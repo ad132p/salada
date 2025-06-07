@@ -38,8 +38,8 @@ var pictures = []picture{
 func main() {
 	router := gin.Default()
 
-	router.Static("/assets", "./assets")
-	router.Static("/images", "./images")
+	router.Static("/assets", "assets")
+	router.Static("/images", "images")
 	router.GET("/pictures", getPictures)
 	router.POST("/pictures", postPictures)
 
@@ -72,6 +72,6 @@ func main() {
 	})
 
 	bindIp := fmt.Sprintf("%s:8080",os.Getenv("BIND_IP"))
-	
+
 	router.Run(bindIp)
 }
