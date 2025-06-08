@@ -1,4 +1,4 @@
-module saladadev/app
+module salada
 
 go 1.24.3
 

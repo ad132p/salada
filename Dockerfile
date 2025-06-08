@@ -3,9 +3,12 @@ FROM golang:1.24-bookworm AS build
 
 WORKDIR /app
 
-COPY . /app
+COPY go.mod go.sum ./
+RUN go mod download
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o salada main.go
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=linux go build -o salada
 
 EXPOSE 8080
 
