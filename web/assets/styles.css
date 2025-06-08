@@ -3,6 +3,22 @@
   width: 50%;
 }
 
+@keyframes me_moving {
+  from {rotate: 0deg;}
+  to {rotate: 360deg;}
+}
+
+.me_pic {
+  display: block;
+  margin: auto;
+  border-radius: 50%;
+}
+
+.me_pic:active {
+  animation-name: me_moving;
+  animation-duration: 2s;
+}
+
 h1 {
   text-align: center;
 }
