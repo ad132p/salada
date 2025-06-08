@@ -1,16 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-{{ template "scripts" . }}
-<body>
-  {{ template "header" . }}
-  <h1>
-    {{ .title }}
-  </h1>
-  <div class="app">
-    <div class="main">
-      <img class="me_pic" src="images/me.jpeg" alt="Hardcore Emocore" height="200">
-      <p class="slide">C'est Moi</p>
-    </div>
+{{ template "base" . }}
+<div class="app">
+  <div class="main">
+    <img class="me_pic" src="images/me.jpeg" alt="Hardcore Emocore" height="200">
+    <p class="slide">C'est Moi</p>
   </div>
-  {{ template "footer" . }}
-</body>
+</div>
