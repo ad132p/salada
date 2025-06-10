@@ -1,7 +1,20 @@
 {{ template "base" . }}
 <div class="app">
   <div class="box">
-    <div>very long blog post title 0</div>
-    <div>very long blog post title 1</div>
+    <h1>{{.title}}</h1>
+
+    {{if .posts}}
+        <ul>
+            {{range .posts}}
+                <li>
+                    <h2><a href="/posts/{{.Slug}}">{{.Title}}</a></h2>
+                    <p>Published: {{.PublishedAt.Format "January 2, 2006"}}</p>
+                    <p>{{.Content}}</p>
+                </li>
+            {{end}}
+        </ul>
+    {{else}}
+        <p>No blog posts available.</p>
+    {{end}}
   </div>
 </div>
