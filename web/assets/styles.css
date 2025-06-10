@@ -11,12 +11,16 @@
 }
 
 .me_pic {
-  display: block;
+  display: float;
   margin: 0;
   border-radius: 50%;
-  animation: three_sixty 5s 1;
+  transition: transform 0.5s ease-in-out;
+  animation: three_sixty 5s 1
 }
 
+.me_pic:hover {
+  animation: three_sixty 5s ease-out forwards;
+}
 
 @keyframes slide-in {
   from {
@@ -53,8 +57,6 @@ h1 {
 }
 
 .main {
-  text-align: left;
-  display: flex;
   height: 150px;
   margin: 5% auto;
 }
