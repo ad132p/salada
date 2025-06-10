@@ -15,11 +15,10 @@
   margin: 0;
   border-radius: 50%;
   transition: transform 0.5s ease-in-out;
-  animation: three_sixty 5s 1
 }
 
-.me_pic:hover {
-  animation: three_sixty 5s ease-out forwards;
+.me_pic:active {
+  animation: three_sixty 5s 1
 }
 
 @keyframes slide-in {
@@ -91,10 +90,6 @@ h1 {
   color: white;
 }
 
-.navigation a:hover {
-  background: #1565C0;
-}
-
 @media all and (max-width: 800px) {
   .navigation {
     justify-content: space-around;
@@ -117,19 +112,21 @@ h1 {
   .navigation li:last-of-type a {
     border-bottom: none;
   }
-}
 
-.box {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 150px;
-  margin: 5% auto;
-}
 
-.box>* {
-  padding: 20px;
-  border: 2px solid rgb(5, 48, 5);
-  border-radius: 5px;
 
-}
+
+  .box {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 150px;
+    margin: 5% auto;
+  }
+
+  .box>* {
+    padding: 20px;
+    border: 2px solid rgb(5, 48, 5);
+    border-radius: 5px;
+
+  }
