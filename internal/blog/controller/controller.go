@@ -16,7 +16,7 @@ func NewBlogController() *BlogController {
 func RegisterBlogRoutes(router *gin.Engine) {
 	bc := NewBlogController()
 
-	blogGroup := router.Group("/blog")
+	blogGroup := router.Group("/blog/")
 	{
 		blogGroup.GET("/", bc.GetPosts)
 		blogGroup.GET("/:id", bc.GetPostByID)
@@ -24,17 +24,14 @@ func RegisterBlogRoutes(router *gin.Engine) {
 		// Add more user routes
 	}
 
-	router.GET("/blog", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "blog.html", gin.H{
-			"title": "Contact",
-		})
-	})
-
 }
 
 // GetUsers handles GET /users
 func (bc *BlogController) GetPosts(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "Get all users"})
+	c.HTML(http.StatusOK, "blog.html", gin.H{
+		"title": "Contact",
+	})
+	//c.JSON(http.StatusOK, gin.H{"message": "Get all posts"})
 }
 
 // GetUserByID handles GET /users/:id
