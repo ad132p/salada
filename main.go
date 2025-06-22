@@ -70,6 +70,7 @@ func main() {
 		postRoutes.GET("/:slug", postController.GetPostBySlug) // Use slug for public access
 		postRoutes.PUT("/:id", postController.UpdatePost)
 		postRoutes.DELETE("/:id", postController.DeletePost)
+		postRoutes.GET("/admin", postController.GetAdmin)
 	}
 
 	bindIp := fmt.Sprintf("%s:8080", os.Getenv("BIND_IP"))

@@ -157,3 +157,18 @@ func (pc *PostController) DeletePost(c *gin.Context) {
 
 	c.Status(http.StatusNoContent) // 204 No Content for successful deletion
 }
+
+func (pc *PostController) GetAdmin(c *gin.Context) {
+	posts, err := pc.Repo.GetAdmin()
+	if err != nil {
+		c.HTML(http.StatusServiceUnavailable, "blog.html", gin.H{
+			"title": "Admin Interface",
+			"error": "Failed to retrieve posts",
+		})
+		return
+	}
+	c.HTML(http.StatusOK, "admin.html", gin.H{
+		"title": "Admin Interface",
+		"posts": posts,
+	})
+}

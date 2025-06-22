@@ -1,5 +1,5 @@
 {{ template "base" . }}
-<div class="app">
+<div class="app" id="blog">
   <h1>{{.title}}</h1>
   {{if .posts}}
   <div class="box">
@@ -16,4 +16,13 @@
   {{else}}
   <p>No blog posts available.</p>
   {{end}}
+  <div id=new>
+    <textarea id="my-text-area"></textarea>
+  </div>
 </div>
+
+<link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
+<script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
+<script>
+  const easyMDE = new EasyMDE({ element: document.getElementById('my-text-area') });
+</script>
