@@ -13,6 +13,20 @@ import (
 	"github.com/joho/godotenv"
 )
 
+var secrets = gin.H{
+	"admin": gin.H{"email": "foo@bar.com", "phone": "123433"},
+}
+
+func AuthRequired(c *gin.Context) {
+	// get user, it was set by the BasicAuth middleware
+	user := c.MustGet(gin.AuthUserKey).(string)
+	if secret, ok := secrets[user]; ok {
+		c.JSON(http.StatusOK, gin.H{"user": user, "secret": secret})
+	} else {
+		c.JSON(http.StatusOK, gin.H{"user": user, "secret": "NO SECRET :("})
+	}
+}
+
 func main() {
 
 	// Load environment variables from .env file
@@ -24,7 +38,12 @@ func main() {
 	db.ConnectDatabase()
 	// Ensure database connection is closed when main exits
 	defer db.CloseDatabase()
-	router := gin.Default()
+	router := gin.New()
+
+	router.Use(gin.Logger())
+
+	// Recovery middleware recovers from any panics and writes a 500 if there was one.
+	router.Use(gin.Recovery())
 
 	router.Static("/assets/", "./web/assets")
 	router.Static("/images/", "./web/images")
@@ -67,10 +86,11 @@ func main() {
 	{
 		postRoutes.POST("/", postController.CreatePost)
 		postRoutes.GET("/", postController.GetPosts)
+		postRoutes.GET("/new", AuthRequired, postController.GetPostForm)
 		postRoutes.GET("/:slug", postController.GetPostBySlug) // Use slug for public access
 		postRoutes.PUT("/:id", postController.UpdatePost)
 		postRoutes.DELETE("/:id", postController.DeletePost)
-		postRoutes.GET("/admin", postController.GetAdmin)
+
 	}
 
 	bindIp := fmt.Sprintf("%s:8080", os.Getenv("BIND_IP"))
