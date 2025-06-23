@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"time"
 
+	"salada/internal/blog"
 	"salada/internal/blog/model"
 
 	"github.com/google/uuid"
@@ -28,6 +29,7 @@ func (r *PostRepository) CreatePost(post *model.Post) error {
 	// Set creation/update timestamps
 	post.CreatedAt = time.Now().UTC()
 	post.UpdatedAt = post.CreatedAt
+	post.Slug = blog.CreateSlug(post.Title)
 
 	query := `INSERT INTO posts (id, title, slug, content, author_id, published_at, created_at, updated_at)
               VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, created_at, updated_at`

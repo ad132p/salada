@@ -24,24 +24,21 @@ func NewPostController(repo *repositories.PostRepository) *PostController {
 
 // CreatePost handles POST /posts
 func (pc *PostController) CreatePost(c *gin.Context) {
-	var input struct {
-		Title    string     `json:"title" binding:"required"`
-		Slug     string     `json:"slug" binding:"required"`
-		Content  string     `json:"content" binding:"required"`
-		AuthorID *uuid.UUID `json:"author_id,omitempty"`
-	}
 
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+	title := c.PostForm("title")
+	content := c.PostForm("content")
+	authorName := c.PostForm("author")
 
 	post := model.Post{
-		Title:    input.Title,
-		Slug:     input.Slug,
-		Content:  input.Content,
-		AuthorID: input.AuthorID,
+		Title:      title,
+		Content:    content,
+		AuthorName: authorName,
 		// PublishedAt will be set on publish, or remain nil
+	}
+
+	if err := c.ShouldBind(&post); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	if err := pc.Repo.CreatePost(&post); err != nil {
@@ -156,11 +153,4 @@ func (pc *PostController) DeletePost(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent) // 204 No Content for successful deletion
-}
-
-// GetPosts handles GET /posts
-func (pc *PostController) GetPostForm(c *gin.Context) {
-	c.HTML(http.StatusOK, "post_form.html", gin.H{
-		"title": "New Blog Entry",
-	})
 }

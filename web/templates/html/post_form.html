@@ -1,0 +1,21 @@
+{{ template "base" . }}
+<h1>{{.title}}</h1>
+<form class="app" id="new" method="post" action="/blog">
+    <label>
+        Author:
+        <input name="author_id" />
+    </label>
+    <label>
+        Title:
+        <input name="title" id="title" />
+    </label>
+    <div>
+        <textarea name="content" id="content"></textarea>
+    </div>
+    <button>Submit</button>
+</form>
+<link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
+<script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
+<script>
+    const easyMDE = new EasyMDE({ element: document.getElementById('content') });
+</script>
