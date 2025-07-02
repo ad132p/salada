@@ -1,3 +1,8 @@
+# I would like a salada blog app and a fresh postgres database in a single VM,
+# using podman quadlets and kubectl secrets, systemctl --user mode
+# Did you get that?
+
+
 # Create database secret:
 POSTGRES_ROOT_PASSWORD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13)
 kubectl create secret generic \
@@ -24,7 +29,7 @@ cp containers ~/.config/containers/
 systemctl --user daemon-reload
 systemctl --user start salada.service
 
-
+# Both services should be available from systemd
 systemctl --user status salada.service
 systemctl --user status salada-db.service
 
