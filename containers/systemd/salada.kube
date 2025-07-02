@@ -1,0 +1,13 @@
+[Install]
+WantedBy=default.target
+
+[Unit]
+Requires=salada-db.service
+After=salada-db.service
+
+[Kube]
+# Point to the yaml file in the same directory
+Yaml=salada.yml
+Network=salada.network
+PublishPort=8080:8080
+PublishPort=5432:5432

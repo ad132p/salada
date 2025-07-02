@@ -1,0 +1,5 @@
+# ~/.config/containers/systemd/salada-db-data.volume
+[Volume]
+Description=Podman volume for Salada DB data
+# If you want to use a host path directly instead of a managed volume, use:
+# Path=/var/lib/salada-db-data # Replace with your desired host path
