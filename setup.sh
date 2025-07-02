@@ -9,7 +9,7 @@ kubectl create secret generic \
 
 # Create a registry if you dont have one
 podman container run -dt -p 5000:5000 --name registry docker.io/library/registry:2
-# Build and pushsalada image
+# Build and push salada image
 podman build -t salada .
 podman image tag localhost/salada localhost:5000/salada:latest
 podman image push localhost:5000/salada:latest --tls-verify=false
@@ -17,3 +17,14 @@ podman image push localhost:5000/salada:latest --tls-verify=false
 #Database migration
 psql -d "host=localhost port=5432 dbname=postgres user=postgres" < internal/db/databases.sql
 psql -d "host=localhost port=5432 dbname=salada user=postgres" internal/db/tables.sql
+
+
+# Bring salada up!
+cp containers ~/.config/containers/
+systemctl --user daemon-reload
+systemctl --user start salada.service
+
+
+systemctl --user status salada.service
+systemctl --user status salada-db.service
+
