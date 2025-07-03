@@ -7,7 +7,7 @@ Pod=salada # Link to the same pod as the database
 # Environment variable for the database connection string.
 # Since both containers are in the same Pod, they share the network namespace.
 # So, your Go app can connect to the database via 'localhost' and the DB port.
-Environment=DATABASE_URL=postgres://postgres:password@localhost:5432/postgres?sslmode=disable # Adjust based on your Go app's connection string format
+Environment=DATABASE_URL=postgres://postgres:password@salada-db:5432/salada?sslmode=disable # Adjust based on your Go app's connection string format
 
 # This tells systemd to start the DB container's service before the Go app's service
 # Note: This only guarantees start order, not that the DB is fully *ready*.

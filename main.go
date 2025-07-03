@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"salada/internal/blog/controller"
@@ -10,7 +9,6 @@ import (
 	"salada/internal/db"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 )
 
 var secrets = gin.H{
@@ -18,11 +16,6 @@ var secrets = gin.H{
 }
 
 func main() {
-
-	// Load environment variables from .env file
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found, assuming environment variables are set.")
-	}
 
 	// Connect to the database
 	db.ConnectDatabase()

@@ -46,7 +46,7 @@ func (pc *PostController) CreatePost(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, post)
+	c.Redirect(http.StatusCreated, "/blog")
 }
 
 // GetPosts handles GET /posts
