@@ -4,7 +4,6 @@ WantedBy=default.target
 [Container]
 Image=docker.io/library/postgres:latest
 ContainerName=salada-db
-Volume=salada-db.volume:/var/lib/postgresql
 Network=salada.network
-# Once 4.5 is released change this line to use the quadlet Secret key
 Secret=postgres-password-kube,type=env,target=POSTGRES_PASSWORD
+Volume=/data/pg:/var/lib/postgresql/data:Z

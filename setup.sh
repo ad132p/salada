@@ -18,26 +18,39 @@ kubectl create secret generic \
 
 # Create a registry if you dont have one
 podman container run -dt -p 5000:5000 --name registry docker.io/library/registry:2
+# If you have one, make sure it is up
+podman start registry
+
 # Build and push salada image
 podman build -t salada .
 podman image tag localhost/salada localhost:5000/salada:latest
 podman image push localhost:5000/salada:latest --tls-verify=false
 
+
+# Create datadir for your postgres
+sudo mkdir -p /data/pg
+sudo chown -R $USER: /data/pg
+
+
 echo 'net.ipv4.ip_unprivileged_port_start=443' >> /etc/sysctl.conf
 # Bring salada up!
-cp -r containers ~/.config/containers/
+cp -r containers/* ~/.config/containers/
 systemctl --user daemon-reload
 systemctl --user start salada.service
+
+
+#Migrate
+podman exec -i salada-db psql -d "host=localhost port=5432 dbname=postgres user=postgres" < internal/db/databases.sql
+
+
+
 
 # Both services should be available from systemd
 systemctl --user status salada.service
 systemctl --user status salada-db.service
 
-
 # Don't install psql
 alias psql="podman run --network systemd-salada -ti --rm alpine/psql"
-
-#Database migration
-psql -d "host=localhost port=5432 dbname=postgres user=postgres" < internal/db/databases.sql
-psql -d "host=localhost port=5432 dbname=salada user=postgres" internal/db/tables.sql
+psql -d "host=localhost port=5432 dbname=salada user=postgres"
+podman exec -ti salada-db bash
 
