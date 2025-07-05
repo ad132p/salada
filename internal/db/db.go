@@ -16,7 +16,8 @@ var DB *sql.DB
 // ConnectDatabase initializes the database connection.
 func ConnectDatabase() {
 	// Build connection string from environment variables
-	connStr := os.Getenv("DB_CONNECTION_STRING")
+	pass := os.Getenv("POSTGRES_PASSWORD")
+	connStr := fmt.Sprintf("postgresql://salada:%s@salada-db:5432/salada?sslmode=disable", pass)
 
 	var err error
 	DB, err = sql.Open("postgres", connStr)

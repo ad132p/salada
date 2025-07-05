@@ -28,8 +28,17 @@ podman image push localhost:5000/salada:latest --tls-verify=false
 
 
 # Create datadir for your postgres
-sudo mkdir -p /data/pg
-sudo chown -R $USER: /data/pg
+sudo mkdir -p /data/pg/
+sudo chown -R $USER: /data/
+
+# Create certs
+mkdir certs
+openssl req -nodes -new -x509 -keyout certs/server.key -out certs/server.crt -subj '/C=US/L=NYC/O=Salada/CN=postgres'
+chmod 400 certs/server.{crt,key}
+
+
+podman cp certs/* salada-db:/etc/ssl/certs/
+podman cp certs/* salada-db:/etc/ssl/private/
 
 
 echo 'net.ipv4.ip_unprivileged_port_start=443' >> /etc/sysctl.conf
@@ -43,6 +52,8 @@ systemctl --user start salada.service
 podman exec -i salada-db psql -d "host=localhost port=5432 dbname=postgres user=postgres" < internal/db/databases.sql
 
 
+#DB Ip should be
+podman inspect salada-db --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'
 
 
 # Both services should be available from systemd

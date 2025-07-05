@@ -1,26 +1,21 @@
 # ~/.config/containers/systemd/salada.container
 [Container]
 ContainerName=salada-app
+IP=192.168.30.10
 Image=localhost:5000/salada:latest
 Pod=salada # Link to the same pod as the database
-
-# Environment variable for the database connection string.
-# Since both containers are in the same Pod, they share the network namespace.
-# So, your Go app can connect to the database via 'localhost' and the DB port.
-Environment=DATABASE_CONNECTION_STRING=postgres://postgres:@salada-db:5432/salada
-
-# This tells systemd to start the DB container's service before the Go app's service
-# Note: This only guarantees start order, not that the DB is fully *ready*.
-# Your Go app should ideally have retry logic for DB connections.
+Network=salada.network
 Requires=salada-db.container
 After=salada-db.container
+Environment=POSTGRES_HOST=salada-db
 
 # Define a basic health check for the Go app (assuming it has a /health endpoint)
 HealthcheckIntervalSec=5
 HealthcheckTimeoutSec=3
 HealthcheckRetries=3
-HealthcheckCmd=curl --fail http://localhost:8080/health
+HealthcheckCmd=curl --fail http://localhost:8080/
 
 # Optional: Resource limits (adjust as needed)
 # MemoryLimit=128M
 # CPULimit=0.2 # 20% of one CPU core
+Secret=postgres-password-kube,type=env,target=POSTGRES_PASSWORD

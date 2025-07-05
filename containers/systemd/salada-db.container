@@ -2,8 +2,9 @@
 WantedBy=default.target
 
 [Container]
+IP=192.168.30.10
 Image=docker.io/library/postgres:latest
 ContainerName=salada-db
 Network=salada.network
+Volume=salada-db.volume:/var/lib/postgresql/data
 Secret=postgres-password-kube,type=env,target=POSTGRES_PASSWORD
-Volume=/data/pg:/var/lib/postgresql/data:Z
