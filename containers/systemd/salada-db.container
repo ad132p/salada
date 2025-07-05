@@ -2,6 +2,7 @@
 WantedBy=default.target
 
 [Container]
+PublishPort=5432:5432
 IP=192.168.30.10
 Image=docker.io/library/postgres:latest
 ContainerName=salada-db

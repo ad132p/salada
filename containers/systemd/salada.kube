@@ -10,4 +10,3 @@ After=salada-db.service
 Yaml=salada.yml
 Network=salada.network
 PublishPort=8080:8080
-PublishPort=5432:5432
