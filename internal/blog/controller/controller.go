@@ -45,8 +45,7 @@ func (pc *PostController) CreatePost(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create post", "details": err.Error()})
 		return
 	}
-
-	c.Redirect(http.StatusCreated, "/blog")
+	c.Redirect(http.StatusFound, "/blog/")
 }
 
 // GetPosts handles GET /posts
