@@ -1,0 +1,11 @@
+{{ template "base" . }}
+<div class="app" id="blog">
+  <h1>{{.title}}</h1>
+  {{if .post}}
+  <div class="box">
+    <p>{{ .post.Content }}</p>
+  </div>
+  {{else}}
+  <p>No blog post with this slug.</p>
+  {{end}}
+</div>

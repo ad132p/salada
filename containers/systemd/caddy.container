@@ -1,0 +1,11 @@
+[Install]
+WantedBy=default.target
+
+[Container]
+PublishPort=5432:5432
+IP=192.168.30.10
+Image=docker.io/library/caddy:latest
+ContainerName=salada-proxy
+Network=salada.network
+Volume=caddy
+Secret=postgres-password-kube,type=env,target=POSTGRES_PASSWORD

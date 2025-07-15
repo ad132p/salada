@@ -65,7 +65,7 @@ func (pc *PostController) GetPosts(c *gin.Context) {
 	})
 }
 
-// GetPostBySlug handles GET /posts/:slug
+// GetPostBySlug handles GET /blog/:slug
 func (pc *PostController) GetPostBySlug(c *gin.Context) {
 	slug := c.Param("slug")
 	post, err := pc.Repo.GetPostBySlug(slug)
@@ -77,7 +77,10 @@ func (pc *PostController) GetPostBySlug(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
 		return
 	}
-	c.JSON(http.StatusOK, post)
+	c.HTML(http.StatusOK, "blog_post.html", gin.H{
+		"title": post.Title,
+		"post":  post,
+	})
 }
 
 // UpdatePost handles PUT /posts/:id

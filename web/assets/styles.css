@@ -1,132 +1,267 @@
-.app {
-  margin: auto;
-  width: 50%;
+/* General Styles & Utilities */
+body {
+    /* Assuming a general body style for the page, not provided in original, but good practice */
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0; /* Reset padding for consistency */
+    background-color: #f4f4f4; /* Light background for the page */
+    color: #333; /* Default text color */
 }
 
-
+/* Animations */
 @keyframes three_sixty {
-  50% {
-    transform: rotate(360deg);
-  }
-}
-
-.me_pic {
-  display: float;
-  margin: 0;
-  border-radius: 50%;
-  transition: transform 0.5s ease-in-out;
-}
-
-.me_pic:active {
-  animation: three_sixty 5s 1
+    50% {
+        transform: rotate(360deg);
+    }
 }
 
 @keyframes slide-in {
-  from {
-    translate: 150vw 0;
-    scale: 200% 1;
-  }
-
-  to {
-    translate: 0 0;
-    scale: 100% 1;
-  }
+    from {
+        translate: 150vw 0;
+        scale: 200% 1;
+    }
+    to {
+        translate: 0 0;
+        scale: 100% 1;
+    }
 }
 
-
-.slide {
-  animation-duration: 3s;
-  animation-name: slide-in;
-}
-
-
-
-h1 {
-  text-align: center;
-}
-
-.footer {
-  position: fixed;
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  background-color: rgb(5, 48, 5);
-  color: white;
-  text-align: center;
+/* Layout - Main App Container */
+.app {
+    margin: auto;
+    width: 50%;
 }
 
 .main {
-  height: 150px;
-  margin: 5% auto;
+    height: 150px;
+    margin: 5% auto;
 }
 
-@media all and (min-width: 800px) {
-  .main {
-    flex: 3 0px;
-  }
-
-  .main {
-    order: 2;
-  }
-
-  .footer {
-    order: 4;
-  }
+/* Image Styles */
+.me_pic {
+    /* 'display: float;' is not a valid CSS display property.
+       If you intended it to float, use 'float: left;' or 'float: right;'.
+       Otherwise, remove it or use 'display: block;' or 'inline-block;'.
+       Assuming 'display: block;' for a centered image with margin: auto; */
+    display: block; /* Changed from 'float' for proper block behavior */
+    margin: 0 auto; /* Center the image if it's a block element */
+    border-radius: 50%;
+    transition: transform 0.5s ease-in-out;
 }
 
+.me_pic:active {
+    animation: three_sixty 5s 1;
+}
+
+.slide {
+    animation-duration: 3s;
+    animation-name: slide-in;
+}
+
+/* Headings */
+h1 {
+    text-align: center;
+}
+
+/* Navigation */
 .navigation {
-  display: flex;
-  flex-flow: row wrap;
-  justify-content: flex-end;
-  list-style: none;
-  margin: 0;
-  background: rgb(5, 48, 5);
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: flex-end;
+    list-style: none;
+    margin: 0;
+    background: rgb(5, 48, 5); /* Dark green background */
 }
 
 .navigation a {
-  text-decoration: none;
-  display: block;
-  padding: 1em;
-  color: white;
+    text-decoration: none;
+    display: block;
+    padding: 1em;
+    color: white;
 }
 
-@media all and (max-width: 800px) {
-  .navigation {
-    justify-content: space-around;
-  }
+/* Footer */
+.footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: rgb(5, 48, 5); /* Dark green background, same as nav */
+    color: white;
+    text-align: center;
+}
+
+/* Form Styles (General Input Fields) */
+input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box; /* Ensures padding and border are included in the element's total width and height */
+    margin-top: 6px;
+    margin-bottom: 16px;
+}
+
+input[type="submit"] {
+    background-color: #04AA6D; /* Green submit button */
+    color: white;
+}
+
+/* Form Container */
+.container {
+    background-color: #f1f1f1;
+    padding: 20px;
+}
+
+/* Message Box (e.g., for password validation) */
+#message {
+    display: none; /* Hidden by default */
+    background: #f1f1f1;
+    color: #000;
+    position: relative;
+    padding: 20px;
+    margin-top: 10px;
+}
+
+#message p {
+    padding: 10px 35px;
+    font-size: 18px;
+}
+
+.valid {
+    color: green;
+}
+
+.valid:before {
+    position: relative;
+    left: -35px;
+    content: "\2714"; /* Unicode for checkmark */
+}
+
+.invalid {
+    color: red;
+}
+
+.invalid:before {
+    position: relative;
+    left: -35px;
+    content: "\2716"; /* Unicode for multiplication x */
+}
+
+/* Blog Post Form Specific Styles (from previous iteration) */
+.blog-post-form fieldset {
+    border: 1px solid #ddd;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+}
+
+.blog-post-form legend {
+    font-weight: bold;
+    padding: 0 10px;
+    color: #555;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-group input[type="text"],
+.form-group textarea {
+    width: calc(100% - 22px); /* Account for padding and border */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
+}
+
+.form-group textarea {
+    min-height: 300px;
+    resize: vertical;
+}
+
+.form-group small {
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 5px;
+    display: block;
+}
+
+.form-actions {
+    text-align: right;
+    margin-top: 20px;
+}
+
+.form-actions button {
+    background-color: #007bff; /* Blue button */
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    margin-left: 10px;
+}
+
+.form-actions button[type="reset"] {
+    background-color: #6c757d; /* Gray for reset button */
+}
+
+.form-actions button:hover {
+    opacity: 0.9;
+}
+
+/* Media Queries */
+@media all and (min-width: 800px) {
+    /* These flex properties (flex, order) suggest that .main and .footer
+       are direct children of a flex container (e.g., body or a wrapper div)
+       that is not defined in the provided CSS. Ensure their parent has
+       'display: flex;' for these rules to apply correctly. */
+    .main {
+        flex: 3 0px;
+        order: 2;
+    }
+    .footer {
+        order: 4;
+    }
+    .navigation {
+        justify-content: space-around; /* Overrides flex-end for larger screens */
+    }
 }
 
 @media all and (max-width: 600px) {
-  .navigation {
-    flex-flow: column wrap;
-    padding: 0;
-  }
+    .navigation {
+        flex-flow: column wrap; /* Stack navigation items vertically */
+        padding: 0;
+    }
+    .navigation a {
+        text-align: center;
+        padding: 10px;
+        border-top: 1px solid rgba(255, 255, 255, 0.3);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    .navigation li:last-of-type a {
+        border-bottom: none;
+    }
 
-  .navigation a {
-    text-align: center;
-    padding: 10px;
-    border-top: 1px solid rgba(255, 255, 255, 0.3);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  }
-
-  .navigation li:last-of-type a {
-    border-bottom: none;
-  }
-
-
-
-
-  .box {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    height: 150px;
-    margin: 5% auto;
-  }
-
-  .box>* {
-    padding: 20px;
-    border: 2px solid rgb(5, 48, 5);
-    border-radius: 5px;
-
-  }
+    /* .box styles - Ensure you have an element with class 'box' in your HTML */
+    .box {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 150px;
+        margin: 5% auto;
+    }
+    .box > * {
+        padding: 20px;
+        border: 2px solid rgb(5, 48, 5);
+        border-radius: 5px;
+    }
+}

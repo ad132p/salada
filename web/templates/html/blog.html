@@ -6,8 +6,8 @@
     <ul>
       {{range .posts}}
       <li>
-        <h2><a href="/posts/{{.Slug}}">{{.Title}}</a></h2>
-        <p>Published: {{.PublishedAt.Format "January 2, 2006"}}</p>
+        <h2><a href="/blog/{{.Slug}}">{{.Title}}</a></h2>
+        <p>Published: {{.PublishedAt}}</p>
         <p>{{.Content}}</p>
       </li>
       {{end}}

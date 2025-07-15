@@ -1,0 +1,19 @@
+salada.com {
+    # Enable automatic HTTPS. Caddy will obtain and renew SSL certificates
+    # from Let's Encrypt automatically.
+    # It listens on both port 80 (for HTTP to HTTPS redirects) and 443 (for HTTPS).
+
+    # Reverse proxy all requests to your Go Gin app running on localhost on port 80.
+    # Caddy handles the SSL termination (HTTPS) and forwards plain HTTP to your backend.
+    reverse_proxy localhost:80
+
+    # Optional: Add logging for debugging or monitoring
+    log {
+        output stdout
+        format json
+    }
+
+    # Optional: Enable gzip compression for better performance
+    encode gzip
+}
+

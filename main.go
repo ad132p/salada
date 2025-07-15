@@ -9,6 +9,7 @@ import (
 	"salada/internal/db"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/joho/godotenv/autoload"
 )
 
 var secrets = gin.H{
@@ -30,15 +31,28 @@ func main() {
 
 	router.Static("/assets/", "./web/assets")
 	router.Static("/images/", "./web/images")
+	router.MaxMultipartMemory = 8 << 20 // 8 MiB
+	router.POST("/upload", func(c *gin.Context) {
+		file, _ := c.FormFile("file")
+		c.SaveUploadedFile(file, "./files/"+file.Filename)
+		c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
+	})
 	router.LoadHTMLGlob("web/templates/html/*")
 	router.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", gin.H{
 			"title": "Home",
 		})
 	})
+
 	router.GET("/about", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "about.html", gin.H{
 			"title": "About",
+		})
+	})
+
+	router.GET("/login", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "login.html", gin.H{
+			"title": "Login",
 		})
 	})
 
