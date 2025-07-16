@@ -29,6 +29,9 @@ func main() {
 	// Recovery middleware recovers from any panics and writes a 500 if there was one.
 	router.Use(gin.Recovery())
 
+	// Filesize limits global
+	router.MaxMultipartMemory = 8 << 20
+
 	router.Static("/assets/", "./web/assets")
 	router.Static("/images/", "./web/images")
 	router.MaxMultipartMemory = 8 << 20 // 8 MiB
@@ -75,17 +78,18 @@ func main() {
 	// Initialize repository with the *sql.DB instance
 	postRepo := repositories.NewPostRepository(db.DB)
 
-	// Initialize controller with the repository instance
-	postController := controller.NewPostController(postRepo)
+	// Initialize blog controller with the repository instance
+	blogController := controller.NewBlogController(postRepo)
 
 	// Define routes for blog posts
 	postRoutes := router.Group("/blog/")
 	{
-		postRoutes.POST("/", postController.CreatePost)
-		postRoutes.GET("/", postController.GetPosts)
-		postRoutes.GET("/:slug", postController.GetPostBySlug) // Use slug for public access
-		postRoutes.PUT("/:id", postController.UpdatePost)
-		postRoutes.DELETE("/:id", postController.DeletePost)
+		postRoutes.POST("/", blogController.CreatePost)
+		postRoutes.GET("/", blogController.GetPosts)
+		postRoutes.GET("/:slug", blogController.GetPostBySlug) // Use slug for public access
+		postRoutes.PUT("/:id", blogController.UpdatePost)
+		postRoutes.DELETE("/:id", blogController.DeletePost)
+		postRoutes.POST("/image", blogController.UploadImage)
 
 	}
 

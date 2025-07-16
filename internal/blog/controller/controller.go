@@ -2,6 +2,8 @@ package controller
 
 import (
 	"database/sql"
+	"fmt"
+	"log"
 	"net/http"
 	"salada/internal/blog/model"
 	"salada/internal/blog/repositories"
@@ -12,18 +14,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// PostController handles blog post-related requests.
-type PostController struct {
+// BlogController handles blog post-related requests.
+type BlogController struct {
 	Repo *repositories.PostRepository
 }
 
 // NewPostController creates a new PostController instance.
-func NewPostController(repo *repositories.PostRepository) *PostController {
-	return &PostController{Repo: repo}
+func NewBlogController(repo *repositories.PostRepository) *BlogController {
+	return &BlogController{Repo: repo}
 }
 
-// CreatePost handles POST /posts
-func (pc *PostController) CreatePost(c *gin.Context) {
+// CreatePost handles POST /blog
+func (pc *BlogController) CreatePost(c *gin.Context) {
 
 	title := c.PostForm("title")
 	content := c.PostForm("content")
@@ -48,8 +50,19 @@ func (pc *PostController) CreatePost(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/blog/")
 }
 
-// GetPosts handles GET /posts
-func (pc *PostController) GetPosts(c *gin.Context) {
+// UploadImage handles POST /blog
+func (pc *BlogController) UploadImage(c *gin.Context) {
+	file, _ := c.FormFile("file")
+	log.Println(file.Filename)
+
+	// Upload the file to specific dst.
+	c.SaveUploadedFile(file, "./"+file.Filename)
+
+	c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
+}
+
+// GetPosts handles GET /blog/
+func (pc *BlogController) GetPosts(c *gin.Context) {
 	posts, err := pc.Repo.GetPosts()
 	if err != nil {
 		c.HTML(http.StatusServiceUnavailable, "blog.html", gin.H{
@@ -65,7 +78,7 @@ func (pc *PostController) GetPosts(c *gin.Context) {
 }
 
 // GetPostBySlug handles GET /blog/:slug
-func (pc *PostController) GetPostBySlug(c *gin.Context) {
+func (pc *BlogController) GetPostBySlug(c *gin.Context) {
 	slug := c.Param("slug")
 	post, err := pc.Repo.GetPostBySlug(slug)
 	if err != nil {
@@ -83,7 +96,7 @@ func (pc *PostController) GetPostBySlug(c *gin.Context) {
 }
 
 // UpdatePost handles PUT /posts/:id
-func (pc *PostController) UpdatePost(c *gin.Context) {
+func (pc *BlogController) UpdatePost(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
@@ -135,8 +148,8 @@ func (pc *PostController) UpdatePost(c *gin.Context) {
 	c.JSON(http.StatusOK, post)
 }
 
-// DeletePost handles DELETE /posts/:id
-func (pc *PostController) DeletePost(c *gin.Context) {
+// DeletePost handles DELETE /blog/:id
+func (pc *BlogController) DeletePost(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {

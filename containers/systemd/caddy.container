@@ -1,11 +1,36 @@
-[Install]
-WantedBy=default.target
+[Unit]
+Description=Caddy Web Server and Reverse Proxy
+After=network-online.target
+Wants=network-online.target
 
 [Container]
-PublishPort=5432:5432
-IP=192.168.30.10
 Image=docker.io/library/caddy:latest
-ContainerName=salada-proxy
-Network=salada.network
-Volume=caddy
-Secret=postgres-password-kube,type=env,target=POSTGRES_PASSWORD
+ContainerName=caddy
+PublishPort=8081:80/tcp
+PublishPort=8443:443/tcp
+
+# Volume for Caddy's persistent data (TLS certificates, etc.)
+# This uses the named volume defined above
+Volume=caddy-data.volume:/data:Z
+
+# Volume for Caddy's configuration file (your Caddyfile)
+# This is a bind mount to a local directory.
+# Replace /path/to/your/Caddyfile with the actual path on your host.
+# The :ro makes it read-only. The :Z is for SELinux context (important on Fedora/RHEL).
+Volume=/home/apollo/salada/caddy/Caddyfile:/etc/caddy/Caddyfile:ro,Z
+
+# Optional: Volume for Caddy's internal config state (if you use the API)
+# Volume=caddy-config.volume:/config:Z
+
+# Optional: Volume for your website's static files (if Caddy is serving them)
+# Replace /path/to/your/website/root with the actual path on your host.
+# Volume=/path/to/your/website/root:/srv:ro,Z
+
+# Auto-update policy (optional)
+AutoUpdate=registry # Checks for new image versions from the registry
+
+[Service]
+Restart=unless-stopped
+
+[Install]
+WantedBy=default.target
