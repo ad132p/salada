@@ -6,7 +6,7 @@
 
       {{range .posts}}
       <article>
-        <h2><a href="/blog/{{.Slug}}">{{.Title}}</a></h2>
+        <h2><a href="/blog/{{.Slug}}" class="post_anchor">{{.Title}}</a></h2>
         <p>Published: {{.PublishedAt}}</p>
         <p>{{.Content}}</p>
       </article>

@@ -5,10 +5,11 @@ body {
     line-height: 1.6;
     margin: 0;
     padding: 0; /* Reset padding for consistency */
-    background-color: #f4f4f4; /* Light background for the page */
-    color: #333; /* Default text color */
+    background-color: #f4f4f4e1; /* Light background for the page */
+    color: #333333; /* Default text color */
 }
 
+/* Main Block */
 /* Animations */
 @keyframes three_sixty {
     50% {
@@ -147,6 +148,12 @@ input[type="submit"] {
     position: relative;
     left: -35px;
     content: "\2716"; /* Unicode for multiplication x */
+}
+
+
+/* Blog Posts Front Page Styles (from previous iteration) */
+.post_anchor {
+    color: #333333
 }
 
 /* Blog Post Form Specific Styles (from previous iteration) */

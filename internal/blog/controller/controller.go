@@ -63,7 +63,7 @@ func (pc *BlogController) UploadImage(c *gin.Context) {
 
 // GetPosts handles GET /blog/
 func (pc *BlogController) GetPosts(c *gin.Context) {
-	posts, err := pc.Repo.GetPosts()
+	posts, err := pc.Repo.GetPublishedPosts()
 	if err != nil {
 		c.HTML(http.StatusServiceUnavailable, "blog.html", gin.H{
 			"title": "Blog Posts",
