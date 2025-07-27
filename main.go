@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"salada/internal/admin/admin_controller"
+	admin_controller "salada/internal/admin/controller"
 	"salada/internal/blog/controller"
 	"salada/internal/blog/repositories"
 	"salada/internal/db"
@@ -98,6 +98,7 @@ func main() {
 	}))
 
 	admin.GET("/blog", adminController.GetPendingPosts)
+	admin.GET("/blog/:slug", adminController.GetPostBySlug)
 	admin.GET("/", adminController.GetAdminMain)
 
 	bindIp := fmt.Sprintf("%s:8080", os.Getenv("BIND_IP"))

@@ -1,0 +1,19 @@
+{{ template "base" . }}
+<div class="app" id="blog">
+  <h1>{{.title}}</h1>
+  {{if .post}}
+  <div class="box">
+    <p>{{ .post.Content }}</p>
+  </div>
+  <a href="/admin/blog/{{.Slug}}">
+    <button type="button" id="editButton">Edit</button>
+  </a>
+  <a href="/admin/blog/{{.Slug}}"  >
+    <button type="button" id="deleteButton">Delete</button>
+  </a>>
+
+  {{else}}
+  <p>No blog post with this slug.</p>
+  <p>youve got this.</p>
+  {{end}}
+</div>

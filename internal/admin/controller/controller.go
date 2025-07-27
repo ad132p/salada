@@ -82,7 +82,6 @@ func (pc *AdminController) GetPendingPosts(c *gin.Context) {
 	})
 }
 
-// GetPostBySlug handles GET /blog/:slug
 func (pc *AdminController) GetAdminMain(c *gin.Context) {
 	// get user, it was set by the BasicAuth middleware
 	user := c.MustGet(gin.AuthUserKey).(string)
@@ -93,6 +92,24 @@ func (pc *AdminController) GetAdminMain(c *gin.Context) {
 			"title": "New Blog Entry",
 		})
 	}
+}
+
+// GetPostBySlug handles GET /blog/:slug
+func (pc *AdminController) GetPostBySlug(c *gin.Context) {
+	slug := c.Param("slug")
+	post, err := pc.Repo.GetPostBySlug(slug)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve post"})
+		return
+	}
+	if post == nil { // Check if no record was found by the repository
+		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
+		return
+	}
+	c.HTML(http.StatusOK, "blog_post_admin.html", gin.H{
+		"title": post.Title,
+		"post":  post,
+	})
 }
 
 // UpdatePost handles PUT /posts/:id
