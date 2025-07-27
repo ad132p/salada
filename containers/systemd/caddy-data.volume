@@ -1,6 +1,0 @@
-[Volume]
-# This defines a named volume for Caddy's persistent data
-# Podman will manage its actual location on the host.
-# You can optionally set User and Group if running rootless to ensure correct permissions.
-User=apollo
-Group=apollo

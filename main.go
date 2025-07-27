@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"salada/internal/admin/admin_controller"
 	"salada/internal/blog/controller"
 	"salada/internal/blog/repositories"
 	"salada/internal/db"
@@ -11,10 +12,6 @@ import (
 	"github.com/gin-gonic/gin"
 	_ "github.com/joho/godotenv/autoload"
 )
-
-var secrets = gin.H{
-	"admin": gin.H{"email": "foo@bar.com", "phone": "123433"},
-}
 
 func main() {
 
@@ -81,6 +78,8 @@ func main() {
 	// Initialize blog controller with the repository instance
 	blogController := controller.NewBlogController(postRepo)
 
+	adminController := admin_controller.NewAdminController(postRepo)
+
 	// Define routes for blog posts
 	postRoutes := router.Group("/blog/")
 	{
@@ -94,21 +93,12 @@ func main() {
 	}
 
 	//Define admin routes
-	authorized := router.Group("/admin", gin.BasicAuth(gin.Accounts{
+	admin := router.Group("/admin", gin.BasicAuth(gin.Accounts{
 		"foo": "bar",
 	}))
 
-	authorized.GET("/blog", func(c *gin.Context) {
-		// get user, it was set by the BasicAuth middleware
-		user := c.MustGet(gin.AuthUserKey).(string)
-		if secret, ok := secrets[user]; ok {
-			c.JSON(http.StatusOK, gin.H{"user": user, "secret": secret})
-		} else {
-			c.HTML(http.StatusOK, "post_form.html", gin.H{
-				"title": "New Blog Entry",
-			})
-		}
-	})
+	admin.GET("/blog", adminController.GetPendingPosts)
+	admin.GET("/", adminController.GetAdminMain)
 
 	bindIp := fmt.Sprintf("%s:8080", os.Getenv("BIND_IP"))
 	router.Run(bindIp)

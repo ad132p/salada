@@ -3,15 +3,14 @@
   <h1>{{.title}}</h1>
   {{if .posts}}
   <div class="box">
-    <ul>
+
       {{range .posts}}
-      <li>
+      <article>
         <h2><a href="/blog/{{.Slug}}">{{.Title}}</a></h2>
         <p>Published: {{.PublishedAt}}</p>
         <p>{{.Content}}</p>
-      </li>
+      </article>
       {{end}}
-    </ul>
   </div>
   {{else}}
   <p>No blog posts available.</p>
