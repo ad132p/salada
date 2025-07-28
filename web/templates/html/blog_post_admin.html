@@ -5,15 +5,83 @@
   <div class="box">
     <p>{{ .post.Content }}</p>
   </div>
-  <a href="/admin/blog/{{.Slug}}">
+    <p id="primary_key">{{ .post.ID }}</p>
+    <p id="slug">{{ .post.Slug }}</p>
     <button type="button" id="editButton">Edit</button>
-  </a>
-  <a href="/admin/blog/{{.Slug}}"  >
     <button type="button" id="deleteButton">Delete</button>
-  </a>>
-
   {{else}}
   <p>No blog post with this slug.</p>
-  <p>youve got this.</p>
+
   {{end}}
+    <p id="message">Go get it.</p>
 </div>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const deleteButton = document.getElementById('deleteButton');
+    const editButton = document.getElementById('editButton');
+    const messageDisplay = document.getElementById('message');
+    const slug = document.getElementById('slug');
+    const primaryKey = document.getElementById('primary_key');
+    const postsEndpoint = `http://127.0.0.1:8080/admin/blog/${primaryKey.textContent}`;
+    
+
+    // Function to handle DELETE request
+    deleteButton.addEventListener('click', async () => {
+        try {
+            messageDisplay.textContent = 'Deleting item...';
+            const response = await fetch(postsEndpoint, {
+                method: 'DELETE',
+                headers: {
+                    // Add any necessary authorization headers, e.g.,
+                    // 'Authorization': 'Bearer YOUR_AUTH_TOKEN'
+                },
+            });
+
+            if (response.ok) {
+                messageDisplay.textContent = `Item ${slug} deleted successfully!`;
+                // Optionally, update the UI to reflect the deletion
+            } else {
+                const errorData = await response.json();
+                messageDisplay.textContent = `Error deleting item: ${errorData.message || response.statusText}`;
+            }
+        } catch (error) {
+            messageDisplay.textContent = `Network error: ${error.message}`;
+            console.error('Error during DELETE request:', error);
+        }
+    });
+
+    // Function to handle PUT request
+    editButton.addEventListener('click', async () => {
+        const dataToUpdate = {
+            name: 'Updated Item Name',
+            description: 'This item has been updated via a PUT request.',
+            // ... other fields you want to update
+        };
+
+        try {
+            messageDisplay.textContent = 'Updating item...';
+            const response = await fetch(updateUrl, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Add any necessary authorization headers, e.g.,
+                    // 'Authorization': 'Bearer YOUR_AUTH_TOKEN'
+                },
+                body: JSON.stringify(dataToUpdate),
+            });
+
+            if (response.ok) {
+                const responseData = await response.json();
+                messageDisplay.textContent = `Item ${itemIdToUpdate} updated successfully! Response: ${JSON.stringify(responseData)}`;
+                // Optionally, update the UI to reflect the update
+            } else {
+                const errorData = await response.json();
+                messageDisplay.textContent = `Error updating item: ${errorData.message || response.statusText}`;
+            }
+        } catch (error) {
+            messageDisplay.textContent = `Network error: ${error.message}`;
+            console.error('Error during PUT request:', error);
+        }
+    });
+});
+</script>

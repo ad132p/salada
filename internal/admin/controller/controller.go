@@ -55,7 +55,7 @@ func (pc *AdminController) CreatePost(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/blog/")
 }
 
-// UploadImage handles POST /blog
+// UploadImage handles POST /admin/blog
 func (pc *AdminController) UploadImage(c *gin.Context) {
 	file, _ := c.FormFile("file")
 	log.Println(file.Filename)

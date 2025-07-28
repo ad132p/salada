@@ -9,6 +9,7 @@ import (
 	"salada/internal/blog/repositories"
 	"salada/internal/db"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/joho/godotenv/autoload"
 )
@@ -22,6 +23,8 @@ func main() {
 	router := gin.Default()
 
 	router.Use(gin.Logger())
+
+	router.Use(cors.Default()) // Please fix this!
 
 	// Recovery middleware recovers from any panics and writes a 500 if there was one.
 	router.Use(gin.Recovery())
@@ -83,11 +86,10 @@ func main() {
 	// Define routes for blog posts
 	postRoutes := router.Group("/blog/")
 	{
-		postRoutes.POST("/", blogController.CreatePost)
+
 		postRoutes.GET("/", blogController.GetPosts)
 		postRoutes.GET("/:slug", blogController.GetPostBySlug) // Use slug for public access
-		postRoutes.PUT("/:id", blogController.UpdatePost)
-		postRoutes.DELETE("/:id", blogController.DeletePost)
+
 		postRoutes.POST("/image", blogController.UploadImage)
 
 	}
@@ -100,6 +102,9 @@ func main() {
 	admin.GET("/blog", adminController.GetPendingPosts)
 	admin.GET("/blog/:slug", adminController.GetPostBySlug)
 	admin.GET("/", adminController.GetAdminMain)
+	admin.POST("/blog", adminController.CreatePost)
+	admin.PUT("/blog/:id", adminController.UpdatePost)
+	admin.DELETE("/blog/:id", adminController.DeletePost)
 
 	bindIp := fmt.Sprintf("%s:8080", os.Getenv("BIND_IP"))
 	router.Run(bindIp)
