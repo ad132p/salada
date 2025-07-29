@@ -6,7 +6,10 @@ import (
 	"net/http"
 	"salada/internal/blog/repositories"
 
+	"database/sql"
+
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // BlogController handles blog post-related requests.
@@ -62,4 +65,27 @@ func (pc *BlogController) GetPostBySlug(c *gin.Context) {
 		"title": post.Title,
 		"post":  post,
 	})
+}
+
+// DeletePost handles DELETE /blog/:id
+func (pc *BlogController) DeletePost(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
+		return
+	}
+
+	err = pc.Repo.DeletePost(id)
+	if err != nil {
+		if err == sql.ErrNoRows { // Check for no rows affected, indicating not found
+			c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete post", "details": err.Error()})
+		return
+	}
+
+	c.Status(http.StatusNoContent) // 204 No Content for successful deletion
+	c.Next()
 }

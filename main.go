@@ -8,8 +8,13 @@ import (
 	"salada/internal/blog/controller"
 	"salada/internal/blog/repositories"
 	"salada/internal/db"
+	salada_session "salada/internal/sessions"
+	session_repo "salada/internal/sessions/repositories"
+	"time"
 
 	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/sessions"
+
 	"github.com/gin-gonic/gin"
 	_ "github.com/joho/godotenv/autoload"
 )
@@ -24,7 +29,14 @@ func main() {
 
 	router.Use(gin.Logger())
 
-	router.Use(cors.Default()) // Please fix this!
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"}, // Replace with your actual frontend origin(s)
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With", "Cookie"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour, // How long preflight requests can be cached
+	}))
 
 	// Recovery middleware recovers from any panics and writes a 500 if there was one.
 	router.Use(gin.Recovery())
@@ -77,6 +89,9 @@ func main() {
 
 	// Initialize repository with the *sql.DB instance
 	postRepo := repositories.NewPostRepository(db.DB)
+	sessionRepo := session_repo.NewSessionRepository(db.DB)
+
+	router.Use(sessions.Sessions("salada_session", sessionRepo.Store))
 
 	// Initialize blog controller with the repository instance
 	blogController := controller.NewBlogController(postRepo)
@@ -89,22 +104,21 @@ func main() {
 
 		postRoutes.GET("/", blogController.GetPosts)
 		postRoutes.GET("/:slug", blogController.GetPostBySlug) // Use slug for public access
-
 		postRoutes.POST("/image", blogController.UploadImage)
-
+		postRoutes.DELETE("/:id", salada_session.AdminAuthRequired(), blogController.DeletePost)
+		postRoutes.PUT("/:id", adminController.UpdatePost)
+		postRoutes.POST("/", adminController.CreatePost)
 	}
 
 	//Define admin routes
 	admin := router.Group("/admin", gin.BasicAuth(gin.Accounts{
 		"foo": "bar",
 	}))
-
-	admin.GET("/blog", adminController.GetPendingPosts)
-	admin.GET("/blog/:slug", adminController.GetPostBySlug)
-	admin.GET("/", adminController.GetAdminMain)
-	admin.POST("/blog", adminController.CreatePost)
-	admin.PUT("/blog/:id", adminController.UpdatePost)
-	admin.DELETE("/blog/:id", adminController.DeletePost)
+	{
+		admin.GET("/blog", adminController.GetPendingPosts)
+		admin.GET("/blog/:slug", adminController.GetPostBySlug)
+		admin.GET("/", adminController.GetAdminMain, salada_session.SetSessionValueMiddleware("role", "admin"))
+	}
 
 	bindIp := fmt.Sprintf("%s:8080", os.Getenv("BIND_IP"))
 	router.Run(bindIp)

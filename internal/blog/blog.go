@@ -2,8 +2,9 @@ package blog
 
 import (
 	"regexp"
-
+	//"salada/internal/blog/model"
 	"strings"
+	//"golang.org/x/crypto/bcrypt"
 )
 
 // createSlug generates a URL-friendly slug from a given title.

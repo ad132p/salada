@@ -1,7 +1,6 @@
 package admin_controller
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,9 +8,8 @@ import (
 	"salada/internal/blog/repositories"
 	"time"
 
-	"github.com/google/uuid"
-
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // AdminController handles blog post-related requests.
@@ -163,26 +161,4 @@ func (pc *AdminController) UpdatePost(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, post)
-}
-
-// DeletePost handles DELETE /blog/:id
-func (pc *AdminController) DeletePost(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := uuid.Parse(idStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
-		return
-	}
-
-	err = pc.Repo.DeletePost(id)
-	if err != nil {
-		if err == sql.ErrNoRows { // Check for no rows affected, indicating not found
-			c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete post", "details": err.Error()})
-		return
-	}
-
-	c.Status(http.StatusNoContent) // 204 No Content for successful deletion
 }

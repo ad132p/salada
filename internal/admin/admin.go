@@ -1,22 +1,23 @@
 package admin
 
 import (
-	"regexp"
+	"net/http"
 
-	"strings"
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-gonic/gin"
 )
 
-// createSlug generates a URL-friendly slug from a given title.
-func CreateSlug(title string) string {
-	// Convert to lowercase
-	slug := strings.ToLower(title)
+// AdminRoleRequired checks if the logged-in user has the "admin" role
+func AdminRoleRequired() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		session := sessions.Default(c)
+		role := session.Get("role") // Assuming you store user role in the session
 
-	// Replace non-alphanumeric characters with hyphens
-	reg := regexp.MustCompile("[^a-z0-9]+")
-	slug = reg.ReplaceAllString(slug, "-")
-
-	// Trim leading/trailing hyphens
-	slug = strings.Trim(slug, "-")
-
-	return slug
+		if role == nil || role.(string) != "admin" { // Type assertion `.(string)`
+			c.JSON(http.StatusForbidden, gin.H{"error": "Access denied. Insufficient privileges."})
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
 }

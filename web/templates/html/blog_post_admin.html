@@ -22,7 +22,7 @@
     const messageDisplay = document.getElementById('message');
     const slug = document.getElementById('slug');
     const primaryKey = document.getElementById('primary_key');
-    const postsEndpoint = `http://127.0.0.1:8080/admin/blog/${primaryKey.textContent}`;
+    const postsEndpoint = `http://127.0.0.1:8080/blog/${primaryKey.textContent}`;
     
 
     // Function to handle DELETE request
@@ -39,7 +39,7 @@
 
             if (response.ok) {
                 messageDisplay.textContent = `Item ${slug} deleted successfully!`;
-                // Optionally, update the UI to reflect the deletion
+                window.location.href = '/admin/blog/'
             } else {
                 const errorData = await response.json();
                 messageDisplay.textContent = `Error deleting item: ${errorData.message || response.statusText}`;
@@ -73,7 +73,6 @@
             if (response.ok) {
                 const responseData = await response.json();
                 messageDisplay.textContent = `Item ${itemIdToUpdate} updated successfully! Response: ${JSON.stringify(responseData)}`;
-                // Optionally, update the UI to reflect the update
             } else {
                 const errorData = await response.json();
                 messageDisplay.textContent = `Error updating item: ${errorData.message || response.statusText}`;
