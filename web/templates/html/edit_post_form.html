@@ -1,0 +1,97 @@
+{{ template "base" . }}
+<h1>{{.title}}</h1>
+
+<main>
+    <form class="app" id="new-blog-post" method="post" action="/blog" enctype="multipart/form-data">
+        <fieldset>
+            <legend>Post Details</legend>
+
+            <div class="form-group">
+                <label for="author_id">Author:</label>
+                <input type="text" name="author_id" id="author_id" required aria-describedby="author-hint">
+                <small id="author-hint">Enter your author name or ID.</small>
+            </div>
+
+            <div class="form-group">
+                <label for="title">Title:</label>
+                <input type="text" name="title" id="title" required placeholder="Enter your post title here">
+            </div>
+
+            <div class="form-group">
+                <label for="category">Category (Optional):</label>
+                <input type="text" name="category" id="category" placeholder="e.g., Tech, Lifestyle, Travel">
+            </div>
+
+            <div class="form-group">
+                <label for="tags">Tags (Comma-separated, Optional):</label>
+                <input type="text" name="tags" id="tags" placeholder="e.g., html, css, javascript">
+            </div>
+
+        </fieldset>
+
+        <fieldset>
+            <legend>Post Content</legend>
+            <div class="form-group">
+                <label for="content">Write your post content here:</label>
+                <textarea name="content" id="content"></textarea>
+            </div>
+        </fieldset>
+
+        <div class="form-actions">
+            <button type="submit">Publish Post</button>
+            <button type="reset">Clear Form</button>
+        </div>
+    </form>
+</main>
+
+<script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
+<script>
+    const easyMDE = new EasyMDE({
+        element: document.getElementById('content'),
+        autofocus: true,
+        uploadImage: true, // Keep this if you want image upload functionality
+        imageUploadEndpoint: "upload", // Your server endpoint for image uploads
+        placeholder: "Start writing your blog post in Markdown...", // Helpful placeholder
+        spellChecker: true, // Enable spell checker
+        toolbar: [ // Customize the toolbar for a better user experience
+            "bold", "italic", "heading", "|",
+            "unordered-list", "ordered-list", "code", "quote", "|",
+            "link", "image", "|",
+            "preview", "side-by-side", "fullscreen", "|",
+            "guide"
+        ],
+        // You might want to add other EasyMDE options here, like status bar, etc.
+    });
+
+    editButton.addEventListener('click', async () => {
+            const dataToUpdate = {
+                name: 'Updated Item Name',
+                description: 'This item has been updated via a PUT request.',
+                // ... other fields you want to update
+            };
+
+            try {
+                messageDisplay.textContent = 'Updating item...';
+                const response = await fetch(updateUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // Add any necessary authorization headers, e.g.,
+                        // 'Authorization': 'Bearer YOUR_AUTH_TOKEN'
+                    },
+                    body: JSON.stringify(dataToUpdate),
+                });
+
+                if (response.ok) {
+                    const responseData = await response.json();
+                    messageDisplay.textContent = `Item ${itemIdToUpdate} updated successfully! Response: ${JSON.stringify(responseData)}`;
+                } else {
+                    const errorData = await response.json();
+                    messageDisplay.textContent = `Error updating item: ${errorData.message || response.statusText}`;
+                }
+            } catch (error) {
+                messageDisplay.textContent = `Network error: ${error.message}`;
+                console.error('Error during PUT request:', error);
+            }
+        });
+</script>

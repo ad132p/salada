@@ -95,3 +95,21 @@ func (pc *BlogController) DeletePost(c *gin.Context) {
 	c.Status(http.StatusNoContent) // 204 No Content for successful deletion
 	c.Next()
 }
+
+// EditPostForm handles GET /blog//edit/:slug/
+func (pc *BlogController) EditPostForm(c *gin.Context) {
+	slug := c.Param("slug")
+	post, err := pc.Repo.GetPostBySlug(slug)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve post"})
+		return
+	}
+	if post == nil { // Check if no record was found by the repository
+		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
+		return
+	}
+	c.HTML(http.StatusOK, "edit_post_form.html", gin.H{
+		"title": post.Title,
+		"post":  post,
+	})
+}

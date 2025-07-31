@@ -109,6 +109,7 @@ func main() {
 		postRoutes.PUT("/:id", adminController.UpdatePost)
 		postRoutes.POST("/", adminController.CreatePost)
 		postRoutes.GET("/new", blogController.GetNewPostForm)
+		postRoutes.GET("/edit/:slug", blogController.EditPostForm)
 	}
 
 	//Define admin routes

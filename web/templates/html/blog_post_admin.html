@@ -7,7 +7,7 @@
     </div>
     <p id="primary_key">{{ .post.ID }}</p>
     <p id="slug">{{ .post.Slug }}</p>
-    <button type="button" id="editButton">Edit</button>
+    <a href="/blog/edit/{{.post.Slug}}" class="post_anchor">Edit</a>
     <button type="button" id="deleteButton">Delete</button>
     {{else}}
     <p>No blog post with this slug.</p>
@@ -46,39 +46,6 @@
             } catch (error) {
                 messageDisplay.textContent = `Network error: ${error.message}`;
                 console.error('Error during DELETE request:', error);
-            }
-        });
-
-        // Function to handle PUT request
-        editButton.addEventListener('click', async () => {
-            const dataToUpdate = {
-                name: 'Updated Item Name',
-                description: 'This item has been updated via a PUT request.',
-                // ... other fields you want to update
-            };
-
-            try {
-                messageDisplay.textContent = 'Updating item...';
-                const response = await fetch(updateUrl, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        // Add any necessary authorization headers, e.g.,
-                        // 'Authorization': 'Bearer YOUR_AUTH_TOKEN'
-                    },
-                    body: JSON.stringify(dataToUpdate),
-                });
-
-                if (response.ok) {
-                    const responseData = await response.json();
-                    messageDisplay.textContent = `Item ${itemIdToUpdate} updated successfully! Response: ${JSON.stringify(responseData)}`;
-                } else {
-                    const errorData = await response.json();
-                    messageDisplay.textContent = `Error updating item: ${errorData.message || response.statusText}`;
-                }
-            } catch (error) {
-                messageDisplay.textContent = `Network error: ${error.message}`;
-                console.error('Error during PUT request:', error);
             }
         });
     });
