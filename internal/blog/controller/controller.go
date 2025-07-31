@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"salada/internal/blog/model"
 	"salada/internal/blog/repositories"
+	"time"
 
 	"database/sql"
 
@@ -20,6 +22,87 @@ type BlogController struct {
 // NewPostController creates a new PostController instance.
 func NewBlogController(repo *repositories.PostRepository) *BlogController {
 	return &BlogController{Repo: repo}
+}
+
+// CreatePost handles POST /blog
+func (pc *BlogController) CreatePost(c *gin.Context) {
+
+	title := c.PostForm("title")
+	content := c.PostForm("content")
+	authorName := c.PostForm("author")
+	tags := c.PostForm("tags")
+
+	post := model.Post{
+		Title:      title,
+		Content:    content,
+		AuthorName: authorName,
+		Tags:       tags,
+		// PublishedAt will be set on publish, or remain nil
+	}
+
+	if err := c.ShouldBind(&post); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := pc.Repo.CreatePost(&post); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create post", "details": err.Error()})
+		return
+	}
+	c.Redirect(http.StatusFound, "/blog/")
+}
+
+// UpdatePost handles PUT /posts/:id
+func (pc *BlogController) UpdatePost(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
+		return
+	}
+
+	var input struct {
+		Title       *string    `json:"title"`
+		Slug        *string    `json:"slug"`
+		Content     *string    `json:"content"`
+		PublishedAt *time.Time `json:"published_at"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	post, err := pc.Repo.GetPostByID(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find post"})
+		return
+	}
+	if post == nil { // Check if no record was found
+		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
+		return
+	}
+
+	// Update fields if provided in the input
+	if input.Title != nil {
+		post.Title = *input.Title
+	}
+	if input.Slug != nil {
+		post.Slug = *input.Slug
+	}
+	if input.Content != nil {
+		post.Content = *input.Content
+	}
+	if input.PublishedAt != nil {
+		post.PublishedAt = input.PublishedAt
+	}
+
+	if err := pc.Repo.UpdatePost(post); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update post", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, post)
 }
 
 // UploadImage handles POST /blog
@@ -96,7 +179,7 @@ func (pc *BlogController) DeletePost(c *gin.Context) {
 	c.Next()
 }
 
-// EditPostForm handles GET /blog//edit/:slug/
+// EditPostForm handles GET /blog/edit/:slug/
 func (pc *BlogController) EditPostForm(c *gin.Context) {
 	slug := c.Param("slug")
 	post, err := pc.Repo.GetPostBySlug(slug)

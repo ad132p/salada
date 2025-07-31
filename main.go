@@ -106,8 +106,8 @@ func main() {
 		postRoutes.GET("/:slug", blogController.GetPostBySlug) // Use slug for public access
 		postRoutes.POST("/image", blogController.UploadImage)
 		postRoutes.DELETE("/:id", blogController.DeletePost)
-		postRoutes.PUT("/:id", adminController.UpdatePost)
-		postRoutes.POST("/", adminController.CreatePost)
+		postRoutes.PUT("/:id", blogController.UpdatePost)
+		postRoutes.POST("/", blogController.CreatePost)
 		postRoutes.GET("/new", blogController.GetNewPostForm)
 		postRoutes.GET("/edit/:slug", blogController.EditPostForm)
 	}
