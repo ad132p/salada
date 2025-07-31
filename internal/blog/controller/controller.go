@@ -49,6 +49,12 @@ func (pc *BlogController) GetPosts(c *gin.Context) {
 	})
 }
 
+func (pc *BlogController) GetNewPostForm(c *gin.Context) {
+	c.HTML(http.StatusOK, "post_form.html", gin.H{
+		"title": "New Blog Entry",
+	})
+}
+
 // GetPostBySlug handles GET /blog/:slug
 func (pc *BlogController) GetPostBySlug(c *gin.Context) {
 	slug := c.Param("slug")

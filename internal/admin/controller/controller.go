@@ -92,6 +92,18 @@ func (pc *AdminController) GetAdminMain(c *gin.Context) {
 	}
 }
 
+func (pc *AdminController) GetNewPostForm(c *gin.Context) {
+	// get user, it was set by the BasicAuth middleware
+	user := c.MustGet(gin.AuthUserKey).(string)
+	if secret, ok := secrets[user]; ok {
+		c.JSON(http.StatusOK, gin.H{"user": user, "secret": secret})
+	} else {
+		c.HTML(http.StatusOK, "post_form.html", gin.H{
+			"title": "New Blog Entry",
+		})
+	}
+}
+
 // GetPostBySlug handles GET /blog/:slug
 func (pc *AdminController) GetPostBySlug(c *gin.Context) {
 	slug := c.Param("slug")

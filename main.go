@@ -105,9 +105,10 @@ func main() {
 		postRoutes.GET("/", blogController.GetPosts)
 		postRoutes.GET("/:slug", blogController.GetPostBySlug) // Use slug for public access
 		postRoutes.POST("/image", blogController.UploadImage)
-		postRoutes.DELETE("/:id", salada_session.AdminAuthRequired(), blogController.DeletePost)
+		postRoutes.DELETE("/:id", blogController.DeletePost)
 		postRoutes.PUT("/:id", adminController.UpdatePost)
 		postRoutes.POST("/", adminController.CreatePost)
+		postRoutes.GET("/new", blogController.GetNewPostForm)
 	}
 
 	//Define admin routes
