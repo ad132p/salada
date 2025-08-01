@@ -65,6 +65,7 @@ func (pc *BlogController) UpdatePost(c *gin.Context) {
 		Title       *string    `json:"title"`
 		Slug        *string    `json:"slug"`
 		Content     *string    `json:"content"`
+		AuthorName  *string    `json:"author_name"`
 		PublishedAt *time.Time `json:"published_at"`
 	}
 
@@ -97,6 +98,10 @@ func (pc *BlogController) UpdatePost(c *gin.Context) {
 		post.PublishedAt = input.PublishedAt
 	}
 
+	if input.AuthorName != nil {
+		post.AuthorName = *input.AuthorName
+	}
+
 	if err := pc.Repo.UpdatePost(post); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update post", "details": err.Error()})
 		return
@@ -107,13 +112,13 @@ func (pc *BlogController) UpdatePost(c *gin.Context) {
 
 // UploadImage handles POST /blog
 func (pc *BlogController) UploadImage(c *gin.Context) {
-	file, _ := c.FormFile("file")
-	log.Println(file.Filename)
+	image, _ := c.FormFile("image")
+	log.Println(image.Filename)
 
 	// Upload the file to specific dst.
-	c.SaveUploadedFile(file, "./"+file.Filename)
+	c.SaveUploadedFile(image, "./"+image.Filename)
 
-	c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
+	c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", image.Filename))
 }
 
 // GetPosts handles GET /blog/

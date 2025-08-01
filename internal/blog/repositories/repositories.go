@@ -157,9 +157,8 @@ func (r *PostRepository) GetPublishedPosts() ([]model.Post, error) {
 
 // GetPostBySlug fetches a single post by its slug.
 func (r *PostRepository) GetPostBySlug(slug string) (*model.Post, error) {
-	query := `SELECT id, title, slug, content, author_id, published_at, created_at, updated_at FROM posts WHERE slug = $1`
+	query := `SELECT id, title, slug, content, author_name, published_at, created_at, updated_at FROM posts WHERE slug = $1`
 	var post model.Post
-	var authorID sql.Null[uuid.UUID]
 	var publishedAt sql.NullTime
 
 	err := r.db.QueryRow(query, slug).Scan(
@@ -167,7 +166,7 @@ func (r *PostRepository) GetPostBySlug(slug string) (*model.Post, error) {
 		&post.Title,
 		&post.Slug,
 		&post.Content,
-		&authorID,
+		&post.AuthorName,
 		&publishedAt,
 		&post.CreatedAt,
 		&post.UpdatedAt,
@@ -178,12 +177,6 @@ func (r *PostRepository) GetPostBySlug(slug string) (*model.Post, error) {
 			return nil, nil // Return nil, nil if no row is found
 		}
 		return nil, err
-	}
-
-	if authorID.Valid {
-		post.AuthorID = &authorID.V
-	} else {
-		post.AuthorID = nil
 	}
 	if publishedAt.Valid {
 		post.PublishedAt = &publishedAt.Time
@@ -196,9 +189,8 @@ func (r *PostRepository) GetPostBySlug(slug string) (*model.Post, error) {
 
 // GetPostByID fetches a single post by its ID.
 func (r *PostRepository) GetPostByID(id uuid.UUID) (*model.Post, error) {
-	query := `SELECT id, title, slug, content, author_id, published_at, created_at, updated_at FROM posts WHERE id = $1`
+	query := `SELECT id, title, slug, content, author_name, published_at, created_at, updated_at FROM posts WHERE id = $1`
 	var post model.Post
-	var authorID sql.Null[uuid.UUID]
 	var publishedAt sql.NullTime
 
 	err := r.db.QueryRow(query, id).Scan(
@@ -206,7 +198,7 @@ func (r *PostRepository) GetPostByID(id uuid.UUID) (*model.Post, error) {
 		&post.Title,
 		&post.Slug,
 		&post.Content,
-		&authorID,
+		&post.AuthorName,
 		&publishedAt,
 		&post.CreatedAt,
 		&post.UpdatedAt,
@@ -219,11 +211,6 @@ func (r *PostRepository) GetPostByID(id uuid.UUID) (*model.Post, error) {
 		return nil, err
 	}
 
-	if authorID.Valid {
-		post.AuthorID = &authorID.V
-	} else {
-		post.AuthorID = nil
-	}
 	if publishedAt.Valid {
 		post.PublishedAt = &publishedAt.Time
 	} else {
@@ -237,13 +224,15 @@ func (r *PostRepository) GetPostByID(id uuid.UUID) (*model.Post, error) {
 func (r *PostRepository) UpdatePost(post *model.Post) error {
 	post.UpdatedAt = time.Now().UTC() // Update the timestamp
 
-	query := `UPDATE posts SET title = $1, slug = $2, content = $3, published_at = $4, updated_at = $5 WHERE id = $6`
+	query := `UPDATE posts SET title = $1, author_name = $2, slug = $3, content = $4, published_at = $5, updated_at = $6, tags = $7 WHERE id = $8`
 	_, err := r.db.Exec(query,
 		post.Title,
+		post.AuthorName,
 		post.Slug,
 		post.Content,
 		post.PublishedAt, // Will be NULL if *time.Time is nil
 		post.UpdatedAt,
+		post.Tags,
 		post.ID,
 	)
 	return err

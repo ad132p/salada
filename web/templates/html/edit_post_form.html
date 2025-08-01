@@ -2,29 +2,28 @@
 <h1>{{.title}}</h1>
 
 <main>
-    <form class="app" id="new-blog-post" method="post" action="/blog" enctype="multipart/form-data">
+    <div class="app">
         <fieldset>
             <legend>Post Details</legend>
-
+            <p id="primary_key">{{ .post.ID }}</p>
+            <p id="slug">{{ .post.Slug }}</p>
             <div class="form-group">
-                <label for="author_id">Author:</label>
-                <input type="text" name="author_id" id="author_id" value="{{.post.AuthorName}}" required aria-describedby="author-hint">
+                <label for="author_name">Author Name:</label>
+                <input type="text" name="author_name" id="author_name" value="{{.post.AuthorName}}" required
+                    aria-describedby="author-hint">
                 <small id="author-hint">Enter your author name or ID.</small>
             </div>
 
             <div class="form-group">
                 <label for="title">Title:</label>
-                <input type="text" name="title" id="title" value="{{.post.Title}}"  required placeholder="Enter your post title here">
-            </div>
-
-            <div class="form-group">
-                <label for="category">Category (Optional):</label>
-                <input type="text" name="category" id="category" value="{{.post.Content}}" placeholder="e.g., Tech, Lifestyle, Travel">
+                <input type="text" name="title" id="title" value="{{.post.Title}}" required
+                    placeholder="Enter your post title here">
             </div>
 
             <div class="form-group">
                 <label for="tags">Tags (Comma-separated, Optional):</label>
-                <input type="text" name="tags" id="tags" value="{{.post.Tags}}" placeholder="e.g., html, css, javascript">
+                <input type="text" name="tags" id="tags" value="{{.post.Tags}}"
+                    placeholder="e.g., html, css, javascript">
             </div>
 
         </fieldset>
@@ -33,15 +32,17 @@
             <legend>Post Content</legend>
             <div class="form-group">
                 <label for="content">Write your post content here:</label>
-                <textarea name="content" id="content"></textarea>
+                <textarea name="content" id="content">{{.post.Content}}</textarea>
             </div>
         </fieldset>
 
-        <div class="form-actions">
-            <button type="submit">Edit Post</button>
+        <div class="actions">
+            <button id="edit_button">Edit Post</button>
             <button type="reset">Clear Form</button>
         </div>
-    </form>
+        <div id="message">oof</div>
+    </div>
+
 </main>
 
 <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
@@ -50,7 +51,10 @@
         element: document.getElementById('content'),
         autofocus: true,
         uploadImage: true, // Keep this if you want image upload functionality
-        imageUploadEndpoint: "upload", // Your server endpoint for image uploads
+        imageUploadEndpoint: 'http://127.0.0.1:8080/upload', // Your server endpoint for image uploads
+        imageMaxSize: 1024 * 1024 * 8,
+        imagePathAbsolute: false,
+        imageUploadFieldName: 'file',
         placeholder: "Start writing your blog post in Markdown...", // Helpful placeholder
         spellChecker: true, // Enable spell checker
         toolbar: [ // Customize the toolbar for a better user experience
@@ -63,35 +67,39 @@
         // You might want to add other EasyMDE options here, like status bar, etc.
     });
 
+    editButton = document.getElementById("edit_button")
+    messageDisplay = document.getElementById("message")
     editButton.addEventListener('click', async () => {
-            const dataToUpdate = {
-                name: 'Updated Item Name',
-                description: 'This item has been updated via a PUT request.',
-                // ... other fields you want to update
-            };
+        const primaryKey = document.getElementById('primary_key');
+        const slug = document.getElementById('slug');
+        const authorName = document.getElementById('author_name');
+        const updateUrl = `http://127.0.0.1:8080/blog/${primaryKey.textContent}`;
+        const data = {
+            author_name: authorName.value,
+            slug: slug.textContent,
+            content: easyMDE.value(),
+        };
 
-            try {
-                messageDisplay.textContent = 'Updating item...';
-                const response = await fetch(updateUrl, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        // Add any necessary authorization headers, e.g.,
-                        // 'Authorization': 'Bearer YOUR_AUTH_TOKEN'
-                    },
-                    body: JSON.stringify(dataToUpdate),
-                });
+        try {
+            messageDisplay.textContent = 'Updating item...';
+            const response = await fetch(updateUrl, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
 
-                if (response.ok) {
-                    const responseData = await response.json();
-                    messageDisplay.textContent = `Item ${itemIdToUpdate} updated successfully! Response: ${JSON.stringify(responseData)}`;
-                } else {
-                    const errorData = await response.json();
-                    messageDisplay.textContent = `Error updating item: ${errorData.message || response.statusText}`;
-                }
-            } catch (error) {
-                messageDisplay.textContent = `Network error: ${error.message}`;
-                console.error('Error during PUT request:', error);
+            if (response.ok) {
+                const responseData = await response.json();
+                messageDisplay.textContent = `Item ${slug} updated successfully! Response: ${JSON.stringify(responseData)}`;
+            } else {
+                const errorData = await response.json();
+                messageDisplay.textContent = `Error updating item: ${errorData.message || response.statusText}`;
             }
-        });
+        } catch (error) {
+            messageDisplay.textContent = `Network error: ${error.message}`;
+            console.error('Error during PUT request:', error);
+        }
+    });
 </script>
