@@ -6,10 +6,11 @@
 sudo dnf install podman -y
 # Install kubectl
 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+chmod +x ./kubectl
 
 # Create database secret:
 POSTGRES_ROOT_PASSWORD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13)
-kubectl create secret generic \
+./kubectl create secret generic \
     --from-literal=password="${POSTGRES_ROOT_PASSWORD}" \
     postgres-password-kube \
     --dry-run=client \
@@ -30,11 +31,6 @@ podman image push localhost:5000/salada:latest --tls-verify=false
 # Create datadir for your postgres
 sudo mkdir -p /data/pg/
 sudo chown -R $USER: /data/
-
-# Create certs
-mkdir certs
-openssl req -nodes -new -x509 -keyout certs/server.key -out certs/server.crt -subj '/C=US/L=NYC/O=Salada/CN=postgres'
-chmod 400 certs/server.{crt,key}
 
 
 podman cp certs/* salada-db:/etc/ssl/certs/

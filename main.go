@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
-	"os"
 	admin_controller "salada/internal/admin/controller"
 	"salada/internal/blog/controller"
 	"salada/internal/blog/repositories"
@@ -15,8 +15,10 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
 
+	"github.com/gin-gonic/autotls"
 	"github.com/gin-gonic/gin"
 	_ "github.com/joho/godotenv/autoload"
+	"golang.org/x/crypto/acme/autocert"
 )
 
 func main() {
@@ -122,6 +124,13 @@ func main() {
 		admin.GET("/", adminController.GetAdminMain, salada_session.SetSessionValueMiddleware("role", "admin"))
 	}
 
-	bindIp := fmt.Sprintf("%s:8080", os.Getenv("BIND_IP"))
-	router.Run(bindIp)
+	//bindIp := fmt.Sprintf("%s:8080", os.Getenv("BIND_IP"))
+	//router.Run(bindIp)
+	m := autocert.Manager{
+		Prompt:     autocert.AcceptTOS,
+		HostPolicy: autocert.HostWhitelist("salada.dev"),
+		Cache:      autocert.DirCache("/var/www/.cache"),
+	}
+
+	log.Fatal(autotls.RunWithManager(router, &m))
 }
