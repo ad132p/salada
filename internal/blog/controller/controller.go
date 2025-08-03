@@ -110,6 +110,36 @@ func (pc *BlogController) UpdatePost(c *gin.Context) {
 	c.JSON(http.StatusOK, post)
 }
 
+// UpdatePost handles PUT /publish/:id
+func (pc *BlogController) PublishPost(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
+		return
+	}
+	post, err := pc.Repo.GetPostByID(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find post"})
+		return
+	}
+	if post == nil { // Check if no record was found
+		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
+		return
+	}
+
+	if post.PublishedAt != nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "Post not found"})
+		return
+	}
+	if err := pc.Repo.PublishPost(post); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update post", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, post)
+}
+
 // UploadImage handles POST /blog
 func (pc *BlogController) UploadImage(c *gin.Context) {
 	image, _ := c.FormFile("image")

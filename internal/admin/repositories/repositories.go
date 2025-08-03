@@ -10,18 +10,17 @@ import (
 	"github.com/google/uuid"
 )
 
-// PostRepository defines methods for interacting with post data.
-type PostRepository struct {
+type AdminRepository struct {
 	db *sql.DB
 }
 
-// NewPostRepository creates a new PostRepository.
-func NewPostRepository(db *sql.DB) *PostRepository {
-	return &PostRepository{db: db}
+// NewAdminRepository creates a new AdminRepository.
+func NewAdminRepository(db *sql.DB) *AdminRepository {
+	return &AdminRepository{db: db}
 }
 
 // CreatePost inserts a new post into the database.
-func (r *PostRepository) CreatePost(post *model.Post) error {
+func (r *AdminRepository) CreatePost(post *model.Post) error {
 	// Set UUID if not already set (e.g., if client provides it)
 	if post.ID == uuid.Nil {
 		post.ID = uuid.New()
@@ -51,7 +50,7 @@ func (r *PostRepository) CreatePost(post *model.Post) error {
 }
 
 // GetPosts fetches all posts from the database.
-func (r *PostRepository) GetPosts() ([]model.Post, error) {
+func (r *AdminRepository) GetPosts() ([]model.Post, error) {
 	query := `SELECT id, title, slug, content, author_id, published_at, created_at, updated_at FROM posts ORDER BY created_at DESC`
 	rows, err := r.db.Query(query)
 	if err != nil {
@@ -103,7 +102,7 @@ func (r *PostRepository) GetPosts() ([]model.Post, error) {
 }
 
 // GetPostBySlug fetches a single post by its slug.
-func (r *PostRepository) GetPostBySlug(slug string) (*model.Post, error) {
+func (r *AdminRepository) GetPostBySlug(slug string) (*model.Post, error) {
 	query := `SELECT id, title, slug, content, author_id, published_at, created_at, updated_at FROM posts WHERE slug = $1`
 	var post model.Post
 	var authorID sql.Null[uuid.UUID]
@@ -142,7 +141,7 @@ func (r *PostRepository) GetPostBySlug(slug string) (*model.Post, error) {
 }
 
 // GetPostByID fetches a single post by its ID.
-func (r *PostRepository) GetPostByID(id uuid.UUID) (*model.Post, error) {
+func (r *AdminRepository) GetPostByID(id uuid.UUID) (*model.Post, error) {
 	query := `SELECT id, title, slug, content, author_id, published_at, created_at, updated_at FROM posts WHERE id = $1`
 	var post model.Post
 	var authorID sql.Null[uuid.UUID]
@@ -181,7 +180,7 @@ func (r *PostRepository) GetPostByID(id uuid.UUID) (*model.Post, error) {
 }
 
 // UpdatePost updates an existing post in the database.
-func (r *PostRepository) UpdatePost(post *model.Post) error {
+func (r *AdminRepository) UpdatePost(post *model.Post) error {
 	post.UpdatedAt = time.Now().UTC() // Update the timestamp
 
 	query := `UPDATE posts SET title = $1, slug = $2, content = $3, published_at = $4, updated_at = $5 WHERE id = $6`
@@ -197,7 +196,7 @@ func (r *PostRepository) UpdatePost(post *model.Post) error {
 }
 
 // DeletePost deletes a post by its ID.
-func (r *PostRepository) DeletePost(id uuid.UUID) error {
+func (r *AdminRepository) DeletePost(id uuid.UUID) error {
 	query := `DELETE FROM posts WHERE id = $1`
 	res, err := r.db.Exec(query, id)
 	if err != nil {

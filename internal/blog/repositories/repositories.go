@@ -20,6 +20,15 @@ func NewPostRepository(db *sql.DB) *PostRepository {
 	return &PostRepository{db: db}
 }
 
+type AdminRepository struct {
+	db *sql.DB
+}
+
+// NewAdminRepository creates a new AdminRepository.
+func NewAdminRepository(db *sql.DB) *AdminRepository {
+	return &AdminRepository{db: db}
+}
+
 // CreatePost inserts a new post into the database.
 func (r *PostRepository) CreatePost(post *model.Post) error {
 	// Set UUID if not already set (e.g., if client provides it)
@@ -31,8 +40,8 @@ func (r *PostRepository) CreatePost(post *model.Post) error {
 	post.UpdatedAt = post.CreatedAt
 	post.Slug = blog.CreateSlug(post.Title)
 
-	query := `INSERT INTO posts (id, title, slug, content, author_id, published_at, created_at, updated_at)
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, created_at, updated_at`
+	query := `INSERT INTO posts (id, title, slug, content, author_id, author_name, published_at, created_at, updated_at)
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, created_at, updated_at`
 
 	// Use QueryRow to get back the generated ID and timestamps (if DB generates)
 	// Or use Exec if you're setting ID in Go and don't need returns
@@ -41,7 +50,8 @@ func (r *PostRepository) CreatePost(post *model.Post) error {
 		post.Title,
 		post.Slug,
 		post.Content,
-		post.AuthorID,    // Will be NULL if *uuid.UUID is nil
+		post.AuthorID,
+		post.AuthorName,  // Will be NULL if *uuid.UUID is nil
 		post.PublishedAt, // Will be NULL if *time.Time is nil
 		post.CreatedAt,
 		post.UpdatedAt,
@@ -71,8 +81,8 @@ func (r *PostRepository) GetPosts() ([]model.Post, error) {
 			&post.Title,
 			&post.Slug,
 			&post.Content,
-			&authorID,
-			&publishedAt,
+			&post.AuthorName,
+			&post.PublishedAt,
 			&post.CreatedAt,
 			&post.UpdatedAt,
 		)
@@ -157,9 +167,8 @@ func (r *PostRepository) GetPublishedPosts() ([]model.Post, error) {
 
 // GetPostBySlug fetches a single post by its slug.
 func (r *PostRepository) GetPostBySlug(slug string) (*model.Post, error) {
-	query := `SELECT id, title, slug, content, author_name, published_at, created_at, updated_at FROM posts WHERE slug = $1`
+	query := `SELECT id, title, slug, content, author_name, published_at, created_at, updated_at FROM posts WHERE slug = $1;`
 	var post model.Post
-	var publishedAt sql.NullTime
 
 	err := r.db.QueryRow(query, slug).Scan(
 		&post.ID,
@@ -167,21 +176,16 @@ func (r *PostRepository) GetPostBySlug(slug string) (*model.Post, error) {
 		&post.Slug,
 		&post.Content,
 		&post.AuthorName,
-		&publishedAt,
+		&post.PublishedAt,
 		&post.CreatedAt,
 		&post.UpdatedAt,
 	)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil // Return nil, nil if no row is found
+			return &post, nil // Return nil, nil if no row is found
 		}
-		return nil, err
-	}
-	if publishedAt.Valid {
-		post.PublishedAt = &publishedAt.Time
-	} else {
-		post.PublishedAt = nil
+		return &post, err
 	}
 
 	return &post, nil
@@ -235,6 +239,15 @@ func (r *PostRepository) UpdatePost(post *model.Post) error {
 		post.Tags,
 		post.ID,
 	)
+	return err
+}
+
+// UpdatePost updates an existing post in the database.
+func (r *PostRepository) PublishPost(post *model.Post) error {
+	post.UpdatedAt = time.Now().UTC() // Update the timestamp
+
+	query := `UPDATE posts SET published_at = NOW()`
+	_, err := r.db.Exec(query)
 	return err
 }
 

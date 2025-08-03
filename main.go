@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	admin_controller "salada/internal/admin/controller"
+	admin_repositories "salada/internal/admin/repositories"
 	"salada/internal/blog/controller"
 	"salada/internal/blog/repositories"
 	"salada/internal/db"
@@ -29,6 +30,7 @@ func main() {
 	// Ensure database connection is closed when main exits
 	defer db.CloseDatabase()
 	router := gin.Default()
+	gin.SetMode(gin.DebugMode)
 
 	router.Use(gin.Logger())
 
@@ -92,6 +94,7 @@ func main() {
 
 	// Initialize repository with the *sql.DB instance
 	postRepo := repositories.NewPostRepository(db.DB)
+	adminRepo := admin_repositories.NewAdminRepository(db.DB)
 	sessionRepo := session_repo.NewSessionRepository(db.DB)
 
 	router.Use(sessions.Sessions("salada_session", sessionRepo.Store))
@@ -99,12 +102,11 @@ func main() {
 	// Initialize blog controller with the repository instance
 	blogController := controller.NewBlogController(postRepo)
 
-	adminController := admin_controller.NewAdminController(postRepo)
+	adminController := admin_controller.NewAdminController(adminRepo)
 
 	// Define routes for blog posts
 	postRoutes := router.Group("/blog/")
 	{
-
 		postRoutes.GET("/", blogController.GetPosts)
 		postRoutes.GET("/:slug", blogController.GetPostBySlug) // Use slug for public access
 		postRoutes.POST("/image", blogController.UploadImage)
@@ -113,6 +115,7 @@ func main() {
 		postRoutes.POST("/", blogController.CreatePost)
 		postRoutes.GET("/new", blogController.GetNewPostForm)
 		postRoutes.GET("/edit/:slug", blogController.EditPostForm)
+		postRoutes.PATCH("/publish/:id", blogController.PublishPost)
 	}
 
 	//Define admin routes
@@ -123,6 +126,7 @@ func main() {
 		admin.GET("/blog", adminController.GetPendingPosts)
 		admin.GET("/blog/:slug", adminController.GetPostBySlug)
 		admin.GET("/", adminController.GetAdminMain, salada_session.SetSessionValueMiddleware("role", "admin"))
+
 	}
 
 	if os.Getenv("MODE") == "dev" {

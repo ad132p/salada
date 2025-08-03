@@ -9,6 +9,7 @@
     <p id="slug">{{ .post.Slug }}</p>
     <a href="/blog/edit/{{.post.Slug}}" class="post_anchor">Edit</a>
     <button type="button" id="deleteButton">Delete</button>
+    <button type="button" id="publishButton">Publish</button>
     {{else}}
     <p>No blog post with this slug.</p>
 
@@ -18,11 +19,12 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const deleteButton = document.getElementById('deleteButton');
-        const editButton = document.getElementById('editButton');
+        const publishButton = document.getElementById('publishButton');
         const messageDisplay = document.getElementById('message');
         const slug = document.getElementById('slug');
         const primaryKey = document.getElementById('primary_key');
         const postsEndpoint = `http://127.0.0.1:8080/blog/${primaryKey.textContent}`;
+        const publishEndpoint = `http://127.0.0.1:8080/blog/publish/${primaryKey.textContent}`;
 
 
         // Function to handle DELETE request
@@ -46,6 +48,30 @@
             } catch (error) {
                 messageDisplay.textContent = `Network error: ${error.message}`;
                 console.error('Error during DELETE request:', error);
+            }
+        });
+
+        // Function to handle PATCH update request
+        publishButton.addEventListener('click', async () => {
+            try {
+                messageDisplay.textContent = 'Publishing item...';
+                const response = await fetch(publishEndpoint, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (response.ok) {
+                    messageDisplay.textContent = `Item ${slug} published successfully!`;
+                    window.location.href = '/admin/blog/'
+                } else {
+                    const errorData = await response.json();
+                    messageDisplay.textContent = `Error publishing item: ${errorData.message || response.statusText}`;
+                }
+            } catch (error) {
+                messageDisplay.textContent = `Network error: ${error.message}`;
+                console.error('Error during PATCH request:', error);
             }
         });
     });

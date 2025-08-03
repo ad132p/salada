@@ -8,10 +8,11 @@
       <article>
         <h2><a href="/admin/blog/{{.Slug}}" class="post_anchor">{{.Title}}</a></h2>
         <p>Published: {{ or .PublishedAt "NO"}} </p>
+        <p>Author: {{.AuthorName}} </p>
       </article>
       {{end}}
   </div>
   {{else}}
-  <p>No blog posts available.</p>
+  <p>{{.error}}</p>
   {{end}}
 </div>

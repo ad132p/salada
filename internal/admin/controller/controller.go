@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"salada/internal/blog/repositories"
+	"salada/internal/admin/repositories"
 
 	"github.com/gin-gonic/gin"
 )
 
 // AdminController handles blog post-related requests.
 type AdminController struct {
-	Repo    *repositories.PostRepository
+	Repo    *repositories.AdminRepository
 	Secrets *gin.H
 }
 
@@ -20,7 +20,7 @@ var secrets = gin.H{
 }
 
 // NewAdminController creates a new AdminController instance.
-func NewAdminController(repo *repositories.PostRepository) *AdminController {
+func NewAdminController(repo *repositories.AdminRepository) *AdminController {
 	return &AdminController{Repo: repo}
 }
 
@@ -35,13 +35,13 @@ func (pc *AdminController) UploadImage(c *gin.Context) {
 	c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
 }
 
-// GetPosts handles GET /blog/
+// GetPosts handles GET /admin/blog/
 func (pc *AdminController) GetPendingPosts(c *gin.Context) {
 	posts, err := pc.Repo.GetPosts()
 	if err != nil {
 		c.HTML(http.StatusServiceUnavailable, "blog_admin.html", gin.H{
 			"title": "Blog Posts - Admin Page",
-			"error": "Failed to retrieve posts",
+			"error": err,
 		})
 		return
 	}
@@ -68,7 +68,7 @@ func (pc *AdminController) GetPostBySlug(c *gin.Context) {
 	slug := c.Param("slug")
 	post, err := pc.Repo.GetPostBySlug(slug)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve post"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
 	if post == nil { // Check if no record was found by the repository
