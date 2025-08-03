@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	admin_controller "salada/internal/admin/controller"
 	"salada/internal/blog/controller"
 	"salada/internal/blog/repositories"
@@ -124,13 +125,17 @@ func main() {
 		admin.GET("/", adminController.GetAdminMain, salada_session.SetSessionValueMiddleware("role", "admin"))
 	}
 
-	//bindIp := fmt.Sprintf("%s:8080", os.Getenv("BIND_IP"))
-	//router.Run(bindIp)
-	m := autocert.Manager{
-		Prompt:     autocert.AcceptTOS,
-		HostPolicy: autocert.HostWhitelist("salada.dev"),
-		Cache:      autocert.DirCache("/var/www/.cache"),
+	if os.Getenv("MODE") == "dev" {
+		bindIp := fmt.Sprintf("%s:8080", os.Getenv("BIND_IP"))
+		router.Run(bindIp)
+	} else {
+		m := autocert.Manager{
+			Prompt:     autocert.AcceptTOS,
+			HostPolicy: autocert.HostWhitelist("salada.dev"),
+			Cache:      autocert.DirCache("/var/www/.cache"),
+		}
+
+		log.Fatal(autotls.RunWithManager(router, &m))
 	}
 
-	log.Fatal(autotls.RunWithManager(router, &m))
 }

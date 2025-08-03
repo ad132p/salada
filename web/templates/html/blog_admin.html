@@ -7,7 +7,7 @@
       {{range .posts}}
       <article>
         <h2><a href="/admin/blog/{{.Slug}}" class="post_anchor">{{.Title}}</a></h2>
-        <p>Published: {{.PublishedAt}}</p>
+        <p>Published: {{ or .PublishedAt "NO"}} </p>
       </article>
       {{end}}
   </div>
