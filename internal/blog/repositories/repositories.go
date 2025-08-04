@@ -114,7 +114,7 @@ func (r *PostRepository) GetPosts() ([]model.Post, error) {
 
 // GetPublishedPosts fetches all published posts from the database.
 func (r *PostRepository) GetPublishedPosts() ([]model.Post, error) {
-	query := `SELECT id, title, slug, content, author_id, published_at, created_at, updated_at FROM posts
+	query := `SELECT id, title, slug, content, author_id, author_name, published_at, created_at, updated_at FROM posts
 	WHERE published_at IS NOT NULL ORDER BY created_at DESC`
 	rows, err := r.db.Query(query)
 	if err != nil {
@@ -127,15 +127,15 @@ func (r *PostRepository) GetPublishedPosts() ([]model.Post, error) {
 		var post model.Post
 		// Scan into post fields. Use sql.Null* types for nullable columns.
 		var authorID sql.Null[uuid.UUID]
-		var publishedAt sql.NullTime
 
 		err := rows.Scan(
 			&post.ID,
 			&post.Title,
 			&post.Slug,
 			&post.Content,
-			&authorID,
-			&publishedAt,
+			&post.AuthorID,
+			&post.AuthorName,
+			&post.PublishedAt,
 			&post.CreatedAt,
 			&post.UpdatedAt,
 		)
@@ -149,12 +149,6 @@ func (r *PostRepository) GetPublishedPosts() ([]model.Post, error) {
 		} else {
 			post.AuthorID = nil
 		}
-		if publishedAt.Valid {
-			post.PublishedAt = &publishedAt.Time
-		} else {
-			post.PublishedAt = nil
-		}
-
 		posts = append(posts, post)
 	}
 

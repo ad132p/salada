@@ -8,6 +8,7 @@ import (
 	"salada/internal/blog"
 
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type AdminRepository struct {
@@ -210,4 +211,24 @@ func (r *AdminRepository) DeletePost(id uuid.UUID) error {
 		return sql.ErrNoRows // Indicate that no row was deleted
 	}
 	return nil
+}
+
+// CreateUser receives an username and returns an id
+func (r *AdminRepository) CreateUser(username string) (int, error) {
+	var newUser model.User
+	// Hash the password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return 0, err
+	}
+	newUser.Password = string(hashedPassword)
+
+	// SQL query to insert the new user
+	query := `INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id`
+	var id int
+	err = r.db.QueryRow(query, username, newUser.Password).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
 }

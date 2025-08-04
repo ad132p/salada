@@ -123,6 +123,7 @@ func main() {
 		"foo": "bar",
 	}))
 	{
+		admin.POST("/user", adminController.Register)
 		admin.GET("/blog", adminController.GetPendingPosts)
 		admin.GET("/blog/:slug", adminController.GetPostBySlug)
 		admin.GET("/", adminController.GetAdminMain, salada_session.SetSessionValueMiddleware("role", "admin"))

@@ -6,9 +6,14 @@ import (
 	"github.com/google/uuid"
 )
 
-// Post represents a blog post.
-// Fields are mapped directly to database columns.
-// Pointers are used for nullable fields in the database.
+type User struct {
+	ID        int
+	Username  string
+	Email     string
+	Password  string
+	CreatedAt time.Time
+}
+
 type Post struct {
 	ID          uuid.UUID  `json:"id"`
 	Title       string     `json:"title"`
@@ -19,4 +24,5 @@ type Post struct {
 	PublishedAt *time.Time `json:"published_at,omitempty"` // Nullable in DB
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`
+	Tags        string
 }

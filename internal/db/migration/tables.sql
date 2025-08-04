@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(255) UNIQUE NOT NULL,
     password TEXT NOT NULL, -- Storing hashed password
-    role VARCHAR(50) NOT NULL DEFAULT 'user',
+    role VARCHAR(50) NOT NULL DEFAULT 'anon',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

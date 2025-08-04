@@ -21,10 +21,3 @@ type Post struct {
 	UpdatedAt   time.Time  `json:"updated_at"`
 	Tags        string
 }
-
-type User struct {
-	ID       uint
-	Username string
-	Password string // Hashed password
-	Role     string
-}

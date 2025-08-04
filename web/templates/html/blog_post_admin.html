@@ -3,10 +3,11 @@
     <h1>{{.title}}</h1>
     {{if .post}}
     <div class="box">
+        <h2>Content</h2>
         <p>{{ .post.Content }}</p>
     </div>
-    <p id="primary_key">{{ .post.ID }}</p>
-    <p id="slug">{{ .post.Slug }}</p>
+    <p id="primary_key">PK: {{ .post.ID }}</p>
+    <p id="slug">Slug {{ .post.Slug }}</p>
     <a href="/blog/edit/{{.post.Slug}}" class="post_anchor">Edit</a>
     <button type="button" id="deleteButton">Delete</button>
     <button type="button" id="publishButton">Publish</button>
