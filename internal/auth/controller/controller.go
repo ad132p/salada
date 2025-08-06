@@ -43,16 +43,20 @@ func (pc *AuthController) Login(c *gin.Context) {
 	if err != nil {
 		// Consolidate all login-related errors into a single "Invalid credentials" message
 		// to prevent user enumeration attacks.
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		c.HTML(http.StatusUnauthorized, "login.html", gin.H{
+			"error": "Username not registered",
+		})
 		return
 	}
 
 	// Compare the provided password with the stored hash
 	if err := bcrypt.CompareHashAndPassword([]byte(password), []byte(loginInput.Password)); err != nil {
 		// Return the same generic error for password mismatch as for user not found
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "Invalid credentials",
+		})
 		return
 	}
-	c.Redirect(http.StatusFound, "/")
+	c.Redirect(http.StatusFound, "/blog/")
 
 }
