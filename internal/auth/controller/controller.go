@@ -21,13 +21,9 @@ func NewAuthController(repo *repositories.AdminRepository) *AuthController {
 
 func (pc *AuthController) Register(c *gin.Context) {
 	var newUser model.User
-	if err := c.ShouldBindJSON(&newUser); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
-		return
-	}
-
-	username := c.Param("username")
-	id, err := pc.Repo.CreateUser(username)
+	newUser.Username = c.PostForm("username")
+	newUser.Password = c.PostForm("password")
+	id, err := pc.Repo.CreateUser(newUser)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
@@ -57,5 +53,6 @@ func (pc *AuthController) Login(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
+	c.Redirect(http.StatusFound, "/")
 
 }

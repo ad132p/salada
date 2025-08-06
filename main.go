@@ -77,6 +77,12 @@ func main() {
 		})
 	})
 
+	router.GET("/register", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "register.html", gin.H{
+			"title": "Register",
+		})
+	})
+
 	router.GET("/contact", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "contact.html", gin.H{
 			"title": "Contact",
@@ -122,7 +128,7 @@ func main() {
 	//Define auth routes:
 	auth := router.Group("/auth")
 	{
-		auth.POST("/user/:username", authController.Register)
+		auth.POST("/register/", authController.Register)
 		auth.POST("/login", authController.Login)
 	}
 
