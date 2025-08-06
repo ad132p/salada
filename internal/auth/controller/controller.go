@@ -38,15 +38,12 @@ func (pc *AuthController) Register(c *gin.Context) {
 
 func (pc *AuthController) Login(c *gin.Context) {
 	var loginInput model.LoginInput
-	if err := c.ShouldBindJSON(&loginInput); err != nil {
-		// Provide more detailed error message for better debugging
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
-		return
-	}
+	loginInput.Username = c.PostForm("username")
+	loginInput.Password = c.PostForm("password")
 
 	// Best Practice: The username/email should come from the JSON body,
 	// not a URL parameter. This is what the user provides in the form.
-	user, err := pc.Repo.GetUserCredentials(loginInput.Username)
+	password, err := pc.Repo.GetUserPassword(loginInput.Username)
 	if err != nil {
 		// Consolidate all login-related errors into a single "Invalid credentials" message
 		// to prevent user enumeration attacks.
@@ -55,7 +52,7 @@ func (pc *AuthController) Login(c *gin.Context) {
 	}
 
 	// Compare the provided password with the stored hash
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginInput.Password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(password), []byte(loginInput.Password)); err != nil {
 		// Return the same generic error for password mismatch as for user not found
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return

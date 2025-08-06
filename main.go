@@ -123,7 +123,7 @@ func main() {
 	auth := router.Group("/auth")
 	{
 		auth.POST("/user/:username", authController.Register)
-		auth.POST("/login/:username", authController.Login)
+		auth.POST("/login", authController.Login)
 	}
 
 	//Define admin routes

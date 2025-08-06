@@ -3,7 +3,6 @@ package model
 import (
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
@@ -30,10 +29,5 @@ type Post struct {
 
 type LoginInput struct {
 	Username string `json:"username"`
-	Password []byte
-}
-
-type Claims struct {
-	UserID int `json:"user_id"`
-	jwt.RegisteredClaims
+	Password string `json:"password"`
 }
