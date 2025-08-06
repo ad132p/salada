@@ -52,7 +52,7 @@ func (pc *AuthController) Login(c *gin.Context) {
 	// Compare the provided password with the stored hash
 	if err := bcrypt.CompareHashAndPassword([]byte(password), []byte(loginInput.Password)); err != nil {
 		// Return the same generic error for password mismatch as for user not found
-		c.JSON(http.StatusUnauthorized, gin.H{
+		c.HTML(http.StatusUnauthorized, "login.html", gin.H{
 			"error": "Invalid credentials",
 		})
 		return
