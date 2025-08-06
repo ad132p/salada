@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"salada/internal/admin/model"
 	"salada/internal/admin/repositories"
 
 	"github.com/gin-gonic/gin"
@@ -76,21 +75,4 @@ func (pc *AdminController) GetPostBySlug(c *gin.Context) {
 		"title": post.Title,
 		"post":  post,
 	})
-}
-
-func (pc *AdminController) Register(c *gin.Context) {
-	var newUser model.User
-	if err := c.ShouldBindJSON(&newUser); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
-		return
-	}
-
-	username := c.Param("username")
-	id, err := pc.Repo.CreateUser(username)
-
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
-		return
-	}
-	c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully", "user_id": id})
 }

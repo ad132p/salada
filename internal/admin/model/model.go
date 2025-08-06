@@ -3,6 +3,7 @@ package model
 import (
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
@@ -25,4 +26,14 @@ type Post struct {
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`
 	Tags        string
+}
+
+type LoginInput struct {
+	Username string `json:"username"`
+	Password []byte
+}
+
+type Claims struct {
+	UserID int `json:"user_id"`
+	jwt.RegisteredClaims
 }

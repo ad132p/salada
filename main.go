@@ -7,6 +7,7 @@ import (
 	"os"
 	admin_controller "salada/internal/admin/controller"
 	admin_repositories "salada/internal/admin/repositories"
+	auth_controller "salada/internal/auth/controller"
 	"salada/internal/blog/controller"
 	"salada/internal/blog/repositories"
 	"salada/internal/db"
@@ -101,7 +102,7 @@ func main() {
 
 	// Initialize blog controller with the repository instance
 	blogController := controller.NewBlogController(postRepo)
-
+	authController := auth_controller.NewAuthController(adminRepo)
 	adminController := admin_controller.NewAdminController(adminRepo)
 
 	// Define routes for blog posts
@@ -118,12 +119,19 @@ func main() {
 		postRoutes.PATCH("/publish/:id", blogController.PublishPost)
 	}
 
+	//Define auth routes:
+	auth := router.Group("/auth")
+	{
+		auth.POST("/user/:username", authController.Register)
+		auth.POST("/login/:username", authController.Login)
+	}
+
 	//Define admin routes
 	admin := router.Group("/admin", gin.BasicAuth(gin.Accounts{
 		"foo": "bar",
 	}))
 	{
-		admin.POST("/user", adminController.Register)
+
 		admin.GET("/blog", adminController.GetPendingPosts)
 		admin.GET("/blog/:slug", adminController.GetPostBySlug)
 		admin.GET("/", adminController.GetAdminMain, salada_session.SetSessionValueMiddleware("role", "admin"))
