@@ -1,10 +1,11 @@
 package controller
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 	"salada/internal/admin/model"
 	"salada/internal/admin/repositories"
-	salada_session "salada/internal/sessions"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -25,13 +26,17 @@ func (pc *AuthController) Register(c *gin.Context) {
 	var newUser model.User
 	newUser.Username = c.PostForm("username")
 	newUser.Password = c.PostForm("password")
+	newUser.Email = c.PostForm("email")
+	fmt.Println(newUser)
 	id, err := pc.Repo.CreateUser(newUser)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully", "user_id": id})
+
+	log.Println("User created: ", id)
+	c.Redirect(http.StatusFound, "/login/")
 }
 
 func (pc *AuthController) Login(c *gin.Context) {
@@ -60,13 +65,16 @@ func (pc *AuthController) Login(c *gin.Context) {
 		})
 		return
 	}
-	salada_session.SetSessionValueMiddleware("username", loginInput.Username)
+	session := sessions.Default(c)
+	session.Set("username", loginInput.Username)
+	session.Save()
 	c.Redirect(http.StatusFound, "/blog/")
 }
 
 func (pc *AuthController) Logout(c *gin.Context) {
 	session := sessions.Default(c)
 	session.Clear()
+	session.Options(sessions.Options{MaxAge: -1})
 	session.Save()
 	c.JSON(200, gin.H{"message": "Logged out successfully"})
 }

@@ -222,9 +222,9 @@ func (r *AdminRepository) CreateUser(user model.User) (int, error) {
 	}
 
 	// SQL query to insert the new user
-	query := `INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id`
+	query := `INSERT INTO users (username, password, email) VALUES ($1, $2, $3) RETURNING id`
 	var id int
-	err = r.db.QueryRow(query, user.Username, string(hashedPassword)).Scan(&id)
+	err = r.db.QueryRow(query, user.Username, string(hashedPassword), user.Email).Scan(&id)
 	if err != nil {
 		return 0, err
 	}

@@ -156,6 +156,7 @@ func (pc *BlogController) UploadImage(c *gin.Context) {
 func (pc *BlogController) GetPosts(c *gin.Context) {
 	session := sessions.Default(c)
 	username := session.Get("username")
+
 	posts, err := pc.Repo.GetPublishedPosts()
 	if err != nil {
 		c.HTML(http.StatusServiceUnavailable, "blog.html", gin.H{
