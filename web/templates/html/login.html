@@ -1,7 +1,7 @@
 {{ template "base" . }}
 <div class="app">
   <div class="container">
-    <form class="app" id="login" method="post" action="/auth/login" enctype="multipart/form-data">
+    <form class="app" id="login" method="post" action="/login" enctype="multipart/form-data">
       <label for="username">Username</label>
       <input type="text" id="username" name="username" required>
 
@@ -22,4 +22,8 @@
     <p id="length" class="invalid">Minimum <b>8 characters</b></p>
   </div>
   {{.error}}
+  <p>
+    <a href="/register">Register</a>
+  </p>
+
 </div>

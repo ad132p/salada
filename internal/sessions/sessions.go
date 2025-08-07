@@ -32,16 +32,19 @@ func AdminAuthRequired() gin.HandlerFunc {
 	}
 }
 
-// AuthRequired is a middleware to check if a user is authenticated.
-func AuthRequired(c *gin.Context) {
-	session := sessions.Default(c)
-	username := session.Get("username")
-	if username == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		c.Abort()
-		return
+func AuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		session := sessions.Default(c)
+		auth := session.Get("authenticated")
+
+		if auth == nil || auth.(bool) != true {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Please log in first"})
+			c.Abort()
+			return
+		}
+
+		c.Next()
 	}
-	c.Next()
 }
 
 func SetSessionValueMiddleware(key string, value any) gin.HandlerFunc {

@@ -10,6 +10,7 @@ import (
 
 	"database/sql"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -153,6 +154,8 @@ func (pc *BlogController) UploadImage(c *gin.Context) {
 
 // GetPosts handles GET /blog/
 func (pc *BlogController) GetPosts(c *gin.Context) {
+	session := sessions.Default(c)
+	username := session.Get("username")
 	posts, err := pc.Repo.GetPublishedPosts()
 	if err != nil {
 		c.HTML(http.StatusServiceUnavailable, "blog.html", gin.H{
@@ -162,8 +165,9 @@ func (pc *BlogController) GetPosts(c *gin.Context) {
 		return
 	}
 	c.HTML(http.StatusOK, "blog.html", gin.H{
-		"title": "Blog Posts",
-		"posts": posts,
+		"title":    "Blog Posts",
+		"posts":    posts,
+		"username": username,
 	})
 }
 

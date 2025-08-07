@@ -126,11 +126,8 @@ func main() {
 	}
 
 	//Define auth routes:
-	auth := router.Group("/auth")
-	{
-		auth.POST("/register/", authController.Register)
-		auth.POST("/login", authController.Login)
-	}
+	router.POST("/register/", authController.Register)
+	router.POST("/login", authController.Login)
 
 	//Define admin routes
 	admin := router.Group("/admin", gin.BasicAuth(gin.Accounts{

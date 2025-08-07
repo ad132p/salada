@@ -4,7 +4,9 @@ import (
 	"net/http"
 	"salada/internal/admin/model"
 	"salada/internal/admin/repositories"
+	salada_session "salada/internal/sessions"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -33,6 +35,7 @@ func (pc *AuthController) Register(c *gin.Context) {
 }
 
 func (pc *AuthController) Login(c *gin.Context) {
+
 	var loginInput model.LoginInput
 	loginInput.Username = c.PostForm("username")
 	loginInput.Password = c.PostForm("password")
@@ -57,6 +60,13 @@ func (pc *AuthController) Login(c *gin.Context) {
 		})
 		return
 	}
+	salada_session.SetSessionValueMiddleware("username", loginInput.Username)
 	c.Redirect(http.StatusFound, "/blog/")
+}
 
+func (pc *AuthController) Logout(c *gin.Context) {
+	session := sessions.Default(c)
+	session.Clear()
+	session.Save()
+	c.JSON(200, gin.H{"message": "Logged out successfully"})
 }

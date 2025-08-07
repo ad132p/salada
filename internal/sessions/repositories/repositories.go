@@ -13,7 +13,6 @@ type SessionRepository struct {
 	Store postgres.Store
 }
 
-// NewPostRepository creates a new PostRepository.
 func NewSessionRepository(db *sql.DB) *SessionRepository {
 	store, err := postgres.NewStore(db, []byte(os.Getenv("SESSION_SECRET")))
 	if err != nil {
