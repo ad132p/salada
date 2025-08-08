@@ -34,7 +34,7 @@
         logoutButton.addEventListener('click', async () => {
             try {
                 const response = await fetch(logoutEndpoint, {
-                    method: 'POST',
+                    method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
                     },

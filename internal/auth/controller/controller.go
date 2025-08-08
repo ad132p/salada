@@ -73,8 +73,8 @@ func (pc *AuthController) Login(c *gin.Context) {
 
 func (pc *AuthController) Logout(c *gin.Context) {
 	session := sessions.Default(c)
-	session.Clear()
 	session.Options(sessions.Options{MaxAge: -1})
+	session.Clear()
 	session.Save()
 	c.JSON(200, gin.H{"message": "Logged out successfully"})
 }
