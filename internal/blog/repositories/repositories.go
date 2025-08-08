@@ -40,8 +40,8 @@ func (r *PostRepository) CreatePost(post *model.Post) error {
 	post.UpdatedAt = post.CreatedAt
 	post.Slug = blog.CreateSlug(post.Title)
 
-	query := `INSERT INTO posts (id, title, slug, content, author_id, author_name, published_at, created_at, updated_at)
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, created_at, updated_at`
+	query := `INSERT INTO posts (id, title, slug, content, author_id, author_name, published_at, created_at, updated_at, tags, category)
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, created_at, updated_at`
 
 	// Use QueryRow to get back the generated ID and timestamps (if DB generates)
 	// Or use Exec if you're setting ID in Go and don't need returns
@@ -55,6 +55,8 @@ func (r *PostRepository) CreatePost(post *model.Post) error {
 		post.PublishedAt, // Will be NULL if *time.Time is nil
 		post.CreatedAt,
 		post.UpdatedAt,
+		post.Tags,
+		post.Category,
 	).Scan(&post.ID, &post.CreatedAt, &post.UpdatedAt) // Scan the returned values
 
 	return err

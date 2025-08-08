@@ -32,12 +32,14 @@ func (pc *BlogController) CreatePost(c *gin.Context) {
 	content := c.PostForm("content")
 	authorName := c.PostForm("author")
 	tags := c.PostForm("tags")
+	category := c.PostForm("category")
 
 	post := model.Post{
 		Title:      title,
 		Content:    content,
 		AuthorName: authorName,
 		Tags:       tags,
+		Category:   category,
 		// PublishedAt will be set on publish, or remain nil
 	}
 
