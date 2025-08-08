@@ -10,5 +10,6 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -o salada
 
 EXPOSE 8080
+EXPOSE 443
 
 CMD [ "./salada" ]

@@ -13,7 +13,7 @@ Environment=POSTGRES_HOST=salada-db
 HealthcheckIntervalSec=5
 HealthcheckTimeoutSec=3
 HealthcheckRetries=3
-HealthcheckCmd=curl --fail http://localhost:8080/
+HealthcheckCmd=curl --fail https://salada.dev/
 
 # Optional: Resource limits (adjust as needed)
 # MemoryLimit=128M
