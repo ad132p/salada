@@ -21,7 +21,7 @@ spec:
   - name: salada
     image: localhost:5000/salada:latest
     env:
-    - name: POSTGRES_PASSWORD_OPTIONAL
+    - name: POSTGRES_PASSWORD
       valueFrom:
         secretKeyRef:
           name: postgres-password-kube

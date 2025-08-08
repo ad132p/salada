@@ -18,4 +18,4 @@ HealthcheckCmd=curl --fail http://localhost:8080/
 # Optional: Resource limits (adjust as needed)
 # MemoryLimit=128M
 # CPULimit=0.2 # 20% of one CPU core
-Secret=postgres-password-kube,type=env,target=POSTGRES_PASSWORD_OPTIONAL
+Secret=postgres-password-kube,type=env,target=POSTGRES_PASSWORD
