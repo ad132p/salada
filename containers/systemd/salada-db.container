@@ -8,4 +8,4 @@ Image=docker.io/library/postgres:latest
 ContainerName=salada-db
 Network=salada.network
 Volume=salada-db.volume:/var/lib/postgresql/data
-Secret=postgres-password-kube,type=env,target=POSTGRES_PASSWORD
+Secret=postgres-password-kube,type=env,target=POSTGRES_PASSWORD_OPTIONAL
