@@ -71,7 +71,7 @@ func (pc *AdminController) GetPostBySlug(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
 		return
 	}
-	c.HTML(http.StatusOK, "blog_post_admin.html", gin.H{
+	c.HTML(http.StatusOK, "admin_blog_post.html", gin.H{
 		"title": post.Title,
 		"post":  post,
 	})

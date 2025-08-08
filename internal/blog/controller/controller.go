@@ -173,7 +173,7 @@ func (pc *BlogController) GetPosts(c *gin.Context) {
 }
 
 func (pc *BlogController) GetNewPostForm(c *gin.Context) {
-	c.HTML(http.StatusOK, "post_form.html", gin.H{
+	c.HTML(http.StatusOK, "blog_new.html", gin.H{
 		"title": "New Blog Entry",
 	})
 }

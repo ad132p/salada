@@ -7,23 +7,23 @@
             <legend>Post Details</legend>
 
             <div class="form-group">
-                <label for="author_id">Author:</label>
-                <input type="text" name="author" id="author" required aria-describedby="author-hint">
-                <small id="author-hint">Enter your author name or ID.</small>
-            </div>
-
-            <div class="form-group">
                 <label for="title">Title:</label>
                 <input type="text" name="title" id="title" required placeholder="Enter your post title here">
-            </div>
 
-            <div class="form-group">
-                <label for="category">Category (Optional):</label>
-                <input type="text" name="category" id="category" placeholder="e.g., Tech, Lifestyle, Travel">
-            </div>
+                <label for="category_select">Category (Optional):</label>
+                <select name="category" id="category_select">
+                    <option value="">--Please choose an option--</option>
+                    <option value="">Football</option>
+                    <option value="cs">Computer Science</option>
+                    <option value="politics">Politics</option>
+                    <option value="plants">Plants</option>
+                    <option value="cine">Cinema</option>
+                    <option value="lit">Literature</option>
+                    <option value="random">Random</option>
+                </select>
 
-            <div class="form-group">
-                <label for="tags">Tags (Comma-separated, Optional):</label>
+
+                <label for="tags">Tags (Comma,Space-separated, Optional):</label>
                 <input type="text" name="tags" id="tags" placeholder="e.g., html, css, javascript">
             </div>
 

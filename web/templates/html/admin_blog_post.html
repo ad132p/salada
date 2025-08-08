@@ -6,7 +6,7 @@
         <h2>Content</h2>
         <p>{{ .post.Content }}</p>
     </div>
-    <p id="primary_key">PK: {{ .post.ID }}</p>
+    <p id="primary_key">{{ .post.ID }}</p>
     <p id="slug">Slug {{ .post.Slug }}</p>
     <a href="/blog/edit/{{.post.Slug}}" class="post_anchor">Edit</a>
     <button type="button" id="deleteButton">Delete</button>
@@ -65,7 +65,7 @@
 
                 if (response.ok) {
                     messageDisplay.textContent = `Item ${slug} published successfully!`;
-                    window.location.href = '/admin/blog/'
+                    window.location.href = '/blog/'
                 } else {
                     const errorData = await response.json();
                     messageDisplay.textContent = `Error publishing item: ${errorData.message || response.statusText}`;

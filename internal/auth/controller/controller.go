@@ -67,6 +67,7 @@ func (pc *AuthController) Login(c *gin.Context) {
 	}
 	session := sessions.Default(c)
 	session.Set("username", loginInput.Username)
+	session.Options(sessions.Options{MaxAge: 600})
 	session.Save()
 	c.Redirect(http.StatusFound, "/blog/")
 }
