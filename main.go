@@ -142,6 +142,7 @@ func main() {
 
 	}
 
+	// 'dev' mode run on :8080, and prod deploys salada.dev
 	if os.Getenv("MODE") == "dev" {
 		bindIp := fmt.Sprintf("%s:8080", os.Getenv("BIND_IP"))
 		router.Run(bindIp)

@@ -1,12 +1,9 @@
 {{ template "base" . }}
 <div class="app" id="blog">
   <h1>{{.title}}</h1>
-  {{ if .username }}
-
 
   {{if .posts}}
   <div class="box">
-
     {{range .posts}}
     <article>
       <h2><a href="/blog/{{.Slug}}" class="post_anchor">{{.Title}}</a></h2>
@@ -17,40 +14,19 @@
   {{else}}
   <p>No blog posts available.</p>
   {{end}}
-  <a href="/blog/new/">New blog</a>
+
+
+  {{ if .username }}
   <p>Hello, {{.username}}</p>
-  <button type="button" id="logoutButton">Logout</button>
+  <a href="/blog/new/">New blog</a>
+
+  <form action="/logout" method="get">
+    <input type="hidden" id="username" name="username" value="{{.username}}" />
+    <input type="submit" value="Logout!" />
+  </form>
   {{ else }}
   <p>Hello, anon</p1>
+    <a href="/login">Login</a>
     {{ end }}
   <p id="message">Go get it.</p>
 </div>
-
-
-
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const logoutButton = document.getElementById('logoutButton');
-    const logoutEndpoint = `http://127.0.0.1:8080/logout`;
-    const messageDisplay = document.getElementById('message');
-    // Function to handle POST update request
-    logoutButton.addEventListener('click', async () => {
-      try {
-        const response = await fetch(logoutEndpoint, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          messageDisplay.textContent = `Error publishing item: ${errorData.message || response.statusText}`;
-        }
-      } catch (error) {
-        messageDisplay.textContent = `Network error: ${error.message}`;
-        console.error('Error during GET request:', error);
-      }
-    });
-  });
-</script>
