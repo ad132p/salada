@@ -1,32 +1,28 @@
 {{ template "base" . }}
 <div class="app" id="blog">
+  {{ if .username }}
+  <p>Hello, {{.username}}</p>
+  <a href="/blog/new/">New blog</a>
+  <form action="/logout" method="get">
+    <input type="hidden" id="username" name="username" value="{{.username}}" />
+    <input type="submit" value="Logout!" />
+  </form>
+  {{ else }}
+  <p>Hello, anon!</p1>
+    <a href="/login">Login</a>
+    {{ end }}
   <h1>{{.title}}</h1>
-
   {{if .posts}}
   <div class="box">
     {{range .posts}}
     <article>
       <h2><a href="/blog/{{.Slug}}" class="post_anchor">{{.Title}}</a></h2>
       <p>Published: {{.PublishedAt}}</p>
+      <p>Author: {{.AuthorName}}</p>
     </article>
     {{end}}
   </div>
   {{else}}
   <p>No blog posts available.</p>
   {{end}}
-
-
-  {{ if .username }}
-  <p>Hello, {{.username}}</p>
-  <a href="/blog/new/">New blog</a>
-
-  <form action="/logout" method="get">
-    <input type="hidden" id="username" name="username" value="{{.username}}" />
-    <input type="submit" value="Logout!" />
-  </form>
-  {{ else }}
-  <p>Hello, anon</p1>
-    <a href="/login">Login</a>
-    {{ end }}
-  <p id="message">Go get it.</p>
 </div>

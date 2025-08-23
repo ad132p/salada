@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"salada/internal/admin/repositories"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -42,16 +43,19 @@ func (pc *AdminController) GetPendingPosts(c *gin.Context) {
 		return
 	}
 	c.HTML(http.StatusOK, "blog_admin.html", gin.H{
-		"title": "Blog Posts - Admin Page         ",
+		"title": "Blog Posts - Admin Page",
 		"posts": posts,
 	})
 }
 
 func (pc *AdminController) GetAdminMain(c *gin.Context) {
 	// get user, it was set by the BasicAuth middleware
-	user := c.MustGet(gin.AuthUserKey).(string)
-	if true {
-		c.JSON(http.StatusOK, gin.H{"user": user})
+	session := sessions.Default(c)
+	username := session.Get("username")
+	if username != "epaminondas" {
+		c.HTML(http.StatusOK, "denied.html", gin.H{
+			"title": "Access denied",
+		})
 	} else {
 		c.HTML(http.StatusOK, "admin.html", gin.H{
 			"title": "New Blog Entry",

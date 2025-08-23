@@ -95,7 +95,7 @@ h1 {
 
 /* Form Styles (General Input Fields) */
 input {
-    width: 100%;
+    width: 25%;
     padding: 12px;
     border: 1px solid #ccc;
     border-radius: 4px;

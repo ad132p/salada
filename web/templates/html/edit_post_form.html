@@ -7,12 +7,6 @@
             <legend>Post Details</legend>
             <p id="primary_key">{{ .post.ID }}</p>
             <p id="slug">{{ .post.Slug }}</p>
-            <div class="form-group">
-                <label for="author_name">Author Name:</label>
-                <input type="text" name="author_name" id="author_name" value="{{.post.AuthorName}}" required
-                    aria-describedby="author-hint">
-                <small id="author-hint">Enter your author name or ID.</small>
-            </div>
 
             <div class="form-group">
                 <label for="title">Title:</label>
