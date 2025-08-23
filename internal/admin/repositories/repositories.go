@@ -52,7 +52,7 @@ func (r *AdminRepository) CreatePost(post *model.Post) error {
 
 // GetPosts fetches all posts from the database.
 func (r *AdminRepository) GetPosts() ([]model.Post, error) {
-	query := `SELECT id, title, slug, content, author_id, published_at, created_at, updated_at FROM posts ORDER BY created_at DESC`
+	query := `SELECT id, title, slug, content, author_id, author_name, published_at, created_at, updated_at FROM posts ORDER BY created_at DESC`
 	rows, err := r.db.Query(query)
 	if err != nil {
 		return nil, err
@@ -72,6 +72,7 @@ func (r *AdminRepository) GetPosts() ([]model.Post, error) {
 			&post.Slug,
 			&post.Content,
 			&authorID,
+			&post.AuthorName,
 			&publishedAt,
 			&post.CreatedAt,
 			&post.UpdatedAt,

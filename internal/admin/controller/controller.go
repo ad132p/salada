@@ -49,10 +49,9 @@ func (pc *AdminController) GetPendingPosts(c *gin.Context) {
 }
 
 func (pc *AdminController) GetAdminMain(c *gin.Context) {
-	// get user, it was set by the BasicAuth middleware
 	session := sessions.Default(c)
-	username := session.Get("username")
-	if username != "epaminondas" {
+	role := session.Get("role")
+	if role != "admin" {
 		c.HTML(http.StatusOK, "denied.html", gin.H{
 			"title": "Access denied",
 		})

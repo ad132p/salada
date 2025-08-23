@@ -25,24 +25,34 @@ func NewBlogController(repo *repositories.PostRepository) *BlogController {
 	return &BlogController{Repo: repo}
 }
 
-// CreatePost handles POST /blog
 func (pc *BlogController) CreatePost(c *gin.Context) {
+
+	session := sessions.Default(c)
+
+	// Use the "comma, ok" idiom for safe type assertion
+	authorName, ok := session.Get("username").(string)
+	if !ok {
+		// Handle the case where the username is not in the session or not a string
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User is not logged in."})
+		c.Abort() // Abort the request chain
+		return
+	}
 
 	title := c.PostForm("title")
 	content := c.PostForm("content")
-	authorName := c.PostForm("author")
 	tags := c.PostForm("tags")
 	category := c.PostForm("category")
 
+	// The rest of your code remains the same...
 	post := model.Post{
 		Title:      title,
 		Content:    content,
-		AuthorName: authorName,
+		AuthorName: authorName, // Use the safely retrieved variable
 		Tags:       tags,
 		Category:   category,
-		// PublishedAt will be set on publish, or remain nil
 	}
 
+	// Bind and save the post...
 	if err := c.ShouldBind(&post); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -113,7 +123,6 @@ func (pc *BlogController) UpdatePost(c *gin.Context) {
 	c.JSON(http.StatusOK, post)
 }
 
-// UpdatePost handles PUT /publish/:id
 func (pc *BlogController) PublishPost(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
