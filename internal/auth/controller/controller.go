@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"salada/internal/admin/model"
 	"salada/internal/admin/repositories"
 
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -40,7 +40,6 @@ func (pc *AuthController) Register(c *gin.Context) {
 }
 
 func (pc *AuthController) Login(c *gin.Context) {
-
 	var loginInput model.LoginInput
 	loginInput.Username = c.PostForm("username")
 	loginInput.Password = c.PostForm("password")
@@ -65,17 +64,14 @@ func (pc *AuthController) Login(c *gin.Context) {
 		})
 		return
 	}
-	session := sessions.Default(c)
-	session.Set("username", loginInput.Username)
-	session.Options(sessions.Options{MaxAge: 600})
-	session.Save()
+
+	if loginInput.Username == os.Getenv("SUPERUSER") {
+
+	}
+
 	c.Redirect(http.StatusFound, "/blog/")
 }
 
 func (pc *AuthController) Logout(c *gin.Context) {
-	session := sessions.Default(c)
-	session.Options(sessions.Options{MaxAge: -1})
-	session.Clear()
-	session.Save()
 	c.Redirect(http.StatusFound, "/blog/")
 }

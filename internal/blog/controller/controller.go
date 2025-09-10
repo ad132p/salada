@@ -1,16 +1,14 @@
 package controller
 
 import (
-	"fmt"
-	"log"
 	"net/http"
+	"path/filepath"
 	"salada/internal/blog/model"
 	"salada/internal/blog/repositories"
 	"time"
 
 	"database/sql"
 
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -27,17 +25,6 @@ func NewBlogController(repo *repositories.PostRepository) *BlogController {
 
 func (pc *BlogController) CreatePost(c *gin.Context) {
 
-	session := sessions.Default(c)
-
-	// Use the "comma, ok" idiom for safe type assertion
-	authorName, ok := session.Get("username").(string)
-	if !ok {
-		// Handle the case where the username is not in the session or not a string
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User is not logged in."})
-		c.Abort() // Abort the request chain
-		return
-	}
-
 	title := c.PostForm("title")
 	content := c.PostForm("content")
 	tags := c.PostForm("tags")
@@ -47,7 +34,7 @@ func (pc *BlogController) CreatePost(c *gin.Context) {
 	post := model.Post{
 		Title:      title,
 		Content:    content,
-		AuthorName: authorName, // Use the safely retrieved variable
+		AuthorName: "epaminondas", // Use the safely retrieved variable
 		Tags:       tags,
 		Category:   category,
 	}
@@ -152,21 +139,33 @@ func (pc *BlogController) PublishPost(c *gin.Context) {
 	c.JSON(http.StatusOK, post)
 }
 
-// UploadImage handles POST /blog
 func (pc *BlogController) UploadImage(c *gin.Context) {
-	image, _ := c.FormFile("image")
-	log.Println(image.Filename)
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to get file"})
+		return
+	}
 
-	// Upload the file to specific dst.
-	c.SaveUploadedFile(image, "./"+image.Filename)
+	// 1. Save the file to a public directory
+	// For example, into a 'uploads' folder in your project root
+	filename := filepath.Base(file.Filename)
+	savePath := filepath.Join("uploads", filename)
 
-	c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", image.Filename))
+	if err := c.SaveUploadedFile(file, savePath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+		return
+	}
+
+	// 2. IMPORTANT: Construct the public URL
+	// This is the URL that the browser will use to access the image
+	publicURL := "/uploads/" + filename // Or a full URL if hosted elsewhere
+
+	// 3. Return the JSON response with the 'url' field
+	c.JSON(http.StatusOK, gin.H{"url": publicURL})
 }
 
 // GetPosts handles GET /blog/
 func (pc *BlogController) GetPosts(c *gin.Context) {
-	session := sessions.Default(c)
-	username := session.Get("username")
 
 	posts, err := pc.Repo.GetPublishedPosts()
 	if err != nil {
@@ -177,9 +176,8 @@ func (pc *BlogController) GetPosts(c *gin.Context) {
 		return
 	}
 	c.HTML(http.StatusOK, "blog.html", gin.H{
-		"title":    "Blog Posts",
-		"posts":    posts,
-		"username": username,
+		"title": "Blog Posts",
+		"posts": posts,
 	})
 }
 

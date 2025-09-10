@@ -1,0 +1,28 @@
+package server
+
+import (
+	"fmt"
+	"log"
+	"os"
+
+	"github.com/gin-gonic/autotls"
+	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/acme/autocert"
+)
+
+func Run(router *gin.Engine) {
+	// Logger middleware
+	// 'dev' mode run on :8080, and prod deploys salada.dev
+	if os.Getenv("MODE") == "dev" {
+		bindIp := fmt.Sprintf("%s:8080", os.Getenv("BIND_IP"))
+		router.Run(bindIp)
+	} else {
+		m := autocert.Manager{
+			Prompt:     autocert.AcceptTOS,
+			HostPolicy: autocert.HostWhitelist("salada.dev"),
+			Cache:      autocert.DirCache("/var/www/.cache"),
+		}
+
+		log.Fatal(autotls.RunWithManager(router, &m))
+	}
+}

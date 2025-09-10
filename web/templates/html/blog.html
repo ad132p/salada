@@ -1,16 +1,5 @@
 {{ template "base" . }}
 <div class="app" id="blog">
-  {{ if .username }}
-  <p>Hello, {{.username}}</p>
-  <a href="/blog/new/">New blog</a>
-  <form action="/logout" method="get">
-    <input type="hidden" id="username" name="username" value="{{.username}}" />
-    <input type="submit" value="Logout!" />
-  </form>
-  {{ else }}
-  <p>Hello, anon!</p1>
-    <a href="/login">Login</a>
-    {{ end }}
   <h1>{{.title}}</h1>
   {{if .posts}}
   <div class="box">
@@ -25,4 +14,11 @@
   {{else}}
   <p>No blog posts available.</p>
   {{end}}
+
+  <a href="/blog/new/">New blog</a>
+  <form action="/logout" method="get">
+    <input type="hidden" id="username" name="username" value="{{.username}}" />
+    <input type="submit" value="Logout!" />
+  </form>
+  <a href="/login">Login</a>
 </div>

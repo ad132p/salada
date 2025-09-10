@@ -2,7 +2,7 @@
 <h1>{{.title}}</h1>
 
 <main>
-    <form class="app" id="new-blog-post" method="post" action="/blog" enctype="multipart/form-data">
+    <form class="app" id="new-blog-post" method="post" action="/blog/" enctype="multipart/form-data">
         <fieldset>
             <legend>Post Details</legend>
 
@@ -26,8 +26,15 @@
                 <label for="tags">Tags (Comma,Space-separated, Optional):</label>
                 <input type="text" name="tags" id="tags" placeholder="e.g., html, css, javascript">
             </div>
-
         </fieldset>
+
+        <fieldset>
+            <div>
+                <label for="blog_pic">Choose file to upload</label>
+                <input type="file" id="blog_pic" name="profile_pic" accept=".jpg, .jpeg, .png" />
+            </div>
+        </fieldset>
+
 
         <fieldset>
             <legend>Post Content</legend>
@@ -49,17 +56,37 @@
     const easyMDE = new EasyMDE({
         element: document.getElementById('content'),
         autofocus: true,
-        uploadImage: true, // Keep this if you want image upload functionality
-        imageUploadEndpoint: "upload", // Your server endpoint for image uploads
-        placeholder: "Start writing your blog post in Markdown...", // Helpful placeholder
-        spellChecker: true, // Enable spell checker
-        toolbar: [ // Customize the toolbar for a better user experience
+        imageAccept: "image/png, image/jpeg, image/jpg, image/webp",
+        previewImagesInEditor: true,
+
+        imageUploadFunction: (file, onSuccess, onError) => {
+            // Create a FormData object to prepare the file for an HTTP request
+            const formData = new FormData();
+            formData.append('image', file);
+
+            // Send the file to your backend using the fetch API
+            fetch('/blog/uploads', {
+                method: 'POST',
+                body: formData,
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // If the upload was successful, call onSuccess with the new image URL
+                    onSuccess(data.imageUrl);
+                })
+                .catch(error => {
+                    // If there was an error, call onError with a message
+                    onError('Image upload failed');
+                });
+        },
+        placeholder: "Start writing your blog post in Markdown...",
+        spellChecker: true,
+        toolbar: [
             "bold", "italic", "heading", "|",
             "unordered-list", "ordered-list", "code", "quote", "|",
             "link", "image", "|",
             "preview", "side-by-side", "fullscreen", "|",
             "guide"
         ],
-        // You might want to add other EasyMDE options here, like status bar, etc.
     });
 </script>

@@ -1,12 +1,9 @@
 package admin_controller
 
 import (
-	"fmt"
-	"log"
 	"net/http"
 	"salada/internal/admin/repositories"
 
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,17 +16,6 @@ type AdminController struct {
 // NewAdminController creates a new AdminController instance.
 func NewAdminController(repo *repositories.AdminRepository) *AdminController {
 	return &AdminController{Repo: repo}
-}
-
-// UploadImage handles POST /admin/blog
-func (pc *AdminController) UploadImage(c *gin.Context) {
-	file, _ := c.FormFile("file")
-	log.Println(file.Filename)
-
-	// Upload the file to specific dst.
-	c.SaveUploadedFile(file, "./"+file.Filename)
-
-	c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
 }
 
 // GetPosts handles GET /admin/blog/
@@ -49,17 +35,9 @@ func (pc *AdminController) GetPendingPosts(c *gin.Context) {
 }
 
 func (pc *AdminController) GetAdminMain(c *gin.Context) {
-	session := sessions.Default(c)
-	role := session.Get("role")
-	if role != "admin" {
-		c.HTML(http.StatusOK, "denied.html", gin.H{
-			"title": "Access denied",
-		})
-	} else {
-		c.HTML(http.StatusOK, "admin.html", gin.H{
-			"title": "New Blog Entry",
-		})
-	}
+	c.HTML(http.StatusOK, "admin.html", gin.H{
+		"title": "New Blog Entry",
+	})
 }
 
 // GetPostBySlug handles GET /blog/:slug
