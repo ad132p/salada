@@ -9,6 +9,7 @@ import (
 	"salada/internal/blog/controller"
 	"salada/internal/blog/repositories"
 	"salada/internal/db"
+	"salada/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -70,7 +71,7 @@ func SetupRoutes(router *gin.Engine) {
 	adminController := admin_controller.NewAdminController(adminRepo)
 
 	// Define routes for blog posts
-	postRoutes := router.Group("/blog/")
+	postRoutes := router.Group("/blog", middleware.AuthenticateMiddleware)
 	{
 		postRoutes.GET("/", blogController.GetPosts)
 		postRoutes.GET("/:slug", blogController.GetPostBySlug) // Use slug for public access
@@ -84,7 +85,7 @@ func SetupRoutes(router *gin.Engine) {
 	}
 
 	//Define auth routes:
-	router.POST("/register/", authController.Register)
+	router.POST("/register", authController.Register)
 	router.POST("/login", authController.Login)
 	router.GET("/logout", authController.Logout)
 

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"salada/internal/admin/model"
 	"salada/internal/admin/repositories"
+	"salada/internal/auth"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -65,13 +65,19 @@ func (pc *AuthController) Login(c *gin.Context) {
 		return
 	}
 
-	if loginInput.Username == os.Getenv("SUPERUSER") {
+	tokenString, err := auth.CreateToken(loginInput.Username)
 
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Error creating token")
+		return
 	}
+
+	c.SetCookie("token", tokenString, 3600, "/", "localhost", false, true)
 
 	c.Redirect(http.StatusFound, "/blog/")
 }
 
 func (pc *AuthController) Logout(c *gin.Context) {
-	c.Redirect(http.StatusFound, "/blog/")
+	c.SetCookie("token", "", -1, "/", "localhost", false, true)
+	c.Redirect(http.StatusSeeOther, "/")
 }
