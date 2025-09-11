@@ -1,5 +1,16 @@
 # salada
-salada
+
+salada is a blog I wrote for learning a very simple webapp stack with golang and Postgres. This is a new me trying to KISS.
+
+salada blog app should run in a single VM, ideally, but you can always decouple a database pod if you really have to.
+I'm using podman quadlets and kubectl secrets that pods have access to
+and under Rocky Linux you should be able to run commands such as:
+
+
+
+systemctl --user status salada
+systemctl --user status salada-db
+
 
 
 # Pre requisites
@@ -8,9 +19,6 @@ git
 ansible
 Rocky Linux 9
 
-# I would like a salada blog app and a fresh postgres database in a single VM,
-# using podman quadlets and kubectl secrets, systemctl --user mode
-# Did you get that?
 
 ```
 # Install Podman
