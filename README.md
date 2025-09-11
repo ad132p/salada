@@ -20,7 +20,6 @@ curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stabl
 chmod +x ./kubectl
 
 # Create database secret:
-```
 POSTGRES_ROOT_PASSWORD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13)
 ./kubectl create secret generic \
     --from-literal=password="${POSTGRES_ROOT_PASSWORD}" \
