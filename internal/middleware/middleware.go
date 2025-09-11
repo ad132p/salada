@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func SetupMiddleware(router *gin.Engine) {
@@ -52,8 +53,18 @@ func AuthenticateMiddleware(c *gin.Context) {
 		return
 	}
 
-	// Print information about the verified token
-	fmt.Printf("Token verified successfully. Claims: %+v\\n", token.Claims)
+	// Get the claims from the token
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		fmt.Println("Could not get claims from token")
+		return
+	}
+
+	// Access the claims
+	username, ok := claims["sub"].(string)
+	if ok {
+		c.Set("username", username)
+	}
 
 	// Continue with the next middleware or route handler
 	c.Next()

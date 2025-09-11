@@ -39,23 +39,30 @@ func getRole(username string) string {
 	return "rw_only"
 }
 
-// Function to verify JWT tokens
+// VerifyToken verifies the JWT token's signature and its claims.
 func VerifyToken(tokenString string) (*jwt.Token, error) {
-	// Parse the token with the secret key
+	// Parse the token with a callback function to provide the key.
+	// This callback is crucial for security.
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		// 1. Validate the signing algorithm
+		// Use a type switch to ensure the token's signing method is what you expect.
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		// 2. Return your secret key
 		return secretKey, nil
 	})
 
-	// Check for verification errors
+	// Handle parsing errors
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("token parsing failed: %w", err)
 	}
 
-	// Check if the token is valid
+	// 3. Check if the token is valid after parsing
 	if !token.Valid {
 		return nil, fmt.Errorf("invalid token")
 	}
 
-	// Return the verified token
+	// 4. Return the validated token
 	return token, nil
 }

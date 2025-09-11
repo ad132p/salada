@@ -166,8 +166,15 @@ func (pc *BlogController) UploadImage(c *gin.Context) {
 
 // GetPosts handles GET /blog/
 func (pc *BlogController) GetPosts(c *gin.Context) {
+	username, ok := c.MustGet("username").(string)
+	if !ok {
+		// This should not happen if the middleware is correctly set up.
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Username not found in context"})
+		return
+	}
 
 	posts, err := pc.Repo.GetPublishedPosts()
+
 	if err != nil {
 		c.HTML(http.StatusServiceUnavailable, "blog.html", gin.H{
 			"title": "Blog Posts",
@@ -176,8 +183,9 @@ func (pc *BlogController) GetPosts(c *gin.Context) {
 		return
 	}
 	c.HTML(http.StatusOK, "blog.html", gin.H{
-		"title": "Blog Posts",
-		"posts": posts,
+		"title":    "Blog Posts",
+		"posts":    posts,
+		"username": username,
 	})
 }
 

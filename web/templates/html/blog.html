@@ -16,9 +16,15 @@
   {{end}}
 
   <a href="/blog/new/">New blog</a>
+  {{if .username}}
+  <p>Hi {{.username}}</p>
   <form action="/logout" method="get">
     <input type="hidden" id="username" name="username" value="{{.username}}" />
     <input type="submit" value="Logout!" />
   </form>
+  {{else}}
   <a href="/login">Login</a>
+  {{end}}
+
+
 </div>
