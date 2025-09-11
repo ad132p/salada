@@ -90,7 +90,7 @@ func SetupRoutes(router *gin.Engine) {
 	router.GET("/logout", authController.Logout)
 
 	//Define admin routes
-	admin := router.Group("/admin", admin.AdminRoleRequired())
+	admin := router.Group("/admin", admin.AdminRoleRequired)
 	{
 		admin.GET("/blog", adminController.GetPendingPosts)
 		admin.GET("/blog/:slug", adminController.GetPostBySlug)
