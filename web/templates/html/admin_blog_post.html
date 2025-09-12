@@ -24,8 +24,8 @@
         const messageDisplay = document.getElementById('message');
         const slug = document.getElementById('slug');
         const primaryKey = document.getElementById('primary_key');
-        const postsEndpoint = `http://127.0.0.1:8080/blog/${primaryKey.textContent}`;
-        const publishEndpoint = `http://127.0.0.1:8080/blog/publish/${primaryKey.textContent}`;
+        const postsEndpoint = `/blog/${primaryKey.textContent}`;
+        const publishEndpoint = `/blog/publish/${primaryKey.textContent}`;
 
 
         // Function to handle DELETE request
