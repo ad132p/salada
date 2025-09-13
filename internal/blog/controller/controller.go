@@ -1,14 +1,15 @@
 package controller
 
 import (
+	"database/sql"
 	"fmt"
+	"html/template"
 	"net/http"
 	"path/filepath"
+	"salada/internal/blog"
 	"salada/internal/blog/model"
 	"salada/internal/blog/repositories"
 	"time"
-
-	"database/sql"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -221,8 +222,9 @@ func (pc *BlogController) GetPostBySlug(c *gin.Context) {
 		return
 	}
 	c.HTML(http.StatusOK, "blog_post.html", gin.H{
-		"title": post.Title,
-		"post":  post,
+		"title":   post.Title,
+		"post":    post,
+		"content": template.HTML(blog.RenderMarkdownToHTML(post.Content)),
 	})
 }
 

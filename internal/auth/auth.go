@@ -22,9 +22,6 @@ func CreateToken(username string) (string, error) {
 		"iat": time.Now().Unix(),                // Issued at
 	})
 
-	// Print information about the created token
-	fmt.Printf("Token claims added: %+v\n", claims)
-
 	tokenString, err := claims.SignedString(secretKey)
 	if err != nil {
 		return "", err

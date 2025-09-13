@@ -3,7 +3,8 @@
   <h1>{{.title}}</h1>
   {{if .post}}
   <div class="box">
-    <p>{{ .post.Content }}</p>
+
+    {{ .content }}
   </div>
   {{else}}
   <p>No blog post with this slug.</p>

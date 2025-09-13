@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"database/sql"
-	"fmt"
 	"time"
 
 	"salada/internal/blog"
@@ -40,7 +39,6 @@ func (r *PostRepository) CreatePost(post *model.Post) error {
 	post.CreatedAt = time.Now().UTC()
 	post.UpdatedAt = post.CreatedAt
 	post.Slug = blog.CreateSlug(post.Title)
-	fmt.Println(post)
 
 	query := `INSERT INTO posts (id, title, slug, content, author_id, author_name, published_at, created_at, updated_at, tags, category)
               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, created_at, updated_at`
