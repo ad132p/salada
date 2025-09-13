@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
 	"path/filepath"
 	"salada/internal/blog/model"
@@ -27,6 +28,7 @@ func (pc *BlogController) CreatePost(c *gin.Context) {
 
 	title := c.PostForm("title")
 	content := c.PostForm("content")
+	author := c.PostForm("author")
 	tags := c.PostForm("tags")
 	category := c.PostForm("category")
 
@@ -34,7 +36,7 @@ func (pc *BlogController) CreatePost(c *gin.Context) {
 	post := model.Post{
 		Title:      title,
 		Content:    content,
-		AuthorName: "epaminondas", // Use the safely retrieved variable
+		AuthorName: author, // Use the safely retrieved variable
 		Tags:       tags,
 		Category:   category,
 	}
@@ -140,28 +142,32 @@ func (pc *BlogController) PublishPost(c *gin.Context) {
 }
 
 func (pc *BlogController) UploadImage(c *gin.Context) {
-	file, err := c.FormFile("file")
+	// Single file
+	file, err := c.FormFile("image") // The name "image" must match the form field name in the client request
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to get file"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to retrieve the file"})
 		return
 	}
 
-	// 1. Save the file to a public directory
-	// For example, into a 'uploads' folder in your project root
+	// Generate a unique filename to prevent conflicts
 	filename := filepath.Base(file.Filename)
-	savePath := filepath.Join("uploads", filename)
 
-	if err := c.SaveUploadedFile(file, savePath); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+	// Save the file to the specified path
+	dst := filepath.Join("uploads", filename)
+	if err := c.SaveUploadedFile(file, dst); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save the file"})
 		return
 	}
 
-	// 2. IMPORTANT: Construct the public URL
-	// This is the URL that the browser will use to access the image
-	publicURL := "/uploads/" + filename // Or a full URL if hosted elsewhere
+	// Construct the URL for the saved image
+	imageURL := fmt.Sprintf("uploads/%s", filename)
 
-	// 3. Return the JSON response with the 'url' field
-	c.JSON(http.StatusOK, gin.H{"url": publicURL})
+	// Respond to the client with the image URL in the expected format
+	c.JSON(http.StatusOK, gin.H{
+		"data": gin.H{
+			"filePath": imageURL,
+		},
+	})
 }
 
 // GetPosts handles GET /blog/
@@ -190,8 +196,15 @@ func (pc *BlogController) GetPosts(c *gin.Context) {
 }
 
 func (pc *BlogController) GetNewPostForm(c *gin.Context) {
+	username, ok := c.MustGet("username").(string)
+	if !ok {
+		// This should not happen if the middleware is correctly set up.
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Username not found in context"})
+		return
+	}
 	c.HTML(http.StatusOK, "blog_new.html", gin.H{
-		"title": "New Blog Entry",
+		"title":    "New Blog Entry",
+		"username": username,
 	})
 }
 
