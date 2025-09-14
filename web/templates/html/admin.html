@@ -1,12 +1,11 @@
 {{ template "base" . }}
-<div class="app">
-  <div class="main">
-    <img class="me_pic" src="/images/me.jpeg" alt="Hardcore Emocore" height="200">
-    <h1>cuidado magano</h1>
-    <p>This is your admin page. For approving blog posts you need to be admin user</p>
-    <p>Visit blog posts admin page:</p>
+<div class="bg-gray-100 flex flex-col items-center justify-center p-4 min-h-screen">
+  <div class="main max-w-md w-full">
+    <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900 mb-2">cuidado magano</h1>
+    <p class="slide text-xl text-gray-700">This is your admin page. For approving blog posts you need to be admin user.
+    </p>
+    <p class="slide text-xl text-gray-700 mt-2">Visit blog posts admin page:</p>
     <a href="/admin/blog/">Approve blog</a>
   </div>
 </div>
-
 {{ template "footer" . }}

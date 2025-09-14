@@ -1,8 +1,43 @@
 {{ define "header" }}
-<ul class="navigation">
-  <li><a href="/">Home</a></li>
-  <li><a href="/about/">About</a></li>
-  <li><a href="/blog/">Blog</a></li>
-  <li><a href="/contact/">Contact</a></li>
-</ul>
+<nav class="bg-green-400 shadow-md">
+  <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+
+    <a href="#" class="text-2xl font-bold text-gray-800">
+      salada.dev
+    </a>
+
+    <div class="hidden md:flex flex-1 justify-end items-center space-x-8">
+      <ul class="flex space-x-6 md:space-x-8 items-center">
+        <li><a href="/" class="text-gray-600 hover:text-gray-900 transition-colors duration-300 font-medium">Home</a>
+        </li>
+        <li><a href="/about/"
+            class="text-gray-600 hover:text-gray-900 transition-colors duration-300 font-medium">About</a></li>
+        <li><a href="/blog/"
+            class="text-gray-600 hover:text-gray-900 transition-colors duration-300 font-medium">Blog</a></li>
+        <li><a href="/contact/"
+            class="text-gray-600 hover:text-gray-900 transition-colors duration-300 font-medium">Contact</a></li>
+      </ul>
+
+
+
+
+
+
+
+      {{ if .username }}
+      <form action="/logout" method="get">
+        <input type="hidden" id="username" name="username" value="{{.username}}" />
+        <input type="submit" value="Logout!"
+          class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-md transition-colors duration-200 cursor-pointer" />
+      </form>
+
+      {{ else }}
+      <a href="/login"
+        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full transition duration-300">
+        Login
+      </a>
+      {{ end }}
+    </div>
+  </div>
+</nav>
 {{ end }}

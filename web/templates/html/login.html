@@ -1,30 +1,38 @@
 {{ template "base" . }}
-<div class="app">
-  <h1>{{.title}}</h1>
-  <div class="container">
-    <form class="app" id="login" method="post" action="/login" enctype="multipart/form-data">
-      <label for="username">Username</label>
-      <input type="text" id="username" name="username" required>
+<div class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4">
+  <div class="main max-w-md w-full rounded-lg shadow-lg p-8 space-y-6 bg-white" id="login">
+    <h1 class="text-2xl font-bold text-center text-gray-800">{{.title}}</h1>
 
-      <label for="password">Password</label>
-      <input type="password" id="password" name="password" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
-        title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters"
-        required>
+    <form class="space-y-4" id="login" method="post" action="/login" enctype="multipart/form-data">
+      <div>
+        <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+        <input type="text" id="username" name="username" required 
+               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+      </div>
 
-      <input type="submit" value="Submit">
+      <div>
+        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+        <input type="password" id="password" name="password" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
+          title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters"
+          required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+      </div>
+
+      <div>
+        <input type="submit" value="Submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 cursor-pointer">
+      </div>
     </form>
-  </div>
 
-  <div id="message">
-    <h3>Password must contain the following:</h3>
-    <p id="letter" class="invalid">A <b>lowercase</b> letter</p>
-    <p id="capital" class="invalid">A <b>capital (uppercase)</b> letter</p>
-    <p id="number" class="invalid">A <b>number</b></p>
-    <p id="length" class="invalid">Minimum <b>8 characters</b></p>
+    <div id="message" class="bg-blue-50 p-4 rounded-lg shadow-inner">
+      <h3 class="font-semibold text-sm mb-2 text-blue-700">Password must contain the following:</h3>
+      <p id="letter" class="invalid text-sm text-blue-600">A <b>lowercase</b> letter</p>
+      <p id="capital" class="invalid text-sm text-blue-600">A <b>capital (uppercase)</b> letter</p>
+      <p id="number" class="invalid text-sm text-blue-600">A <b>number</b></p>
+      <p id="length" class="invalid text-sm text-blue-600">Minimum <b>8 characters</b></p>
+    </div>
+    {{.error}}
+    <p class="text-center">
+      <a href="/register" class="text-blue-600 hover:text-blue-800 transition-colors duration-200">Register</a>
+    </p>
   </div>
-  {{.error}}
-  <p>
-    <a href="/register">Register</a>
-  </p>
-
 </div>
+{{ template "footer" . }}

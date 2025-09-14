@@ -1,54 +1,70 @@
 {{ template "base" . }}
-<h1>{{.title}}</h1>
+<div class="bg-gray-100 p-4">
+    <div class="container mx-auto max-w-4xl py-8">
+        <div class="bg-white rounded-lg shadow-xl p-8 space-y-8 prose max-w-none">
+            <h1 class="text-3xl font-bold text-gray-800 text-center mb-6">{{.title}}</h1>
 
-<main>
-    <form class="app" id="new-blog-post" method="post" action="/blog/" enctype="multipart/form-data">
-        <fieldset>
-            <legend>Post Details</legend>
-            <input type="hidden" id="author" name="author" value="{{.username}}" />
-            <div class="form-group">
-                <label for="title">Title:</label>
-                <input type="text" name="title" id="title" required placeholder="Enter your post title here">
+            <form class="space-y-6" id="new-blog-post" method="post" action="/blog/" enctype="multipart/form-data">
+                <fieldset class="border border-gray-200 rounded-lg p-6 space-y-4">
+                    <legend class="text-lg font-semibold text-gray-800 px-2">Post Details</legend>
+                    <input type="hidden" id="author" name="author" value="{{.username}}" />
+                    
+                    <div>
+                        <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title:</label>
+                        <input type="text" name="title" id="title" required placeholder="Enter your post title here"
+                            class="block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    </div>
 
-                <label for="category_select">Category (Optional):</label>
-                <select name="category" id="category_select">
-                    <option value="">--Please choose an option--</option>
-                    <option value="football">Football</option>
-                    <option value="cs">Computer Science</option>
-                    <option value="politics">Politics</option>
-                    <option value="plants">Plants</option>
-                    <option value="cine">Cinema</option>
-                    <option value="lit">Literature</option>
-                    <option value="random">Random</option>
-                </select>
+                    <div>
+                        <label for="category_select" class="block text-sm font-medium text-gray-700 mb-1">Category (Optional):</label>
+                        <select name="category" id="category_select"
+                            class="block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <option value="">--Please choose an option--</option>
+                            <option value="football">Football</option>
+                            <option value="cs">Computer Science</option>
+                            <option value="politics">Politics</option>
+                            <option value="plants">Plants</option>
+                            <option value="cine">Cinema</option>
+                            <option value="lit">Literature</option>
+                            <option value="random">Random</option>
+                        </select>
+                    </div>
 
+                    <div>
+                        <label for="tags" class="block text-sm font-medium text-gray-700 mb-1">Tags (Comma,Space-separated, Optional):</label>
+                        <input type="text" name="tags" id="tags" placeholder="e.g., html, css, javascript"
+                            class="block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    </div>
+                </fieldset>
 
-                <label for="tags">Tags (Comma,Space-separated, Optional):</label>
-                <input type="text" name="tags" id="tags" placeholder="e.g., html, css, javascript">
-            </div>
-        </fieldset>
+                <fieldset class="border border-gray-200 rounded-lg p-6 space-y-4">
+                    <legend class="text-lg font-semibold text-gray-800 px-2">Post Content</legend>
+                    <div>
+                        <label for="content" class="block text-sm font-medium text-gray-700 mb-1">Write your post content here:</label>
+                        <textarea name="content" id="content"
+                            class="block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm min-h-[300px]"></textarea>
+                    </div>
+                </fieldset>
 
-
-        <fieldset>
-            <legend>Post Content</legend>
-            <div class="form-group">
-                <label for="content">Write your post content here:</label>
-                <textarea name="content" id="content"></textarea>
-            </div>
-        </fieldset>
-
-        <div class="form-actions">
-            <button type="submit">Publish Post</button>
-            <button type="reset">Clear Form</button>
+                <div class="flex space-x-4 justify-end">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                        Publish Post
+                    </button>
+                    <button type="reset" class="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200">
+                        Clear Form
+                    </button>
+                </div>
+            </form>
         </div>
-    </form>
-</main>
+    </div>
+</div>
 
 <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
 <script>
     const easyMDE = new EasyMDE({
         element: document.getElementById('content'),
         autofocus: true,
+        imageMaxSize: 1024 * 1024 * 8,
         imageAccept: "image/png, image/jpeg, image/jpg, image/webp",
         previewImagesInEditor: true,
         imageUploadEndpoint: "/blog/uploads",
