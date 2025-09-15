@@ -1,8 +1,6 @@
 package controller
 
 import (
-	"fmt"
-	"log"
 	"net/http"
 	"salada/internal/admin/model"
 	"salada/internal/admin/repositories"
@@ -27,15 +25,12 @@ func (pc *AuthController) Register(c *gin.Context) {
 	newUser.Username = c.PostForm("username")
 	newUser.Password = c.PostForm("password")
 	newUser.Email = c.PostForm("email")
-	fmt.Println(newUser)
-	id, err := pc.Repo.CreateUser(newUser)
+	_, err := pc.Repo.CreateUser(newUser)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		c.HTML(http.StatusInternalServerError, "register.html", gin.H{"error": err})
 		return
 	}
-
-	log.Println("User created: ", id)
 	c.Redirect(http.StatusFound, "/login/")
 }
 
