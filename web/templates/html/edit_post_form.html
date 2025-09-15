@@ -1,98 +1,131 @@
 {{ template "base" . }}
-<h1>{{.title}}</h1>
+<div class="container mx-auto px-4 py-8">
+  <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-xl p-8 lg:p-12">
+    <h1 class="text-3xl lg:text-4xl font-extrabold text-gray-900 leading-tight mb-6">{{.title}}</h1>
 
-<main>
-    <div class="app">
-        <fieldset>
-            <legend>Post Details</legend>
-            <p id="primary_key">{{ .post.ID }}</p>
-            <p id="slug">{{ .post.Slug }}</p>
+    <main class="space-y-8">
+      <div class="space-y-6">
+        <fieldset class="border border-gray-300 rounded-md p-6">
+          <legend class="text-lg font-semibold text-gray-700 px-2">Post Details</legend>
+          <div class="space-y-4">
+            <p id="primary_key" class="hidden">{{ .post.ID }}</p>
+            <p id="slug" class="hidden">{{ .post.Slug }}</p>
 
-            <div class="form-group">
-                <label for="title">Title:</label>
-                <input type="text" name="title" id="title" value="{{.post.Title}}" required
-                    placeholder="Enter your post title here">
+            <div class="space-y-2">
+              <label for="title" class="block text-sm font-medium text-gray-700">Title:</label>
+              <input type="text" name="title" id="title" value="{{.post.Title}}" required
+                placeholder="Enter your post title here"
+                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
             </div>
 
-            <div class="form-group">
-                <label for="tags">Tags (Comma-separated, Optional):</label>
-                <input type="text" name="tags" id="tags" value="{{.post.Tags}}"
-                    placeholder="e.g., html, css, javascript">
+            <div>
+              <label for="category_select" class="block text-sm font-medium text-gray-700 mb-1">Category
+                (Optional):</label>
+              <select name="category" id="category_select"
+                class="block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                <option value="">--Please choose an option--</option>
+                <option value="football">Football</option>
+                <option value="cs">Computer Science</option>
+                <option value="politics">Politics</option>
+                <option value="plants">Plants</option>
+                <option value="cine">Cinema</option>
+                <option value="lit">Literature</option>
+                <option value="random">Random</option>
+              </select>
             </div>
 
+            <div class="space-y-2">
+              <label for="tags" class="block text-sm font-medium text-gray-700">Tags (Comma-separated,
+                Optional):</label>
+              <input type="text" name="tags" id="tags" value="{{.post.Tags}}" placeholder="e.g., html, css, javascript"
+                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+          </div>
         </fieldset>
 
-        <fieldset>
-            <legend>Post Content</legend>
-            <div class="form-group">
-                <label for="content">Write your post content here:</label>
-                <textarea name="content" id="content">{{.post.Content}}</textarea>
-            </div>
+        <fieldset class="border border-gray-300 rounded-md p-6">
+          <legend class="text-lg font-semibold text-gray-700 px-2">Post Content</legend>
+          <div class="space-y-2">
+            <label for="content" class="block text-sm font-medium text-gray-700">Write your post content here:</label>
+            <textarea name="content" id="content"
+              class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm min-h-[300px]">{{.post.Content}}</textarea>
+          </div>
         </fieldset>
+      </div>
 
-        <div class="actions">
-            <button id="edit_button">Edit Post</button>
-            <button type="reset">Clear Form</button>
-        </div>
-        <div id="message">oof</div>
-    </div>
-
-</main>
+      <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+        <button id="edit_button"
+          class="flex-1 py-2 px-4 rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+          Edit Post
+        </button>
+        <button type="reset"
+          class="flex-1 py-2 px-4 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+          Clear Form
+        </button>
+      </div>
+      <p id="message" class="mt-4 text-center text-sm text-gray-600 italic">oof</p>
+    </main>
+  </div>
+</div>
 {{ template "footer" . }}
 <script>
-    const easyMDE = new EasyMDE({
-        element: document.getElementById('content'),
-        autofocus: true,
-        uploadImage: true, // Keep this if you want image upload functionality
-        imageUploadEndpoint: 'http://127.0.0.1:8080/upload', // Your server endpoint for image uploads
-        imageMaxSize: 1024 * 1024 * 8,
-        imagePathAbsolute: false,
-        imageUploadFieldName: 'file',
-        placeholder: "Start writing your blog post in Markdown...", // Helpful placeholder
-        spellChecker: true, // Enable spell checker
-        toolbar: [ // Customize the toolbar for a better user experience
-            "bold", "italic", "heading", "|",
-            "unordered-list", "ordered-list", "code", "quote", "|",
-            "link", "image", "|",
-            "preview", "side-by-side", "fullscreen", "|",
-            "guide"
-        ],
-        // You might want to add other EasyMDE options here, like status bar, etc.
-    });
+  const easyMDE = new EasyMDE({
+    element: document.getElementById('content'),
+    autofocus: true,
+    imageMaxSize: 1024 * 1024 * 8,
+    imageAccept: "image/png, image/jpeg, image/jpg, image/webp",
+    previewImagesInEditor: true,
+    imageUploadEndpoint: "/blog/uploads",
+    placeholder: "Start writing your blog post in Markdown...",
+    spellChecker: true,
+    toolbar: [
+      "bold", "italic", "heading", "|",
+      "unordered-list", "ordered-list", "code", "quote", "|",
+      "link", "image", "upload-image", "|",
+      "preview", "side-by-side", "fullscreen", "|",
+      "guide"
+    ],
+  });
 
-    editButton = document.getElementById("edit_button")
-    messageDisplay = document.getElementById("message")
-    editButton.addEventListener('click', async () => {
-        const primaryKey = document.getElementById('primary_key');
-        const slug = document.getElementById('slug');
-        const authorName = document.getElementById('author_name');
-        const updateUrl = `http://127.0.0.1:8080/blog/${primaryKey.textContent}`;
-        const data = {
-            author_name: authorName.value,
-            slug: slug.textContent,
-            content: easyMDE.value(),
-        };
+  const editButton = document.getElementById("edit_button");
+  const messageDisplay = document.getElementById("message");
+  const titleInput = document.getElementById('title');
+  const tagsInput = document.getElementById('tags');
+  const categoryInput = document.getElementById('category_select');
+  const slug = document.getElementById('slug');
+  const primaryKey = document.getElementById('primary_key');
 
-        try {
-            messageDisplay.textContent = 'Updating item...';
-            const response = await fetch(updateUrl, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-            });
+  editButton.addEventListener('click', async () => {
+    const updateUrl = `/blog/${primaryKey.textContent}`;
+    const data = {
+      title: titleInput.value,
+      tags: tagsInput.value,
+      slug: slug.textContent,
+      content: easyMDE.value(),
+    };
 
-            if (response.ok) {
-                const responseData = await response.json();
-                messageDisplay.textContent = `Item ${slug} updated successfully! Response: ${JSON.stringify(responseData)}`;
-            } else {
-                const errorData = await response.json();
-                messageDisplay.textContent = `Error updating item: ${errorData.message || response.statusText}`;
-            }
-        } catch (error) {
-            messageDisplay.textContent = `Network error: ${error.message}`;
-            console.error('Error during PUT request:', error);
-        }
-    });
+    try {
+      messageDisplay.textContent = 'Updating item...';
+      const response = await fetch(updateUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        const responseData = await response.json();
+        messageDisplay.textContent = `Item ${slug.textContent} updated successfully!`;
+        // Optional: Redirect or refresh the page
+        window.location.href = `/admin/blog/${slug.textContent}`;
+      } else {
+        const errorData = await response.json();
+        messageDisplay.textContent = `Error updating item: ${errorData.message || response.statusText}`;
+      }
+    } catch (error) {
+      messageDisplay.textContent = `Network error: ${error.message}`;
+      console.error('Error during PUT request:', error);
+    }
+  });
 </script>

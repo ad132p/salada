@@ -2,7 +2,7 @@
 <nav class="bg-green-400 shadow-md">
   <div class="container mx-auto px-6 py-4 flex justify-between items-center">
 
-    <a href="#" class="text-2xl font-bold text-gray-800">
+    <a href="/" class="text-2xl font-bold text-gray-800">
       salada.dev
     </a>
 
@@ -17,26 +17,6 @@
         <li><a href="/contact/"
             class="text-gray-600 hover:text-gray-900 transition-colors duration-300 font-medium">Contact</a></li>
       </ul>
-
-
-
-
-
-
-
-      {{ if .username }}
-      <form action="/logout" method="get">
-        <input type="hidden" id="username" name="username" value="{{.username}}" />
-        <input type="submit" value="Logout!"
-          class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-md transition-colors duration-200 cursor-pointer" />
-      </form>
-
-      {{ else }}
-      <a href="/login"
-        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full transition duration-300">
-        Login
-      </a>
-      {{ end }}
     </div>
   </div>
 </nav>

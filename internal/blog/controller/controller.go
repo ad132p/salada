@@ -222,8 +222,9 @@ func (pc *BlogController) GetPostBySlug(c *gin.Context) {
 		return
 	}
 	c.HTML(http.StatusOK, "blog_post.html", gin.H{
-		"title":   post.Title,
-		"post":    post,
+		"title": post.Title,
+		"post":  post,
+		//"content": template.HTML(blog.RenderMarkdownToHTML(post.Content)),
 		"content": template.HTML(blog.RenderMarkdownToHTML(post.Content)),
 	})
 }

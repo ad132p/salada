@@ -8,7 +8,8 @@
       {{range .posts}}
       <article class="bg-white p-6 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors duration-200">
         <h2 class="text-xl font-semibold mb-2">
-          <a href="/blog/{{.Slug}}" class="post_anchor text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-200">
+          <a href="/blog/{{.Slug}}"
+            class="post_anchor text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-200">
             {{.Title}}
           </a>
         </h2>
@@ -22,7 +23,16 @@
     {{end}}
 
     <div class="w-full flex justify-center mt-8 space-x-4">
-      <a href="/blog/new/" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md transition-colors duration-200">New blog</a>
+      <a href="/blog/new/"
+        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md transition-colors duration-200">New
+        blog</a>
+      {{ if .username }}
+      <form action="/logout" method="get">
+        <input type="hidden" id="username" name="username" value="{{.username}}" />
+        <input type="submit" value="Logout!"
+          class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-md transition-colors duration-200 cursor-pointer" />
+      </form>
+      {{ end }}
     </div>
   </div>
 </div>

@@ -1,12 +1,14 @@
 {{ template "base" . }}
-<div class="container mx-auto px-4 py-8 max-w-3xl" id="blog">
-  <h1>{{.title}}</h1>
-  {{if .post}}
-  <div class="box">
-
-    {{ .content }}
+<div class="container mx-auto px-4 py-8">
+  <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-xl p-8 lg:p-12">
+    {{if .post}}
+    <h1 class="text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight mb-4">{{.title}}</h1>
+    
+    <div class="prose prose-lg max-w-none text-gray-800">
+      {{ .content }}
+    </div>
+    {{else}}
+    <p class="text-center text-xl text-gray-600 font-medium">No blog post with this slug.</p>
+    {{end}}
   </div>
-  {{else}}
-  <p>No blog post with this slug.</p>
-  {{end}}
 </div>

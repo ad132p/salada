@@ -94,6 +94,7 @@ func SetupRoutes(router *gin.Engine) {
 	{
 		admin.GET("/blog", adminController.GetPendingPosts)
 		admin.GET("/blog/:slug", adminController.GetPostBySlug)
+		admin.GET("/blog/edit/:slug", blogController.EditPostForm)
 		admin.GET("/", adminController.GetAdminMain)
 	}
 }

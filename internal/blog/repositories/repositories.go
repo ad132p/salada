@@ -163,7 +163,7 @@ func (r *PostRepository) GetPublishedPosts() ([]model.Post, error) {
 
 // GetPostBySlug fetches a single post by its slug.
 func (r *PostRepository) GetPostBySlug(slug string) (*model.Post, error) {
-	query := `SELECT id, title, slug, content, author_name, published_at, created_at, updated_at FROM posts WHERE slug = $1;`
+	query := `SELECT id, title, slug, content, author_name, published_at, created_at, updated_at, tags, category FROM posts WHERE slug = $1;`
 	var post model.Post
 
 	err := r.db.QueryRow(query, slug).Scan(
@@ -175,6 +175,8 @@ func (r *PostRepository) GetPostBySlug(slug string) (*model.Post, error) {
 		&post.PublishedAt,
 		&post.CreatedAt,
 		&post.UpdatedAt,
+		&post.Tags,
+		&post.Category,
 	)
 
 	if err != nil {

@@ -1,18 +1,30 @@
 {{ template "base" . }}
-<div class="app" id="blog">
-  <h1>{{.title}}</h1>
-  {{if .posts}}
-  <div class="box">
+<div class="container mx-auto px-4 py-8">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-4xl font-extrabold text-gray-900 mb-8">{{.title}}</h1>
 
+    {{if .posts}}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {{range .posts}}
-      <article>
-        <h2><a href="/admin/blog/{{.Slug}}" class="post_anchor">{{.Title}}</a></h2>
-        <p>Published: {{ or .PublishedAt "NO" }} </p>
-        <p>Author: {{ or .AuthorName "anon" }} </p>
+      <article class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 overflow-hidden">
+        <div class="p-6">
+          <h2 class="text-2xl font-semibold text-gray-800 mb-2 leading-tight">
+            <a href="/admin/blog/{{.Slug}}" class="hover:text-indigo-600 transition-colors duration-200">
+              {{.Title}}
+            </a>
+          </h2>
+          <p class="text-sm text-gray-500 mb-1">
+            <span class="font-medium">Published:</span> {{ or .PublishedAt "NO" }}
+          </p>
+          <p class="text-sm text-gray-500">
+            <span class="font-medium">Author:</span> {{ or .AuthorName "anon" }}
+          </p>
+        </div>
       </article>
       {{end}}
+    </div>
+    {{else}}
+    <p class="text-center text-lg text-gray-600 mt-12">{{.error}}</p>
+    {{end}}
   </div>
-  {{else}}
-  <p>{{.error}}</p>
-  {{end}}
 </div>
