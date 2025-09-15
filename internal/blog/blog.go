@@ -1,11 +1,13 @@
 package blog
 
 import (
+	"io"
 	"regexp"
-	//"salada/internal/blog/model"
 	"strings"
-	//"golang.org/x/crypto/bcrypt"
+
 	"github.com/gomarkdown/markdown"
+	"github.com/gomarkdown/markdown/ast"
+	"github.com/gomarkdown/markdown/html"
 )
 
 // createSlug generates a URL-friendly slug from a given title.
@@ -23,9 +25,63 @@ func CreateSlug(title string) string {
 	return slug
 }
 
+// NewMyRenderer creates a new custom renderer.
+// GetTailwindRenderer creates a new custom renderer instance.
+func GetTailwindRenderer() *TailwindRenderer {
+	// html.NewRenderer creates a standard renderer with common flags.
+	return &TailwindRenderer{
+		Renderer: html.NewRenderer(html.RendererOptions{
+			Flags: html.CommonFlags,
+		}),
+	}
+}
+
 // RenderMarkdownToHTML converts a markdown string to an HTML string.
 func RenderMarkdownToHTML(md string) string {
+	renderer := GetTailwindRenderer()
 	// The `markdown.ToHTML` function parses the markdown and returns the HTML as a byte slice.
-	htmlBytes := markdown.ToHTML([]byte(md), nil, nil)
+	htmlBytes := markdown.ToHTML([]byte(md), nil, renderer)
 	return string(htmlBytes)
+}
+
+type TailwindRenderer struct {
+	*html.Renderer // This is the key part: struct embedding.
+}
+
+// RenderNode implements the Renderer interface.
+func (r *TailwindRenderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.WalkStatus {
+	switch node := node.(type) {
+	case *ast.Heading:
+		if node.Level == 1 {
+			if entering {
+				// Write the opening <h1> tag with Tailwind classes.
+				w.Write([]byte(`<h1 class="text-4xl font-extrabold text-blue-800">`))
+			} else {
+				// Write the closing </h1> tag.
+				w.Write([]byte(`</h1>`))
+			}
+			// Continue the traversal to the next node.
+			return ast.GoToNext
+		}
+	case *ast.Text:
+		// For text nodes, just write the content.
+		w.Write(node.Literal)
+		return ast.GoToNext
+	case *ast.Paragraph:
+		if entering {
+			w.Write([]byte(`<p>`))
+		} else {
+			w.Write([]byte(`</p>`))
+		}
+		return ast.GoToNext
+	}
+
+	// For any other nodes not handled, just continue the traversal.
+	return ast.GoToNext
+}
+
+// RenderHeader implements the Renderer interface.
+// We don't need a specific header for this example, so it's a no-op.
+func (r *TailwindRenderer) RenderHeader(w io.Writer, node ast.Node) {
+	// No-op
 }
