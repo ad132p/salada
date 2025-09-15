@@ -1,6 +1,7 @@
 package blog
 
 import (
+	"fmt"
 	"io"
 	"regexp"
 	"strings"
@@ -74,6 +75,21 @@ func (r *TailwindRenderer) RenderNode(w io.Writer, node ast.Node, entering bool)
 			w.Write([]byte(`</p>`))
 		}
 		return ast.GoToNext
+	case *ast.Image:
+		if entering {
+			// Cast the node to a *ast.Image to access its fields.
+			image := node
+			// Get the destination (URL) and title (alt text).
+			dest := string(image.Destination)
+			altText := string(image.Title)
+
+			// Write the <img> tag with the source and alt attributes.
+			// You can also add Tailwind classes here if desired.
+			w.Write([]byte(fmt.Sprintf(`<img src="%s" alt="%s" />`, dest, altText)))
+		}
+		// Since <img> is a self-closing tag, we don't need a separate "leaving" case.
+		// We can just skip rendering the children (the alt text inside the markdown).
+		return ast.SkipChildren
 	}
 
 	// For any other nodes not handled, just continue the traversal.
