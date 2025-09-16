@@ -13,6 +13,7 @@
       <div class="text-sm text-gray-500 space-y-2">
         <p><strong>Post ID:</strong> <span id="primary_key">{{ .post.ID }}</span></p>
         <p><strong>Slug:</strong> <span id="slug">{{ .post.Slug }}</span></p>
+        <p><strong>Published:</strong> <span id="slug">{{ .post.PublishedAt }}</span></p>
       </div>
 
       <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
@@ -20,10 +21,12 @@
           class="flex-1 text-center py-2 px-4 rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
           Edit
         </a>
+        {{if (eq .post.PublishedAt nil)}}
         <button type="button" id="publishButton"
           class="flex-1 py-2 px-4 rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
           Publish
         </button>
+        {{ end }}
         <button type="button" id="deleteButton"
           class="flex-1 py-2 px-4 rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
           Delete
@@ -39,62 +42,62 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const deleteButton = document.getElementById('deleteButton');
-        const publishButton = document.getElementById('publishButton');
-        const messageDisplay = document.getElementById('message');
-        const slug = document.getElementById('slug');
-        const primaryKey = document.getElementById('primary_key');
-        const postsEndpoint = `/blog/${primaryKey.textContent}`;
-        const publishEndpoint = `/blog/publish/${primaryKey.textContent}`;
+  document.addEventListener('DOMContentLoaded', () => {
+    const deleteButton = document.getElementById('deleteButton');
+    const publishButton = document.getElementById('publishButton');
+    const messageDisplay = document.getElementById('message');
+    const slug = document.getElementById('slug');
+    const primaryKey = document.getElementById('primary_key');
+    const postsEndpoint = `/blog/${primaryKey.textContent}`;
+    const publishEndpoint = `/blog/publish/${primaryKey.textContent}`;
 
-        // Function to handle DELETE request
-        deleteButton.addEventListener('click', async () => {
-            if (!confirm('Are you sure you want to delete this post?')) return;
-            try {
-                messageDisplay.textContent = 'Deleting item...';
-                const response = await fetch(postsEndpoint, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                });
-
-                if (response.ok) {
-                    messageDisplay.textContent = `Item ${slug.textContent} deleted successfully!`;
-                    window.location.href = '/admin/blog/';
-                } else {
-                    const errorData = await response.json();
-                    messageDisplay.textContent = `Error deleting item: ${errorData.message || response.statusText}`;
-                }
-            } catch (error) {
-                messageDisplay.textContent = `Network error: ${error.message}`;
-                console.error('Error during DELETE request:', error);
-            }
+    // Function to handle DELETE request
+    deleteButton.addEventListener('click', async () => {
+      if (!confirm('Are you sure you want to delete this post?')) return;
+      try {
+        messageDisplay.textContent = 'Deleting item...';
+        const response = await fetch(postsEndpoint, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
         });
 
-        // Function to handle PATCH update request
-        publishButton.addEventListener('click', async () => {
-            try {
-                messageDisplay.textContent = 'Publishing item...';
-                const response = await fetch(publishEndpoint, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                });
-
-                if (response.ok) {
-                    messageDisplay.textContent = `Item ${slug.textContent} published successfully!`;
-                    window.location.href = '/blog/';
-                } else {
-                    const errorData = await response.json();
-                    messageDisplay.textContent = `Error publishing item: ${errorData.message || response.statusText}`;
-                }
-            } catch (error) {
-                messageDisplay.textContent = `Network error: ${error.message}`;
-                console.error('Error during PATCH request:', error);
-            }
-        });
+        if (response.ok) {
+          messageDisplay.textContent = `Item ${slug.textContent} deleted successfully!`;
+          window.location.href = '/admin/blog/';
+        } else {
+          const errorData = await response.json();
+          messageDisplay.textContent = `Error deleting item: ${errorData.message || response.statusText}`;
+        }
+      } catch (error) {
+        messageDisplay.textContent = `Network error: ${error.message}`;
+        console.error('Error during DELETE request:', error);
+      }
     });
+
+    // Function to handle PATCH update request
+    publishButton.addEventListener('click', async () => {
+      try {
+        messageDisplay.textContent = 'Publishing item...';
+        const response = await fetch(publishEndpoint, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          messageDisplay.textContent = `Item ${slug.textContent} published successfully!`;
+          window.location.href = '/blog/';
+        } else {
+          const errorData = await response.json();
+          messageDisplay.textContent = `Error publishing item: ${errorData.message || response.statusText}`;
+        }
+      } catch (error) {
+        messageDisplay.textContent = `Network error: ${error.message}`;
+        console.error('Error during PATCH request:', error);
+      }
+    });
+  });
 </script>
