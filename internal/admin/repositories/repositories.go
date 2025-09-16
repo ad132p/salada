@@ -6,6 +6,7 @@ import (
 
 	"salada/internal/admin/model"
 	"salada/internal/blog"
+	blog_model "salada/internal/blog/model"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -21,7 +22,7 @@ func NewAdminRepository(db *sql.DB) *AdminRepository {
 }
 
 // CreatePost inserts a new post into the database.
-func (r *AdminRepository) CreatePost(post *model.Post) error {
+func (r *AdminRepository) CreatePost(post *blog_model.Post) error {
 	// Set UUID if not already set (e.g., if client provides it)
 	if post.ID == uuid.Nil {
 		post.ID = uuid.New()
@@ -51,7 +52,7 @@ func (r *AdminRepository) CreatePost(post *model.Post) error {
 }
 
 // GetPosts fetches all posts from the database.
-func (r *AdminRepository) GetPosts() ([]model.Post, error) {
+func (r *AdminRepository) GetPosts() ([]blog_model.Post, error) {
 	query := `SELECT id, title, slug, content, author_id, author_name, published_at, created_at, updated_at FROM posts ORDER BY created_at DESC`
 	rows, err := r.db.Query(query)
 	if err != nil {
@@ -59,9 +60,9 @@ func (r *AdminRepository) GetPosts() ([]model.Post, error) {
 	}
 	defer rows.Close()
 
-	var posts []model.Post
+	var posts []blog_model.Post
 	for rows.Next() {
-		var post model.Post
+		var post blog_model.Post
 		// Scan into post fields. Use sql.Null* types for nullable columns.
 		var authorID sql.Null[uuid.UUID]
 		var publishedAt sql.NullTime
@@ -104,10 +105,10 @@ func (r *AdminRepository) GetPosts() ([]model.Post, error) {
 }
 
 // GetPostBySlug fetches a single post by its slug.
-func (r *AdminRepository) GetPostBySlug(slug string) (*model.Post, error) {
-	query := `SELECT id, title, slug, content, author_id, published_at, created_at, updated_at FROM posts WHERE slug = $1`
-	var post model.Post
-	var authorID sql.Null[uuid.UUID]
+func (r *AdminRepository) GetPostBySlug(slug string) (*blog_model.Post, error) {
+	query := `SELECT id, title, slug, content, author_name, published_at, created_at, updated_at FROM posts WHERE slug = $1`
+	var post blog_model.Post
+
 	var publishedAt sql.NullTime
 
 	err := r.db.QueryRow(query, slug).Scan(
@@ -115,7 +116,7 @@ func (r *AdminRepository) GetPostBySlug(slug string) (*model.Post, error) {
 		&post.Title,
 		&post.Slug,
 		&post.Content,
-		&authorID,
+		&post.AuthorName,
 		&publishedAt,
 		&post.CreatedAt,
 		&post.UpdatedAt,
@@ -128,11 +129,6 @@ func (r *AdminRepository) GetPostBySlug(slug string) (*model.Post, error) {
 		return nil, err
 	}
 
-	if authorID.Valid {
-		post.AuthorID = &authorID.V
-	} else {
-		post.AuthorID = nil
-	}
 	if publishedAt.Valid {
 		post.PublishedAt = &publishedAt.Time
 	} else {
@@ -143,9 +139,9 @@ func (r *AdminRepository) GetPostBySlug(slug string) (*model.Post, error) {
 }
 
 // GetPostByID fetches a single post by its ID.
-func (r *AdminRepository) GetPostByID(id uuid.UUID) (*model.Post, error) {
+func (r *AdminRepository) GetPostByID(id uuid.UUID) (*blog_model.Post, error) {
 	query := `SELECT id, title, slug, content, author_id, published_at, created_at, updated_at FROM posts WHERE id = $1`
-	var post model.Post
+	var post blog_model.Post
 	var authorID sql.Null[uuid.UUID]
 	var publishedAt sql.NullTime
 
@@ -182,7 +178,7 @@ func (r *AdminRepository) GetPostByID(id uuid.UUID) (*model.Post, error) {
 }
 
 // UpdatePost updates an existing post in the database.
-func (r *AdminRepository) UpdatePost(post *model.Post) error {
+func (r *AdminRepository) UpdatePost(post *blog_model.Post) error {
 	post.UpdatedAt = time.Now().UTC() // Update the timestamp
 
 	query := `UPDATE posts SET title = $1, slug = $2, content = $3, published_at = $4, updated_at = $5 WHERE id = $6`
