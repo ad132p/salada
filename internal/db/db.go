@@ -17,7 +17,7 @@ var DB *sql.DB
 func ConnectDatabase() {
 	// Build connection string from environment variables
 	pass := os.Getenv("POSTGRES_PASSWORD")
-	host := os.Getenv("SALADA_HOST")
+	host := os.Getenv("DB_HOST")
 	connStr := fmt.Sprintf("postgresql://salada:%s@%s:5432/salada?sslmode=disable", pass, host)
 
 	var err error

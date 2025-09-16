@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"os"
 	"salada/internal/admin/model"
 	"salada/internal/admin/repositories"
 	"salada/internal/auth"
@@ -67,12 +68,12 @@ func (pc *AuthController) Login(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("token", tokenString, 3600, "/", "localhost", false, true)
+	c.SetCookie("token", tokenString, 3600, "/", os.Getenv("SALADA_HOST"), false, true)
 
 	c.Redirect(http.StatusFound, "/blog/")
 }
 
 func (pc *AuthController) Logout(c *gin.Context) {
-	c.SetCookie("token", "", -1, "/", "localhost", false, true)
+	c.SetCookie("token", "", -1, "/", os.Getenv("SALADA_HOST"), false, true)
 	c.Redirect(http.StatusSeeOther, "/")
 }

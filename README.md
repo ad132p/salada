@@ -45,6 +45,7 @@ podman start registry
 podman build -t salada .
 podman image tag localhost/salada localhost:5000/salada:latest
 podman image push localhost:5000/salada:latest --tls-verify=false
+podman network create systemd-salada
 
 
 # Create datadir for your postgres
