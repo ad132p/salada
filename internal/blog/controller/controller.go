@@ -9,7 +9,6 @@ import (
 	"salada/internal/blog"
 	"salada/internal/blog/model"
 	"salada/internal/blog/repositories"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -55,7 +54,7 @@ func (pc *BlogController) CreatePost(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/blog/")
 }
 
-// UpdatePost handles PUT /posts/:id
+// UpdatePost handles PUT on /posts/:id
 func (pc *BlogController) UpdatePost(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
@@ -64,15 +63,9 @@ func (pc *BlogController) UpdatePost(c *gin.Context) {
 		return
 	}
 
-	var input struct {
-		Title       *string    `json:"title"`
-		Slug        *string    `json:"slug"`
-		Content     *string    `json:"content"`
-		AuthorName  *string    `json:"author_name"`
-		PublishedAt *time.Time `json:"published_at"`
-	}
+	updatePayload := model.Post{}
 
-	if err := c.ShouldBindJSON(&input); err != nil {
+	if err := c.ShouldBindJSON(&updatePayload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -88,21 +81,25 @@ func (pc *BlogController) UpdatePost(c *gin.Context) {
 	}
 
 	// Update fields if provided in the input
-	if input.Title != nil {
-		post.Title = *input.Title
+	if updatePayload.Title != "" {
+		post.Title = updatePayload.Title
 	}
-	if input.Slug != nil {
-		post.Slug = *input.Slug
+	if updatePayload.Slug != "" {
+		post.Slug = updatePayload.Slug
 	}
-	if input.Content != nil {
-		post.Content = *input.Content
+	if updatePayload.Content != "" {
+		post.Content = updatePayload.Content
 	}
-	if input.PublishedAt != nil {
-		post.PublishedAt = input.PublishedAt
+	if updatePayload.PublishedAt != nil {
+		post.PublishedAt = updatePayload.PublishedAt
 	}
 
-	if input.AuthorName != nil {
-		post.AuthorName = *input.AuthorName
+	if updatePayload.Category != "" {
+		post.Category = updatePayload.Category
+	}
+
+	if updatePayload.Tags != "" {
+		post.Tags = updatePayload.Tags
 	}
 
 	if err := pc.Repo.UpdatePost(post); err != nil {
