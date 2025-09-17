@@ -64,7 +64,7 @@ func (r *PostRepository) CreatePost(post *model.Post) error {
 
 // GetPosts fetches all posts from the database.
 func (r *PostRepository) GetPosts() ([]model.Post, error) {
-	query := `SELECT id, title, slug, content, author_id, published_at, created_at, updated_at FROM posts ORDER BY created_at DESC`
+	query := `SELECT id, title, slug, content, author_id, published_at, created_at, updated_at, category FROM posts ORDER BY created_at DESC`
 	rows, err := r.db.Query(query)
 	if err != nil {
 		return nil, err
@@ -87,6 +87,7 @@ func (r *PostRepository) GetPosts() ([]model.Post, error) {
 			&post.PublishedAt,
 			&post.CreatedAt,
 			&post.UpdatedAt,
+			&post.Category,
 		)
 		if err != nil {
 			return nil, err
@@ -116,7 +117,7 @@ func (r *PostRepository) GetPosts() ([]model.Post, error) {
 
 // GetPublishedPosts fetches all published posts from the database.
 func (r *PostRepository) GetPublishedPosts() ([]model.Post, error) {
-	query := `SELECT id, title, slug, content, author_id, author_name, published_at, created_at, updated_at FROM posts
+	query := `SELECT id, title, slug, content, author_id, author_name, published_at, created_at, updated_at, category FROM posts
 	WHERE published_at IS NOT NULL ORDER BY created_at DESC`
 	rows, err := r.db.Query(query)
 	if err != nil {
@@ -140,6 +141,7 @@ func (r *PostRepository) GetPublishedPosts() ([]model.Post, error) {
 			&post.PublishedAt,
 			&post.CreatedAt,
 			&post.UpdatedAt,
+			&post.Category,
 		)
 		if err != nil {
 			return nil, err
