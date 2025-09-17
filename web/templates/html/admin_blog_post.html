@@ -77,28 +77,30 @@
       }
     });
 
-    // Function to handle PATCH update request
-    publishButton.addEventListener('click', async () => {
-      try {
-        messageDisplay.textContent = 'Publishing item...';
-        const response = await fetch(publishEndpoint, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+    if (publishButton) {
+      // Function to handle PATCH update request
+      publishButton.addEventListener('click', async () => {
+        try {
+          messageDisplay.textContent = 'Publishing item...';
+          const response = await fetch(publishEndpoint, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
 
-        if (response.ok) {
-          messageDisplay.textContent = `Item ${slug.textContent} published successfully!`;
-          window.location.href = '/blog/';
-        } else {
-          const errorData = await response.json();
-          messageDisplay.textContent = `Error publishing item: ${errorData.message || response.statusText}`;
+          if (response.ok) {
+            messageDisplay.textContent = `Item ${slug.textContent} published successfully!`;
+            window.location.href = '/blog/';
+          } else {
+            const errorData = await response.json();
+            messageDisplay.textContent = `Error publishing item: ${errorData.message || response.statusText}`;
+          }
+        } catch (error) {
+          messageDisplay.textContent = `Network error: ${error.message}`;
+          console.error('Error during PATCH request:', error);
         }
-      } catch (error) {
-        messageDisplay.textContent = `Network error: ${error.message}`;
-        console.error('Error during PATCH request:', error);
-      }
-    });
+      });
+    }
   });
 </script>
