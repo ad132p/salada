@@ -29,7 +29,7 @@ func (pc *BlogController) CreatePost(c *gin.Context) {
 	title := c.PostForm("title")
 	content := c.PostForm("content")
 	author := c.PostForm("author")
-	tags := c.PostForm("tags")
+
 	category := c.PostForm("category")
 
 	// The rest of your code remains the same...
@@ -37,8 +37,8 @@ func (pc *BlogController) CreatePost(c *gin.Context) {
 		Title:      title,
 		Content:    content,
 		AuthorName: author, // Use the safely retrieved variable
-		Tags:       tags,
-		Category:   category,
+		//Tags:       tags,
+		Category: category,
 	}
 
 	// Bind and save the post...
@@ -98,7 +98,7 @@ func (pc *BlogController) UpdatePost(c *gin.Context) {
 		post.Category = updatePayload.Category
 	}
 
-	if updatePayload.Tags != "" {
+	if len(updatePayload.Tags) != 0 {
 		post.Tags = updatePayload.Tags
 	}
 
@@ -182,7 +182,7 @@ func (pc *BlogController) GetPosts(c *gin.Context) {
 	if err != nil {
 		c.HTML(http.StatusServiceUnavailable, "blog.html", gin.H{
 			"title": "Blog Posts",
-			"error": "Failed to retrieve posts",
+			"error": err,
 		})
 		return
 	}

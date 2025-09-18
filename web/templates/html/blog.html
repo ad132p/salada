@@ -16,12 +16,13 @@
         <p class="text-sm text-gray-500">Published: {{.PublishedAt}}</p>
         <p class="text-sm text-gray-500">Author: {{.AuthorName}}</p>
         <p class="text-sm text-gray-500">Category: {{.Category}}</p>
-        <p class="text-sm text-gray-500">Tags: {{.Tags}}</p>
-      </article>
+        <p class="text-sm text-gray-500">Tags: {{.Tags}}</p> 
+     </article>
       {{end}}
     </div>
     {{else}}
     <p class="text-lg text-gray-600">No blog posts available.</p>
+    {{.error}}
     {{end}}
 
     <div class="w-full flex justify-center mt-8 space-x-4">

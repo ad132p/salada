@@ -37,6 +37,30 @@ func GetTailwindRenderer() *TailwindRenderer {
 	}
 }
 
+func SplitTagsString(s string) []string {
+	// Replace all delimiters with a single delimiter (e.g., a space)
+	replacer := strings.NewReplacer(",", " ", ";", " ", ":", " ", "|", " ")
+	tempTagsString := replacer.Replace(s)
+
+	// Split the modified string by the new single delimiter
+	// and remove any empty strings that result from multiple delimiters next to each other
+	return strings.Fields(tempTagsString)
+}
+
+// StringArrayToByteArrays converts a slice of strings to a slice of byte slices.
+func StringArrayToByteArrays(stringArray []string) [][]byte {
+	// Create an empty slice of byte slices to store the result.
+	var byteArrays [][]byte
+
+	// Iterate through the input string slice.
+	for _, s := range stringArray {
+		// Convert each string to a byte slice and append it to the result.
+		byteArrays = append(byteArrays, []byte(s))
+	}
+
+	return byteArrays
+}
+
 // RenderMarkdownToHTML converts a markdown string to an HTML string.
 func RenderMarkdownToHTML(md string) string {
 	renderer := GetTailwindRenderer()
