@@ -20,6 +20,6 @@ type Post struct {
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`
 	Tags        []uint8
-	TagsJSON    string
+	TagsJSON    []string
 	Category    string
 }

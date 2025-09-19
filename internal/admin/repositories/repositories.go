@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 
 	"salada/internal/admin/model"
@@ -94,6 +95,12 @@ func (r *AdminRepository) GetPosts() ([]blog_model.Post, error) {
 			post.PublishedAt = nil
 		}
 
+		pgArray := string(post.Tags)
+		post.TagsJSON, err = blog.PgArrayToJSONString(pgArray)
+		if err != nil {
+			return nil, err
+		}
+
 		posts = append(posts, post)
 	}
 
@@ -137,6 +144,13 @@ func (r *AdminRepository) GetPostBySlug(slug string) (*blog_model.Post, error) {
 		post.PublishedAt = nil
 	}
 
+	pgArray := string(post.Tags)
+	post.TagsJSON, err = blog.PgArrayToJSONString(pgArray)
+	fmt.Println(post.TagsJSON, "here")
+	if err != nil {
+		return nil, err
+	}
+
 	return &post, nil
 }
 
@@ -174,6 +188,12 @@ func (r *AdminRepository) GetPostByID(id uuid.UUID) (*blog_model.Post, error) {
 		post.PublishedAt = &publishedAt.Time
 	} else {
 		post.PublishedAt = nil
+	}
+
+	pgArray := string(post.Tags)
+	post.TagsJSON, err = blog.PgArrayToJSONString(pgArray)
+	if err != nil {
+		return nil, err
 	}
 
 	return &post, nil

@@ -15,7 +15,9 @@
         <p><strong>Slug:</strong> <span id="slug">{{ .post.Slug }}</span></p>
         <p><strong>Published:</strong> <span id="slug">{{ .post.PublishedAt }}</span></p>
         <p><strong>Author:</strong> <span id="author_name">{{ .post.AuthorName }}</span></p>
-        <p><strong>Tags:</strong> <span id="tags">{{ .post.Tags }}</span></p>
+        {{range $i, $e := .post.TagsJSON}}
+        <a href="/tags/{{$e}}" id="tags{{$e}}">#{{$e}}</a>
+        {{end}}
         <p><strong>Category:</strong> <span id="tags">{{ .post.Category }}</span></p>
       </div>
 

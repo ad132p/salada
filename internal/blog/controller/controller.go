@@ -30,6 +30,7 @@ func (pc *BlogController) CreatePost(c *gin.Context) {
 	content := c.PostForm("content")
 	author := c.PostForm("author")
 	tags := c.PostForm("tags")
+	fmt.Println(tags)
 
 	category := c.PostForm("category")
 
@@ -37,7 +38,7 @@ func (pc *BlogController) CreatePost(c *gin.Context) {
 		Title:      title,
 		Content:    content,
 		AuthorName: author,
-		TagsJSON:   tags,
+		TagsJSON:   nil,
 		Category:   category,
 	}
 

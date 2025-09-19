@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"salada/internal/blog/model"
 	"strings"
 
 	"github.com/gomarkdown/markdown"
@@ -47,14 +48,14 @@ func SplitTagsString(s string) []string {
 	return strings.Fields(tempTagsString)
 }
 
-func PgArrayToJSONString(pgString string) (string, error) {
+func PgArrayToJSONString(pgString string) ([]string, error) {
 	// A regex to find elements. It looks for either a double-quoted string
 	// or a sequence of characters that are not a comma or brace.
 	r := regexp.MustCompile(`"([^"]*)"|([^,{}]+)`)
 	matches := r.FindAllStringSubmatch(pgString, -1)
 
 	if len(matches) == 0 && strings.TrimSpace(pgString) != "{}" {
-		return "", fmt.Errorf("invalid PostgreSQL array string format")
+		return nil, fmt.Errorf("invalid PostgreSQL array string format")
 	}
 
 	var elements []string
@@ -68,11 +69,11 @@ func PgArrayToJSONString(pgString string) (string, error) {
 		}
 
 		// Add double quotes to the element for a valid JSON string
-		elements = append(elements, fmt.Sprintf(`"%s"`, element))
+		elements = append(elements, element)
 	}
 
 	// Join the elements with commas and wrap with square brackets
-	return fmt.Sprintf("[%s]", strings.Join(elements, ",")), nil
+	return elements, nil
 }
 
 // RenderMarkdownToHTML converts a markdown string to an HTML string.
@@ -138,4 +139,8 @@ func (r *TailwindRenderer) RenderNode(w io.Writer, node ast.Node, entering bool)
 // We don't need a specific header for this example, so it's a no-op.
 func (r *TailwindRenderer) RenderHeader(w io.Writer, node ast.Node) {
 	// No-op
+}
+
+func GetPostsWithHashTags(posts []model.Post) []model.Post {
+	return posts
 }
