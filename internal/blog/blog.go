@@ -48,34 +48,6 @@ func SplitTagsString(s string) []string {
 	return strings.Fields(tempTagsString)
 }
 
-func PgArrayToJSONString(pgString string) ([]string, error) {
-	// A regex to find elements. It looks for either a double-quoted string
-	// or a sequence of characters that are not a comma or brace.
-	r := regexp.MustCompile(`"([^"]*)"|([^,{}]+)`)
-	matches := r.FindAllStringSubmatch(pgString, -1)
-
-	if len(matches) == 0 && strings.TrimSpace(pgString) != "{}" {
-		return nil, fmt.Errorf("invalid PostgreSQL array string format")
-	}
-
-	var elements []string
-	for _, match := range matches {
-		var element string
-		// The regex will put the value in either the first or second group
-		if match[1] != "" {
-			element = match[1]
-		} else {
-			element = strings.TrimSpace(match[2])
-		}
-
-		// Add double quotes to the element for a valid JSON string
-		elements = append(elements, element)
-	}
-
-	// Join the elements with commas and wrap with square brackets
-	return elements, nil
-}
-
 // RenderMarkdownToHTML converts a markdown string to an HTML string.
 func RenderMarkdownToHTML(md string) string {
 	renderer := GetTailwindRenderer()

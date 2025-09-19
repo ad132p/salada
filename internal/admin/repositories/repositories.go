@@ -3,6 +3,7 @@ package repositories
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"salada/internal/admin/model"
@@ -54,7 +55,7 @@ func (r *AdminRepository) CreatePost(post *blog_model.Post) error {
 
 // GetPosts fetches all posts from the database.
 func (r *AdminRepository) GetPosts() ([]blog_model.Post, error) {
-	query := `SELECT id, title, slug, content, author_id, author_name, published_at, created_at, updated_at FROM posts ORDER BY created_at DESC`
+	query := `SELECT id, title, slug, content, author_id, author_name, published_at, created_at, updated_at, tags, category FROM posts ORDER BY created_at DESC`
 	rows, err := r.db.Query(query)
 	if err != nil {
 		return nil, err
@@ -78,6 +79,8 @@ func (r *AdminRepository) GetPosts() ([]blog_model.Post, error) {
 			&publishedAt,
 			&post.CreatedAt,
 			&post.UpdatedAt,
+			&post.Tags,
+			&post.Category,
 		)
 		if err != nil {
 			return nil, err
@@ -96,10 +99,7 @@ func (r *AdminRepository) GetPosts() ([]blog_model.Post, error) {
 		}
 
 		pgArray := string(post.Tags)
-		post.TagsJSON, err = blog.PgArrayToJSONString(pgArray)
-		if err != nil {
-			return nil, err
-		}
+		post.TagsJSON = strings.Split(pgArray[1:len(pgArray)-1], ",")
 
 		posts = append(posts, post)
 	}
@@ -145,11 +145,8 @@ func (r *AdminRepository) GetPostBySlug(slug string) (*blog_model.Post, error) {
 	}
 
 	pgArray := string(post.Tags)
-	post.TagsJSON, err = blog.PgArrayToJSONString(pgArray)
+	post.TagsJSON = strings.Split(pgArray[1:len(pgArray)-1], ",")
 	fmt.Println(post.TagsJSON, "here")
-	if err != nil {
-		return nil, err
-	}
 
 	return &post, nil
 }
@@ -191,10 +188,7 @@ func (r *AdminRepository) GetPostByID(id uuid.UUID) (*blog_model.Post, error) {
 	}
 
 	pgArray := string(post.Tags)
-	post.TagsJSON, err = blog.PgArrayToJSONString(pgArray)
-	if err != nil {
-		return nil, err
-	}
+	post.TagsJSON = strings.Split(pgArray, ",")
 
 	return &post, nil
 }

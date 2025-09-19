@@ -2,6 +2,8 @@ package repositories
 
 import (
 	"database/sql"
+	"strings"
+
 	//	"fmt"
 	"time"
 
@@ -158,10 +160,9 @@ func (r *PostRepository) GetPublishedPosts() ([]model.Post, error) {
 		}
 
 		pgArray := string(post.Tags)
-		post.TagsJSON, err = blog.PgArrayToJSONString(pgArray)
-		if err != nil {
-			return nil, err
-		}
+		rawArray := pgArray[1 : len(pgArray)-1]
+
+		post.TagsJSON = strings.Split(rawArray, ",")
 
 		posts = append(posts, post)
 	}

@@ -18,7 +18,7 @@
         <p class="text-sm text-gray-500">Category: {{.Category}}</p>
         <p class="text-sm text-gray-500" id="hashtag-output"></p>
         {{range $i, $e := .TagsJSON}}
-          <a href="/tags/{{$e}}" id="tags{{$e}}">#{{$e}}</a>
+          <a class="text-sm text-gray-500" href="/tags/{{$e}}" id="tags{{$e}}">#{{ $e }}</a>
         {{end}}
       </article>
       {{end}}
