@@ -33,12 +33,11 @@ func (pc *BlogController) CreatePost(c *gin.Context) {
 
 	category := c.PostForm("category")
 
-	// The rest of your code remains the same...
 	post := model.Post{
 		Title:      title,
 		Content:    content,
-		AuthorName: author, // Use the safely retrieved variable
-		Tags:       tags,
+		AuthorName: author,
+		TagsJSON:   tags,
 		Category:   category,
 	}
 

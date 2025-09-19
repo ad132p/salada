@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"database/sql"
+	//	"fmt"
 	"time"
 
 	"salada/internal/blog"
@@ -155,6 +156,13 @@ func (r *PostRepository) GetPublishedPosts() ([]model.Post, error) {
 		} else {
 			post.AuthorID = nil
 		}
+
+		pgArray := string(post.Tags)
+		post.TagsJSON, err = blog.PgArrayToJSONString(pgArray)
+		if err != nil {
+			return nil, err
+		}
+
 		posts = append(posts, post)
 	}
 

@@ -16,8 +16,9 @@
         <p class="text-sm text-gray-500">Published: {{.PublishedAt}}</p>
         <p class="text-sm text-gray-500">Author: {{.AuthorName}}</p>
         <p class="text-sm text-gray-500">Category: {{.Category}}</p>
-        <p class="text-sm text-gray-500">Tags: {{.Tags}}</p> 
-     </article>
+        <p class="text-sm text-gray-500" id="hashtag-output"></p>
+        <input type="hidden" id="tags" name="tags" value="{{.TagsJSON}}" />
+      </article>
       {{end}}
     </div>
     {{else}}
@@ -39,3 +40,47 @@
     </div>
   </div>
 </div>
+<script>
+  // Function to handle the process of getting the data and yielding hashtags
+  function yieldHashtags() {
+    // 1. Get the element containing the string data
+    const tagsElement = document.getElementById('tags');
+
+    // If the element doesn't exist, log an error and stop
+    if (!tagsElement) {
+      console.error("Element with ID 'tags' not found.");
+      return;
+    }
+
+    // 2. Get the string content from the element
+    const arrayAsString = tagsElement.value;
+    let jsArray = [];
+
+    // Use a try-catch block to safely parse the JSON string
+    try {
+      jsArray = JSON.parse(arrayAsString);
+    } catch (e) {
+      console.error("Failed to parse the string as a JSON array:", e);
+
+      return;
+    }
+
+    // 3. Convert the array elements into a string of hashtag links
+    const hashtagString = jsArray.map(item => {
+      // Create an <a> tag for each item
+      // Use encodeURIComponent to handle spaces and special characters in links
+      return `<a href="#${encodeURIComponent(item.replace(/\s/g, ''))}">#${item}</a>`;
+    }).join(' '); // Join the tags with a space
+
+    // 4. Inject the created string into a new HTML element
+    const outputElement = document.getElementById('hashtag-output');
+    if (outputElement) {
+      outputElement.innerHTML = hashtagString;
+    } else {
+      console.error("Element with ID 'hashtag-output' not found.");
+    }
+  }
+
+  // Call the function to run the process
+  document.addEventListener('DOMContentLoaded', yieldHashtags);
+</script>

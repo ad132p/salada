@@ -47,18 +47,32 @@ func SplitTagsString(s string) []string {
 	return strings.Fields(tempTagsString)
 }
 
-// StringArrayToByteArrays converts a slice of strings to a slice of byte slices.
-func StringArrayToByteArrays(stringArray []string) [][]byte {
-	// Create an empty slice of byte slices to store the result.
-	var byteArrays [][]byte
+func PgArrayToJSONString(pgString string) (string, error) {
+	// A regex to find elements. It looks for either a double-quoted string
+	// or a sequence of characters that are not a comma or brace.
+	r := regexp.MustCompile(`"([^"]*)"|([^,{}]+)`)
+	matches := r.FindAllStringSubmatch(pgString, -1)
 
-	// Iterate through the input string slice.
-	for _, s := range stringArray {
-		// Convert each string to a byte slice and append it to the result.
-		byteArrays = append(byteArrays, []byte(s))
+	if len(matches) == 0 && strings.TrimSpace(pgString) != "{}" {
+		return "", fmt.Errorf("invalid PostgreSQL array string format")
 	}
 
-	return byteArrays
+	var elements []string
+	for _, match := range matches {
+		var element string
+		// The regex will put the value in either the first or second group
+		if match[1] != "" {
+			element = match[1]
+		} else {
+			element = strings.TrimSpace(match[2])
+		}
+
+		// Add double quotes to the element for a valid JSON string
+		elements = append(elements, fmt.Sprintf(`"%s"`, element))
+	}
+
+	// Join the elements with commas and wrap with square brackets
+	return fmt.Sprintf("[%s]", strings.Join(elements, ",")), nil
 }
 
 // RenderMarkdownToHTML converts a markdown string to an HTML string.
