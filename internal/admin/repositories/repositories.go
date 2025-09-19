@@ -106,7 +106,7 @@ func (r *AdminRepository) GetPosts() ([]blog_model.Post, error) {
 
 // GetPostBySlug fetches a single post by its slug.
 func (r *AdminRepository) GetPostBySlug(slug string) (*blog_model.Post, error) {
-	query := `SELECT id, title, slug, content, author_name, published_at, created_at, updated_at FROM posts WHERE slug = $1`
+	query := `SELECT id, title, slug, content, author_name, published_at, created_at, updated_at, tags, category FROM posts WHERE slug = $1`
 	var post blog_model.Post
 
 	var publishedAt sql.NullTime
@@ -120,6 +120,8 @@ func (r *AdminRepository) GetPostBySlug(slug string) (*blog_model.Post, error) {
 		&publishedAt,
 		&post.CreatedAt,
 		&post.UpdatedAt,
+		&post.Tags,
+		&post.Category,
 	)
 
 	if err != nil {
