@@ -29,6 +29,7 @@ func (pc *BlogController) CreatePost(c *gin.Context) {
 	title := c.PostForm("title")
 	content := c.PostForm("content")
 	author := c.PostForm("author")
+	tags := c.PostForm("tags")
 
 	category := c.PostForm("category")
 
@@ -37,8 +38,8 @@ func (pc *BlogController) CreatePost(c *gin.Context) {
 		Title:      title,
 		Content:    content,
 		AuthorName: author, // Use the safely retrieved variable
-		//Tags:       tags,
-		Category: category,
+		Tags:       tags,
+		Category:   category,
 	}
 
 	// Bind and save the post...

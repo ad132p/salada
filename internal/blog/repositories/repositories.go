@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"database/sql"
-	"encoding/json"
 	"time"
 
 	"salada/internal/blog"
@@ -41,8 +40,8 @@ func (r *PostRepository) CreatePost(post *model.Post) error {
 	post.UpdatedAt = post.CreatedAt
 	post.Slug = blog.CreateSlug(post.Title)
 
-	query := `INSERT INTO posts (id, title, slug, content, author_id, author_name, published_at, created_at, updated_at, STRING_TO_ARRAY(tags, ' '), category)
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, created_at, updated_at`
+	query := `INSERT INTO posts (id, title, slug, content, author_id, author_name, published_at, created_at, updated_at, tags, category)
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, string_to_array($10, ','), $11) RETURNING id, created_at, updated_at`
 
 	// Use QueryRow to get back the generated ID and timestamps (if DB generates)
 	// Or use Exec if you're setting ID in Go and don't need returns
@@ -156,8 +155,6 @@ func (r *PostRepository) GetPublishedPosts() ([]model.Post, error) {
 		} else {
 			post.AuthorID = nil
 		}
-
-		json.Unmarshal([]byte(post.TagsJSON), &post.Tags)
 		posts = append(posts, post)
 	}
 
