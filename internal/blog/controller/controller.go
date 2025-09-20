@@ -9,6 +9,7 @@ import (
 	"salada/internal/blog"
 	"salada/internal/blog/model"
 	"salada/internal/blog/repositories"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -38,7 +39,7 @@ func (pc *BlogController) CreatePost(c *gin.Context) {
 		Title:      title,
 		Content:    content,
 		AuthorName: author,
-		TagsJSON:   nil,
+		TagsJSON:   strings.Split(tags, ","),
 		Category:   category,
 	}
 
