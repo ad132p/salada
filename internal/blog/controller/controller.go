@@ -55,7 +55,7 @@ func (pc *BlogController) CreatePost(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/blog/")
 }
 
-// UpdatePost handles PUT on /posts/:id
+// UpdatePost handles PUT on /blog/:id
 func (pc *BlogController) UpdatePost(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
@@ -64,13 +64,11 @@ func (pc *BlogController) UpdatePost(c *gin.Context) {
 		return
 	}
 
-	updatePayload := model.Post{}
-
-	if err := c.ShouldBindJSON(&updatePayload); err != nil {
+	var updatePost model.UpdatePost
+	if err := c.ShouldBindJSON(&updatePost); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
 	post, err := pc.Repo.GetPostByID(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find post"})
@@ -81,34 +79,17 @@ func (pc *BlogController) UpdatePost(c *gin.Context) {
 		return
 	}
 
-	// Update fields if provided in the input
-	if updatePayload.Title != "" {
-		post.Title = updatePayload.Title
-	}
-	if updatePayload.Slug != "" {
-		post.Slug = updatePayload.Slug
-	}
-	if updatePayload.Content != "" {
-		post.Content = updatePayload.Content
-	}
-	if updatePayload.PublishedAt != nil {
-		post.PublishedAt = updatePayload.PublishedAt
-	}
+	updatePost.ID = idStr
+	updatePost.Title = post.Title
+	updatePost.Content = post.Content
+	updatePost.Category = post.Category
 
-	if updatePayload.Category != "" {
-		post.Category = updatePayload.Category
-	}
-
-	if len(updatePayload.Tags) != 0 {
-		post.Tags = updatePayload.Tags
-	}
-
-	if err := pc.Repo.UpdatePost(post); err != nil {
+	if err := pc.Repo.UpdatePost(&updatePost); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update post", "details": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, post)
+	c.JSON(http.StatusOK, updatePost)
 }
 
 func (pc *BlogController) PublishPost(c *gin.Context) {
@@ -262,7 +243,8 @@ func (pc *BlogController) EditPostForm(c *gin.Context) {
 		return
 	}
 	c.HTML(http.StatusOK, "edit_post_form.html", gin.H{
-		"title": post.Title,
-		"post":  post,
+		"title":      post.Title,
+		"post":       post,
+		"categories": blog.Categories,
 	})
 }

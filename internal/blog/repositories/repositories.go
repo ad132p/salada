@@ -199,12 +199,17 @@ func (r *PostRepository) GetPostBySlug(slug string) (*model.Post, error) {
 		return &post, err
 	}
 
+	pgArray := string(post.Tags)
+	rawArray := pgArray[1 : len(pgArray)-1]
+
+	post.TagsJSON = strings.Split(rawArray, ",")
+
 	return &post, nil
 }
 
 // GetPostByID fetches a single post by its ID.
 func (r *PostRepository) GetPostByID(id uuid.UUID) (*model.Post, error) {
-	query := `SELECT id, title, slug, content, author_name, published_at, created_at, updated_at FROM posts WHERE id = $1`
+	query := `SELECT id, title, slug, content, author_name, published_at, created_at, updated_at, tags, category FROM posts WHERE id = $1`
 	var post model.Post
 	var publishedAt sql.NullTime
 
@@ -217,6 +222,8 @@ func (r *PostRepository) GetPostByID(id uuid.UUID) (*model.Post, error) {
 		&publishedAt,
 		&post.CreatedAt,
 		&post.UpdatedAt,
+		&post.Tags,
+		&post.Category,
 	)
 
 	if err != nil {
@@ -232,23 +239,23 @@ func (r *PostRepository) GetPostByID(id uuid.UUID) (*model.Post, error) {
 		post.PublishedAt = nil
 	}
 
+	pgArray := string(post.Tags)
+	rawArray := pgArray[1 : len(pgArray)-1]
+
+	post.TagsJSON = strings.Split(rawArray, ",")
+
 	return &post, nil
 }
 
 // UpdatePost updates an existing post in the database.
-func (r *PostRepository) UpdatePost(post *model.Post) error {
-	post.UpdatedAt = time.Now().UTC() // Update the timestamp
-
-	query := `UPDATE posts SET title = $1, author_name = $2, slug = $3, content = $4, published_at = $5, updated_at = $6, tags = $7 WHERE id = $8`
+func (r *PostRepository) UpdatePost(post *model.UpdatePost) error {
+	query := `UPDATE posts SET title = $2, content = $3, updated_at = NOW(), category = $4 WHERE id = $1`
 	_, err := r.db.Exec(query,
-		post.Title,
-		post.AuthorName,
-		post.Slug,
-		post.Content,
-		post.PublishedAt, // Will be NULL if *time.Time is nil
-		post.UpdatedAt,
-		post.Tags,
 		post.ID,
+		post.Title,
+		post.Content,
+		//post.Tags,
+		post.Category,
 	)
 	return err
 }

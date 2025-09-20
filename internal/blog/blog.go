@@ -116,3 +116,5 @@ func (r *TailwindRenderer) RenderHeader(w io.Writer, node ast.Node) {
 func GetPostsWithHashTags(posts []model.Post) []model.Post {
 	return posts
 }
+
+var Categories = [7]string{"footbal", "cs", "politics", "plants", "cine", "lit", "random"}

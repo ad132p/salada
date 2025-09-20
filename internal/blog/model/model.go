@@ -23,3 +23,11 @@ type Post struct {
 	TagsJSON    []string
 	Category    string
 }
+
+type UpdatePost struct {
+	ID       string `json:"id"`
+	Title    string `json:"title"`
+	Content  string `json:"content"`
+	Tags     string `json:"tags"`
+	Category string `json:"category"`
+}

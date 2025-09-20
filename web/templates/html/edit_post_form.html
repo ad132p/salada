@@ -7,7 +7,7 @@
         <fieldset class="border border-gray-300 rounded-md p-6">
           <legend class="text-lg font-semibold text-gray-700 px-2">Post Details</legend>
           <div class="space-y-4">
-            <p id="primary_key" class="hidden">{{ .post.ID }}</p>
+            <p id="primary_key" name="primary_key" class="hidden">{{ .post.ID }}</p>
             <p id="slug" class="hidden">{{ .post.Slug }}</p>
 
             <div class="space-y-2">
@@ -22,14 +22,10 @@
                 (Optional):</label>
               <select name="category" id="category_select"
                 class="block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                <option value="">--Please choose an option--</option>
-                <option value="football">Football</option>
-                <option value="cs">Computer Science</option>
-                <option value="politics">Politics</option>
-                <option value="plants">Plants</option>
-                <option value="cine">Cinema</option>
-                <option value="lit">Literature</option>
-                <option value="random">Random</option>
+                <option disabled value="">--Please choose an option--</option>
+                {{range $index, $element := .categories}}
+                <option value="{{ $element }}">{{ $element }}</option>
+                {{ end }}
               </select>
             </div>
 
@@ -40,7 +36,7 @@
 
               </label>
 
-              <input type="text" name="tags" id="tags" value="{{range $i, $e := .post.TagsJSON}}{{$e}}{{end}}"
+              <input type="text" name="tags" id="tags" value="{{range .post.TagsJSON}}{{.}},{{end}}"
                 placeholder="e.g., html, css, javascript"
                 class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
             </div>
@@ -103,10 +99,12 @@
   editButton.addEventListener('click', async () => {
     const updateUrl = `/blog/${primaryKey.textContent}`;
     const data = {
+      ID: primaryKey.textContent,
       title: titleInput.value,
+      content: easyMDE.value(),
       tags: tagsInput.value,
       slug: slug.textContent,
-      content: easyMDE.value(),
+      category: categoryInput.value
     };
 
     try {
@@ -122,8 +120,6 @@
       if (response.ok) {
         const responseData = await response.json();
         messageDisplay.textContent = `Item ${slug.textContent} updated successfully!`;
-        // Optional: Redirect or refresh the page
-        window.location.href = `/admin/blog/${slug.textContent}`;
       } else {
         const errorData = await response.json();
         messageDisplay.textContent = `Error updating item: ${errorData.message || response.statusText}`;
