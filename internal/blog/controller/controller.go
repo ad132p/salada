@@ -79,10 +79,7 @@ func (pc *BlogController) UpdatePost(c *gin.Context) {
 		return
 	}
 
-	updatePost.ID = idStr
-	updatePost.Title = post.Title
-	updatePost.Content = post.Content
-	updatePost.Category = post.Category
+	updatePost.ID = id
 
 	if err := pc.Repo.UpdatePost(&updatePost); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update post", "details": err.Error()})

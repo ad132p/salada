@@ -28,12 +28,9 @@
                 {{ end }}
               </select>
             </div>
-
             <div class="space-y-2">
               <label for="tags" class="block text-sm font-medium text-gray-700">Tags (Comma-separated,
                 Optional):</label>
-
-
               </label>
 
               <input type="text" name="tags" id="tags" value="{{range .post.TagsJSON}}{{.}},{{end}}"
@@ -103,7 +100,6 @@
       title: titleInput.value,
       content: easyMDE.value(),
       tags: tagsInput.value,
-      slug: slug.textContent,
       category: categoryInput.value
     };
 
