@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 // Post represents a blog post.
@@ -19,8 +20,7 @@ type Post struct {
 	PublishedAt *time.Time `json:"published_at,omitempty"` // Nullable in DB
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`
-	Tags        []uint8
-	TagsJSON    []string
+	Tags        pq.StringArray
 	Category    string
 }
 

@@ -1,9 +1,9 @@
 package main
 
 import (
+	salada "salada/internal"
 	"salada/internal/db"
 	"salada/internal/middleware"
-	salada_router "salada/internal/router"
 	"salada/internal/server"
 
 	"github.com/gin-gonic/gin"
@@ -20,7 +20,7 @@ func main() {
 	gin.SetMode(gin.DebugMode)
 
 	// Setup routes
-	salada_router.SetupRoutes(router)
+	salada.SetupRoutes(router)
 
 	//Setup middleware configuration
 	middleware.SetupMiddleware(router)

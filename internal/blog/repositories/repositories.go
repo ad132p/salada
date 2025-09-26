@@ -4,13 +4,12 @@ import (
 	"database/sql"
 	"strings"
 
-	//	"fmt"
-	"time"
-
 	"salada/internal/blog"
 	"salada/internal/blog/model"
+	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 // PostRepository defines methods for interacting with post data.
@@ -44,7 +43,7 @@ func (r *PostRepository) CreatePost(post *model.Post) error {
 	post.Slug = blog.CreateSlug(post.Title)
 
 	query := `INSERT INTO posts (id, title, slug, content, author_id, author_name, published_at, created_at, updated_at, tags, category)
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, string_to_array($10, ','), $11) RETURNING id, created_at, updated_at`
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, created_at, updated_at`
 
 	// Use QueryRow to get back the generated ID and timestamps (if DB generates)
 	// Or use Exec if you're setting ID in Go and don't need returns
@@ -58,7 +57,7 @@ func (r *PostRepository) CreatePost(post *model.Post) error {
 		post.PublishedAt, // Will be NULL if *time.Time is nil
 		post.CreatedAt,
 		post.UpdatedAt,
-		post.Tags,
+		pq.Array(post.Tags),
 		post.Category,
 	).Scan(&post.ID, &post.CreatedAt, &post.UpdatedAt) // Scan the returned values
 
@@ -159,11 +158,6 @@ func (r *PostRepository) GetPublishedPosts() ([]model.Post, error) {
 			post.AuthorID = nil
 		}
 
-		pgArray := string(post.Tags)
-		rawArray := pgArray[1 : len(pgArray)-1]
-
-		post.TagsJSON = strings.Split(rawArray, ",")
-
 		posts = append(posts, post)
 	}
 
@@ -198,12 +192,6 @@ func (r *PostRepository) GetPostBySlug(slug string) (*model.Post, error) {
 		}
 		return &post, err
 	}
-
-	pgArray := string(post.Tags)
-	rawArray := pgArray[1 : len(pgArray)-1]
-
-	post.TagsJSON = strings.Split(rawArray, ",")
-
 	return &post, nil
 }
 
@@ -239,22 +227,17 @@ func (r *PostRepository) GetPostByID(id uuid.UUID) (*model.Post, error) {
 		post.PublishedAt = nil
 	}
 
-	pgArray := string(post.Tags)
-	rawArray := pgArray[1 : len(pgArray)-1]
-
-	post.TagsJSON = strings.Split(rawArray, ",")
-
 	return &post, nil
 }
 
 // UpdatePost updates an existing post in the database.
 func (r *PostRepository) UpdatePost(post *model.UpdatePost) error {
-	query := `UPDATE posts SET title = $2, content = $3, updated_at = NOW(), category = $4 WHERE id = $1`
+	query := `UPDATE posts SET title = $2, content = $3, updated_at = NOW(), tags = $4, category = $5 WHERE id = $1`
 	_, err := r.db.Exec(query,
 		post.ID,
 		post.Title,
 		post.Content,
-		//post.Tags,
+		pq.Array(strings.Split(post.Tags, ",")),
 		post.Category,
 	)
 	return err

@@ -17,8 +17,8 @@
         <p class="text-sm text-gray-500">Author: {{.AuthorName}}</p>
         <p class="text-sm text-gray-500">Category: {{.Category}}</p>
         <p class="text-sm text-gray-500" id="hashtag-output"></p>
-        {{range $i, $e := .TagsJSON}}
-          <a class="text-sm text-gray-500" href="/tags/{{$e}}" id="tags{{$e}}">#{{ $e }}</a>
+        {{range $i, $e := .Tags}}
+        <a class="text-sm text-gray-500" href="/tags/{{$e}}" id="tags{{$e}}">#{{ $e }}</a>
         {{end}}
       </article>
       {{end}}
@@ -32,6 +32,7 @@
       <a href="/blog/new/"
         class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md transition-colors duration-200">New
         blog</a>
+
       {{ if .username }}
       <form action="/logout" method="get">
         <input type="hidden" id="username" name="username" value="{{.username}}" />
@@ -40,5 +41,6 @@
       </form>
       {{ end }}
     </div>
+    <div id="jah">{{.msg}}</div>
   </div>
 </div>

@@ -39,7 +39,7 @@ func (pc *BlogController) CreatePost(c *gin.Context) {
 		Title:      title,
 		Content:    content,
 		AuthorName: author,
-		TagsJSON:   strings.Split(tags, ","),
+		Tags:       strings.Split(tags, ","),
 		Category:   category,
 	}
 
@@ -53,7 +53,7 @@ func (pc *BlogController) CreatePost(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create post", "details": err.Error()})
 		return
 	}
-	c.Redirect(http.StatusFound, "/blog/")
+	c.Redirect(http.StatusFound, "/thankyou/")
 }
 
 // UpdatePost handles PUT on /blog/:id
