@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"database/sql"
+	"fmt"
 	"strings"
 
 	"salada/internal/blog"
@@ -122,6 +123,86 @@ func (r *PostRepository) GetPosts() ([]model.Post, error) {
 func (r *PostRepository) GetPublishedPosts() ([]model.Post, error) {
 	query := `SELECT id, title, slug, content, author_id, author_name, published_at, created_at, updated_at, tags, category FROM posts
 	WHERE published_at IS NOT NULL ORDER BY created_at DESC`
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []model.Post
+	for rows.Next() {
+		var post model.Post
+		// Scan into post fields. Use sql.Null* types for nullable columns.
+		var authorID sql.Null[uuid.UUID]
+
+		err := rows.Scan(
+			&post.ID,
+			&post.Title,
+			&post.Slug,
+			&post.Content,
+			&post.AuthorID,
+			&post.AuthorName,
+			&post.PublishedAt,
+			&post.CreatedAt,
+			&post.UpdatedAt,
+			&post.Tags,
+			&post.Category,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		// Assign nullable fields
+		if authorID.Valid {
+			post.AuthorID = &authorID.V
+		} else {
+			post.AuthorID = nil
+		}
+
+		posts = append(posts, post)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return posts, nil
+}
+
+// GetPublishedPosts fetches all published posts from the database.
+func (r *PostRepository) GetCategoryCount() ([]model.CategoryCount, error) {
+	query := `SELECT category, count(category) FROM posts GROUP BY category`
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var categoryCountSet []model.CategoryCount
+	for rows.Next() {
+		var categoryCount model.CategoryCount
+		err := rows.Scan(
+			&categoryCount.Category,
+			&categoryCount.Count,
+		)
+		if err != nil {
+			return nil, err
+		}
+		categoryCountSet = append(categoryCountSet, categoryCount)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return categoryCountSet, nil
+}
+
+func (r *PostRepository) GetPublishedPostsByCategory(category string) ([]model.Post, error) {
+	query := fmt.Sprintf(`SELECT id, title, slug, content, author_id, author_name, published_at, created_at, updated_at, tags, category FROM posts
+	WHERE published_at IS NOT NULL 
+	AND category = '%s'
+	ORDER BY created_at DESC`, category)
 	rows, err := r.db.Query(query)
 	if err != nil {
 		return nil, err

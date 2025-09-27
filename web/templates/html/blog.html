@@ -2,16 +2,12 @@
 
 {{/* Use a simple wrapper for background and minimum height */}}
 <div class="bg-gray-100 min-h-screen py-12">
-
-  {{/* This container is the backbone of the responsive, centered layout. */}}
-  {{/* The inner content should start here, without a max-width wrapper above it. */}}
   <div class="container mx-auto px-4">
     
     <h1 class="text-4xl font-extrabold text-gray-900 mb-10 text-center">{{.title}}</h1>
 
     {{if .posts}}
     
-    {{/* This is the TWO-COLUMN FLEX CONTAINER */}}
     <div class="flex flex-col lg:flex-row lg:space-x-8">
 
       <main class="lg:w-3/4 space-y-8">
@@ -40,7 +36,7 @@
             <div class="flex flex-wrap gap-2">
               {{range $i, $e := .Tags}}
               <a class="text-xs font-semibold px-3 py-1 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition-colors duration-150"
-                href="/tags/{{$e}}" id="tags{{$e}}">
+                href="/tags/{{$e}}" id="{{$e}}">
                 #{{ $e }}
               </a>
               {{end}}
@@ -73,13 +69,13 @@
         <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
           <h3 class="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">Categories</h3>
 
-          {{if .Categories}}
+          {{if .categories}}
           <ul class="space-y-2">
-            {{range .Categories}}
+            {{range .categories}}
             <li>
-              <a href="/category/{{.}}"
+              <a href="/category/{{.Category}}"
                 class="text-gray-700 hover:text-blue-600 hover:underline transition-colors duration-200 flex justify-between items-center">
-                <span>{{.}}</span>
+                <span>{{ .Category  }} ({{.Count}})</span>
               </a>
             </li>
             {{end}}

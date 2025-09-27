@@ -31,3 +31,8 @@ type UpdatePost struct {
 	Tags     string    `json:"tags"`
 	Category string    `json:"category"`
 }
+
+type CategoryCount struct {
+	Category string
+	Count    int
+}
