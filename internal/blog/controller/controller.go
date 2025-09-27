@@ -225,6 +225,36 @@ func (pc *BlogController) GetPostBySlug(c *gin.Context) {
 	})
 }
 
+// GetPostBySlug handles GET /blog/:slug
+func (pc *BlogController) GetCategory(c *gin.Context) {
+	category := c.Param("name")
+	posts, err := pc.Repo.GetPublishedPostsByCategory(category)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+	if len(posts) == 0 { // Check if no record was found by the repository
+		c.JSON(http.StatusNotFound, gin.H{"error": "Category does not have any posts yet,"})
+		return
+	}
+
+	categories, err := pc.Repo.GetCategoryCount()
+	if err != nil {
+		c.HTML(http.StatusServiceUnavailable, "blog_category.html", gin.H{
+			"title": "Categories",
+			"error": err,
+		})
+		return
+	}
+
+	c.HTML(http.StatusOK, "blog_category.html", gin.H{
+		"title":      "Categories",
+		"posts":      posts,
+		"category":   category,
+		"categories": categories,
+	})
+}
+
 // DeletePost handles DELETE /blog/:id
 func (pc *BlogController) DeletePost(c *gin.Context) {
 	idStr := c.Param("id")

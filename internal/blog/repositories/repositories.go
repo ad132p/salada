@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"database/sql"
-	"fmt"
 	"strings"
 
 	"salada/internal/blog"
@@ -199,11 +198,11 @@ func (r *PostRepository) GetCategoryCount() ([]model.CategoryCount, error) {
 }
 
 func (r *PostRepository) GetPublishedPostsByCategory(category string) ([]model.Post, error) {
-	query := fmt.Sprintf(`SELECT id, title, slug, content, author_id, author_name, published_at, created_at, updated_at, tags, category FROM posts
+	query := `SELECT id, title, slug, content, author_id, author_name, published_at, created_at, updated_at, tags, category FROM posts
 	WHERE published_at IS NOT NULL 
-	AND category = '%s'
-	ORDER BY created_at DESC`, category)
-	rows, err := r.db.Query(query)
+	AND category = $1
+	ORDER BY created_at DESC`
+	rows, err := r.db.Query(query, category)
 	if err != nil {
 		return nil, err
 	}
