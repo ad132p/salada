@@ -10,3 +10,19 @@
   {{ template "header" . }}
 </body>
 {{ end }}
+
+{{ define "user_section" }}
+<div class="w-full flex justify-center mt-12 space-x-4">
+  <a href="/blog/new/"
+    class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md transition-colors duration-200">New
+    blog</a>
+
+  {{ if .username }}
+  <form action="/logout" method="get">
+    <input type="hidden" id="username" name="username" value="{{.username}}" />
+    <input type="submit" value="Logout!"
+      class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-md transition-colors duration-200 cursor-pointer" />
+  </form>
+  {{ end }}
+</div>
+{{ end }}

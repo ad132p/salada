@@ -240,17 +240,46 @@ func (pc *BlogController) GetCategory(c *gin.Context) {
 
 	categories, err := pc.Repo.GetCategoryCount()
 	if err != nil {
-		c.HTML(http.StatusServiceUnavailable, "blog_category.html", gin.H{
-			"title": "Categories",
+		c.HTML(http.StatusServiceUnavailable, "blog.html", gin.H{
+			"title": "Posts by Category",
 			"error": err,
 		})
 		return
 	}
 
-	c.HTML(http.StatusOK, "blog_category.html", gin.H{
-		"title":      "Categories",
+	c.HTML(http.StatusOK, "blog.html", gin.H{
+		"title":      "Posts by Category",
 		"posts":      posts,
 		"category":   category,
+		"categories": categories,
+	})
+}
+
+func (pc *BlogController) GetTag(c *gin.Context) {
+	tag := c.Param("name")
+	posts, err := pc.Repo.GetPublishedPostsByTag(tag)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+	if len(posts) == 0 { // Check if no record was found by the repository
+		c.JSON(http.StatusNotFound, gin.H{"error": "No post has such tag."})
+		return
+	}
+
+	categories, err := pc.Repo.GetCategoryCount()
+	if err != nil {
+		c.HTML(http.StatusServiceUnavailable, "blog.html", gin.H{
+			"title": "Posts by Tag",
+			"error": err,
+		})
+		return
+	}
+
+	c.HTML(http.StatusOK, "blog.html", gin.H{
+		"title":      "Posts by Tag",
+		"posts":      posts,
+		"tag":        tag,
 		"categories": categories,
 	})
 }
