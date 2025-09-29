@@ -299,6 +299,57 @@ func (r *PostRepository) GetPublishedPostsByTag(tag string) ([]model.Post, error
 	return posts, nil
 }
 
+func (r *PostRepository) GetPublishedPostsByTagOrContent(tag string) ([]model.Post, error) {
+	query := `SELECT id, title, slug, content, author_id, author_name, published_at, created_at, updated_at, tags, category FROM posts
+	WHERE published_at IS NOT NULL 
+	AND $1 = ANY(tags)
+	ORDER BY created_at DESC`
+	rows, err := r.db.Query(query, tag)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []model.Post
+	for rows.Next() {
+		var post model.Post
+		// Scan into post fields. Use sql.Null* types for nullable columns.
+		var authorID sql.Null[uuid.UUID]
+
+		err := rows.Scan(
+			&post.ID,
+			&post.Title,
+			&post.Slug,
+			&post.Content,
+			&post.AuthorID,
+			&post.AuthorName,
+			&post.PublishedAt,
+			&post.CreatedAt,
+			&post.UpdatedAt,
+			&post.Tags,
+			&post.Category,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		// Assign nullable fields
+		if authorID.Valid {
+			post.AuthorID = &authorID.V
+		} else {
+			post.AuthorID = nil
+		}
+
+		posts = append(posts, post)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return posts, nil
+}
+
 // GetPostBySlug fetches a single post by its slug.
 func (r *PostRepository) GetPostBySlug(slug string) (*model.Post, error) {
 	query := `SELECT id, title, slug, content, author_name, published_at, created_at, updated_at, tags, category FROM posts WHERE slug = $1;`

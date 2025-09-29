@@ -40,8 +40,9 @@ func GetTailwindRenderer() *TailwindRenderer {
 
 func SplitTagsString(s string) []string {
 	// Replace all delimiters with a single delimiter (e.g., a space)
-	replacer := strings.NewReplacer(",", " ", ";", " ", ":", " ", "|", " ")
+	replacer := strings.NewReplacer(" ", ",", ";", ",", ":", ",", "|", ",")
 	tempTagsString := replacer.Replace(s)
+	tempTagsString = strings.TrimSpace(tempTagsString)
 
 	// Split the modified string by the new single delimiter
 	// and remove any empty strings that result from multiple delimiters next to each other
