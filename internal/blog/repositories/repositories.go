@@ -299,12 +299,12 @@ func (r *PostRepository) GetPublishedPostsByTag(tag string) ([]model.Post, error
 	return posts, nil
 }
 
-func (r *PostRepository) GetPublishedPostsByTagOrContent(tag string) ([]model.Post, error) {
+func (r *PostRepository) GetPublishedPostsByTagOrContent(q string) ([]model.Post, error) {
 	query := `SELECT id, title, slug, content, author_id, author_name, published_at, created_at, updated_at, tags, category FROM posts
 	WHERE published_at IS NOT NULL 
 	AND $1 = ANY(tags)
 	ORDER BY created_at DESC`
-	rows, err := r.db.Query(query, tag)
+	rows, err := r.db.Query(query, q)
 	if err != nil {
 		return nil, err
 	}

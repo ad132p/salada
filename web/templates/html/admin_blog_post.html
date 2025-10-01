@@ -17,7 +17,7 @@
         <p><strong>Author:</strong> <span id="author_name">{{ .post.AuthorName }}</span></p>
         <p><strong>Tags:</strong>
           {{range $i, $e := .post.Tags}}
-          <a href="/tags/{{$e}}" id="tags{{$e}}">#{{$e}}</a>
+          <a href="/blog/tags/{{$e}}" id="tags{{$e}}">#{{$e}}</a>
           {{end}}
         </p>
         <p><strong>Category:</strong> <span id="tags">{{ .post.Category }}</span></p>

@@ -284,6 +284,35 @@ func (pc *BlogController) GetTag(c *gin.Context) {
 	})
 }
 
+func (pc *BlogController) GetTagOrContent(c *gin.Context) {
+	query := c.Query("q")
+	fmt.Println(query)
+	posts, err := pc.Repo.GetPublishedPostsByTagOrContent(query)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+	if len(posts) == 0 { // Check if no record was found by the repository
+		c.HTML(http.StatusNotFound, "blog.html", gin.H{"error": "No post has such tag."})
+		return
+	}
+
+	categories, err := pc.Repo.GetCategoryCount()
+	if err != nil {
+		c.HTML(http.StatusServiceUnavailable, "blog.html", gin.H{
+			"title": "Posts by Tag",
+			"error": err,
+		})
+		return
+	}
+
+	c.HTML(http.StatusOK, "blog.html", gin.H{
+		"title":      "Posts by Tag",
+		"posts":      posts,
+		"categories": categories,
+	})
+}
+
 // DeletePost handles DELETE /blog/:id
 func (pc *BlogController) DeletePost(c *gin.Context) {
 	idStr := c.Param("id")

@@ -23,5 +23,6 @@ func BlogRoutes(router *gin.Engine, blogController *controller.BlogController) {
 		postRoutes.PATCH("/publish/:id", blogController.PublishPost)
 		postRoutes.GET("/category/:name", blogController.GetCategory)
 		postRoutes.GET("/tags/:name", blogController.GetTag)
+		postRoutes.GET("/search", blogController.GetTagOrContent)
 	}
 }
