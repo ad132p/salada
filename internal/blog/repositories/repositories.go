@@ -170,7 +170,7 @@ func (r *PostRepository) GetPublishedPosts() ([]model.Post, error) {
 
 // GetPublishedPosts fetches all published posts from the database.
 func (r *PostRepository) GetCategoryCount() ([]model.CategoryCount, error) {
-	query := `SELECT category, count(category) FROM posts GROUP BY category`
+	query := `SELECT category, count(category) FROM posts WHERE published_at IS NOT NULL GROUP BY category`
 	rows, err := r.db.Query(query)
 	if err != nil {
 		return nil, err

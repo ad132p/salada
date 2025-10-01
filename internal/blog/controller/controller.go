@@ -31,7 +31,6 @@ func (pc *BlogController) CreatePost(c *gin.Context) {
 	content := c.PostForm("content")
 	author := c.PostForm("author")
 	tags := c.PostForm("tags")
-	fmt.Println(tags)
 
 	category := c.PostForm("category")
 
