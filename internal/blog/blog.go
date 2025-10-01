@@ -38,17 +38,6 @@ func GetTailwindRenderer() *TailwindRenderer {
 	}
 }
 
-func SplitTagsString(s string) []string {
-	// Replace all delimiters with a single delimiter (e.g., a space)
-	replacer := strings.NewReplacer(" ", ",", ";", ",", ":", ",", "|", ",")
-	tempTagsString := replacer.Replace(s)
-	tempTagsString = strings.TrimSpace(tempTagsString)
-
-	// Split the modified string by the new single delimiter
-	// and remove any empty strings that result from multiple delimiters next to each other
-	return strings.Fields(tempTagsString)
-}
-
 // RenderMarkdownToHTML converts a markdown string to an HTML string.
 func RenderMarkdownToHTML(md string) string {
 	renderer := GetTailwindRenderer()
@@ -59,6 +48,20 @@ func RenderMarkdownToHTML(md string) string {
 
 type TailwindRenderer struct {
 	*html.Renderer // This is the key part: struct embedding.
+}
+
+func SplitWithoutEmpty(s, sep string) []string {
+	// 1. Split the string
+	parts := strings.Split(s, sep)
+
+	// 2. Filter out empty strings
+	var result []string
+	for _, part := range parts {
+		if part != "" {
+			result = append(result, part)
+		}
+	}
+	return result
 }
 
 // RenderNode implements the Renderer interface.

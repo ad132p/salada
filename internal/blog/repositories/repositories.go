@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"database/sql"
-	"strings"
 
 	"salada/internal/blog"
 	"salada/internal/blog/model"
@@ -419,7 +418,7 @@ func (r *PostRepository) UpdatePost(post *model.UpdatePost) error {
 		post.ID,
 		post.Title,
 		post.Content,
-		pq.Array(strings.Split(post.Tags, ",")),
+		pq.Array(blog.SplitWithoutEmpty(post.Tags, ",")),
 		post.Category,
 	)
 	return err
