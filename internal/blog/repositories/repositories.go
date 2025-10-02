@@ -302,6 +302,7 @@ func (r *PostRepository) GetPublishedPostsByTagOrContent(q string) ([]model.Post
 	query := `SELECT id, title, slug, content, author_id, author_name, published_at, created_at, updated_at, tags, category FROM posts
 	WHERE published_at IS NOT NULL 
 	AND $1 = ANY(tags)
+	OR to_tsvector(content) @@ to_tsquery($1)
 	ORDER BY created_at DESC`
 	rows, err := r.db.Query(query, q)
 	if err != nil {
