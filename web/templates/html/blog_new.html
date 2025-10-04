@@ -8,7 +8,10 @@
                 <fieldset class="border border-gray-200 rounded-lg p-6 space-y-4">
                     <legend class="text-lg font-semibold text-gray-800 px-2">Post Details</legend>
                     <input type="hidden" id="author" name="author" value="{{.username}}" />
-                    
+                    <input type="hidden" id="updateRequestId" name="image_upload_request_id"
+                        value="{{.image_upload_request_id}}">
+
+
                     <div>
                         <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title:</label>
                         <input type="text" name="title" id="title" required placeholder="Enter your post title here"
@@ -16,7 +19,8 @@
                     </div>
 
                     <div>
-                        <label for="category_select" class="block text-sm font-medium text-gray-700 mb-1">Category (Optional):</label>
+                        <label for="category_select" class="block text-sm font-medium text-gray-700 mb-1">Category
+                            (Optional):</label>
                         <select name="category" id="category_select" required
                             class="block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                             <option value="">--Please choose an option--</option>
@@ -31,7 +35,8 @@
                     </div>
 
                     <div>
-                        <label for="tags" class="block text-sm font-medium text-gray-700 mb-1">Tags (Comma-separated, Optional):</label>
+                        <label for="tags" class="block text-sm font-medium text-gray-700 mb-1">Tags (Comma-separated,
+                            Optional):</label>
                         <input type="text" name="tags" id="tags" placeholder="e.g., html, css, javascript"
                             class="block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                     </div>
@@ -40,33 +45,112 @@
                 <fieldset class="border border-gray-200 rounded-lg p-6 space-y-4">
                     <legend class="text-lg font-semibold text-gray-800 px-2">Post Content</legend>
                     <div>
-                        <label for="content" class="block text-sm font-medium text-gray-700 mb-1">Write your post content here:</label>
+                        <label for="content" class="block text-sm font-medium text-gray-700 mb-1">Write your post
+                            content here:</label>
                         <textarea name="content" id="content"
                             class="block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm min-h-[300px]"></textarea>
                     </div>
                 </fieldset>
 
                 <div class="flex space-x-4 justify-end">
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                    <button type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
                         Publish Post
                     </button>
-                    <button type="reset" class="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200">
+                    <button type="reset"
+                        class="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200">
                         Clear Form
                     </button>
                 </div>
             </form>
-            
+
         </div>
     </div>
 </div>
 <script>
+    const imageMonitorStatus = {
+        // The unique name for your status bar item
+        className: "image-uuid-monitor",
+        // The element to be displayed. Start with a neutral message.
+        defaultValue: "Image Uploads: None"
+    };
+
+    function updateImageMonitor(newUUID) {
+        // Get the current status bar element for our monitor
+        const monitorElement = document.querySelector('.image-uuid-monitor');
+
+        // Get the current list of UUIDs (or the default text)
+        let currentText = monitorElement.textContent;
+
+        let uuidList = [];
+
+        // Extract existing UUIDs or start fresh
+        if (currentText.startsWith('Image Uploads:')) {
+            // If it's the default, replace it
+            uuidList.push(newUUID);
+            monitorElement.textContent = `Image Uploads: ${uuidList.join(', ')}`;
+        } else {
+            // If it already contains UUIDs, parse them and append the new one
+            // This is a simplified split; you might need regex for robustness
+            const existingUUIDs = currentText.replace('Image Uploads: ', '').split(', ');
+            uuidList = [...existingUUIDs, newUUID];
+            monitorElement.textContent = `Image Uploads: ${uuidList.join(', ')}`;
+        }
+
+        console.log("Status bar updated with UUID:", newUUID);
+    }
+
+    async function customImageUpload(file, onSuccess, onError) {
+
+        // Use FormData to package the file for the POST request
+        const formData = new FormData();
+        formData.append("image", file); // Key must match your Gin backend handler's expected field name
+
+        try {
+            // Perform the asynchronous POST request
+            const response = await fetch('/blog/uploads/', {
+                method: 'POST',
+                body: formData,
+                // Add any necessary headers like JWT/CSRF tokens here
+            });
+
+            if (!response.ok) {
+                // If the HTTP status is an error (4xx or 5xx)
+                const errorText = await response.text();
+                console.error("Image upload failed on server:", errorText);
+                onError("Upload Failed: " + errorText); // Call onError callback
+                return;
+            }
+
+            // Assume the backend returns JSON in the format: 
+            // { "image_id": "UUID-STRING", "url": "http://image-path.com/..." }
+            const data = await response.json();
+
+            const imageUUID = data.image_id;
+            const imageUrl = data.url;
+
+            // **CRITICAL STEP 1: Process the UUID from the successful response**
+            updateImageMonitor(imageUUID);
+
+            // **CRITICAL STEP 2: Call the onSuccess callback**
+            // This is what inserts the image URL into the Markdown editor.
+            onSuccess(imageUrl);
+
+        } catch (error) {
+            console.error("Network or parsing error:", error);
+            onError("Network Error: " + error.message); // Call onError callback for network issues
+        }
+    }
+
     const easyMDE = new EasyMDE({
         element: document.getElementById('content'),
         autofocus: true,
         imageMaxSize: 1024 * 1024 * 8,
         imageAccept: "image/png, image/jpeg, image/jpg, image/webp",
+        status: ["autosave", "lines", "words", "cursors", imageMonitorStatus],
         previewImagesInEditor: true,
-        imageUploadEndpoint: "/blog/uploads",
+        previewClass: "w-sm",
+        imageUploadFunction: customImageUpload,
         placeholder: "Start writing your blog post in Markdown...",
         spellChecker: true,
         toolbar: [

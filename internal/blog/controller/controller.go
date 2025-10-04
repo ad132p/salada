@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"net/http"
 	"path/filepath"
+
 	"salada/internal/blog"
 	"salada/internal/blog/model"
 	"salada/internal/blog/repositories"
@@ -120,6 +121,8 @@ func (pc *BlogController) PublishPost(c *gin.Context) {
 func (pc *BlogController) UploadImage(c *gin.Context) {
 	// Single file
 	file, err := c.FormFile("image") // The name "image" must match the form field name in the client request
+	newUUID := uuid.New()
+
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to retrieve the file"})
 		return
@@ -137,11 +140,18 @@ func (pc *BlogController) UploadImage(c *gin.Context) {
 
 	// Construct the URL for the saved image
 	imageURL := fmt.Sprintf("uploads/%s", filename)
+	image := model.Image{Filepath: imageURL, Status: "pending"}
+
+	if err := pc.Repo.AddImage(image); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add image", "details": err})
+		return
+	}
 
 	// Respond to the client with the image URL in the expected format
 	c.JSON(http.StatusOK, gin.H{
 		"data": gin.H{
-			"filePath": imageURL,
+			"filePath":                imageURL,
+			"image_upload_request_id": newUUID,
 		},
 	})
 }

@@ -434,6 +434,30 @@ func (r *PostRepository) PublishPost(post *model.Post) error {
 	return err
 }
 
+// UpdatePost updates an existing post in the database.
+func (r *PostRepository) AddImage(image model.Image) error {
+	// Set UUID if not already set (e.g., if client provides it)
+	if image.ID == uuid.Nil {
+		image.ID = uuid.New()
+	}
+	image.BlogPostID = uuid.Nil
+	image.UploadedAt = time.Now().UTC()
+
+	query := `INSERT INTO images (id, filepath, status, blog_post_id, uploaded_at)
+              VALUES ($1, $2, $3, $4, $5) RETURNING id, filepath, uploaded_at`
+
+	// Use QueryRow to get back the generated ID and timestamps (if DB generates)
+	// Or use Exec if you're setting ID in Go and don't need returns
+	err := r.db.QueryRow(query,
+		image.ID,
+		image.Filepath,
+		image.Status,
+		image.BlogPostID,
+		image.UploadedAt,
+	).Scan(&image.ID, &image.Filepath, &image.UploadedAt) // Scan the returned values
+	return err
+}
+
 // DeletePost deletes a post by its ID.
 func (r *PostRepository) DeletePost(id uuid.UUID) error {
 	query := `DELETE FROM posts WHERE id = $1`

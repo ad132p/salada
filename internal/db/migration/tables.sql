@@ -41,10 +41,10 @@ CREATE TABLE public.users (
 
 
 create table public.images (
-    id serial,
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
     filepath varchar,
-    status varchar 10,
-    blog_post_id integer,
+    status varchar(10),
+    blog_post_id uuid DEFAULT NULL,
     uploaded_at timestamp
 );
 

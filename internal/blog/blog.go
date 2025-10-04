@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"regexp"
-	"salada/internal/blog/model"
 	"strings"
 
 	"github.com/gomarkdown/markdown"
@@ -58,7 +57,7 @@ func SplitWithoutEmpty(s, sep string) []string {
 	var result []string
 	for _, part := range parts {
 		if part != "" {
-			result = append(result, part)
+			result = append(result, strings.TrimSpace(part))
 		}
 	}
 	return result
@@ -115,10 +114,6 @@ func (r *TailwindRenderer) RenderNode(w io.Writer, node ast.Node, entering bool)
 // We don't need a specific header for this example, so it's a no-op.
 func (r *TailwindRenderer) RenderHeader(w io.Writer, node ast.Node) {
 	// No-op
-}
-
-func GetPostsWithHashTags(posts []model.Post) []model.Post {
-	return posts
 }
 
 var Categories = [7]string{"football", "cs", "politics", "plants", "cine", "lit", "random"}

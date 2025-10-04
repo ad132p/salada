@@ -32,6 +32,15 @@ type UpdatePost struct {
 	Category string    `json:"category"`
 }
 
+type Image struct {
+	ID                   uuid.UUID `json:"id"`
+	Filepath             string    `json:"title"`
+	Status               string    `json:"content"`
+	BlogPostID           uuid.UUID `json:"tags"`
+	ImageUploadRequestID uuid.UUID `json:"image_upload_request_id"`
+	UploadedAt           time.Time
+}
+
 type CategoryCount struct {
 	Category string
 	Count    int
