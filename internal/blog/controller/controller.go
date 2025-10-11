@@ -27,32 +27,29 @@ func NewBlogController(repo *repositories.PostRepository) *BlogController {
 
 func (pc *BlogController) CreatePost(c *gin.Context) {
 
-	title := c.PostForm("title")
-	content := c.PostForm("content")
-	author := c.PostForm("author")
-	tags := c.PostForm("tags")
-
-	category := c.PostForm("category")
-
-	post := model.Post{
-		Title:      title,
-		Content:    content,
-		AuthorName: author,
-		Tags:       blog.SplitWithoutEmpty(tags, ","),
-		Category:   category,
-	}
-
-	// Bind and save the post...
-	if err := c.ShouldBind(&post); err != nil {
+	post := model.Post{}
+	if err := c.ShouldBindJSON(&post); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := pc.Repo.CreatePost(&post); err != nil {
+	postID, err := pc.Repo.CreatePost(&post)
+
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create post", "details": err.Error()})
 		return
 	}
-	c.Redirect(http.StatusFound, "/thankyou/")
+
+	updateRequest := model.UpdateImages{PostID: post.ID, ImageIDs: post.ImageIDs}
+
+	err = pc.Repo.UpdateImagesWithPostID(&updateRequest)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update images of post", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusFound, gin.H{"msg": "Success", "ID": postID})
 }
 
 // UpdatePost handles PUT on /blog/:id
@@ -121,7 +118,6 @@ func (pc *BlogController) PublishPost(c *gin.Context) {
 func (pc *BlogController) UploadImage(c *gin.Context) {
 	// Single file
 	file, err := c.FormFile("image") // The name "image" must match the form field name in the client request
-	newUUID := uuid.New()
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to retrieve the file"})
@@ -139,10 +135,12 @@ func (pc *BlogController) UploadImage(c *gin.Context) {
 	}
 
 	// Construct the URL for the saved image
-	imageURL := fmt.Sprintf("uploads/%s", filename)
+	imageURL := fmt.Sprintf("/uploads/%s", filename)
 	image := model.Image{Filepath: imageURL, Status: "pending"}
 
-	if err := pc.Repo.AddImage(image); err != nil {
+	imageUUID, err := pc.Repo.AddImage(image)
+
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add image", "details": err})
 		return
 	}
@@ -150,8 +148,8 @@ func (pc *BlogController) UploadImage(c *gin.Context) {
 	// Respond to the client with the image URL in the expected format
 	c.JSON(http.StatusOK, gin.H{
 		"data": gin.H{
-			"filePath":                imageURL,
-			"image_upload_request_id": newUUID,
+			"filepath": imageURL,
+			"image_id": imageUUID,
 		},
 	})
 }

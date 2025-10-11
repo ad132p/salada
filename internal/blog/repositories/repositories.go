@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"database/sql"
+	"fmt"
 
 	"salada/internal/blog"
 	"salada/internal/blog/model"
@@ -31,8 +32,9 @@ func NewAdminRepository(db *sql.DB) *AdminRepository {
 }
 
 // CreatePost inserts a new post into the database.
-func (r *PostRepository) CreatePost(post *model.Post) error {
+func (r *PostRepository) CreatePost(post *model.Post) (uuid.UUID, error) {
 	// Set UUID if not already set (e.g., if client provides it)
+	fmt.Println(post)
 	if post.ID == uuid.Nil {
 		post.ID = uuid.New()
 	}
@@ -40,18 +42,17 @@ func (r *PostRepository) CreatePost(post *model.Post) error {
 	post.CreatedAt = time.Now().UTC()
 	post.UpdatedAt = post.CreatedAt
 	post.Slug = blog.CreateSlug(post.Title)
+	post.Tags = blog.SplitWithoutEmpty(post.TagsString, ",")
 
-	query := `INSERT INTO posts (id, title, slug, content, author_id, author_name, published_at, created_at, updated_at, tags, category)
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, created_at, updated_at`
+	query := `INSERT INTO posts (title, slug, content, author_name, published_at, created_at, updated_at, tags, category)
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, created_at, updated_at`
 
 	// Use QueryRow to get back the generated ID and timestamps (if DB generates)
 	// Or use Exec if you're setting ID in Go and don't need returns
 	err := r.db.QueryRow(query,
-		post.ID,
 		post.Title,
 		post.Slug,
 		post.Content,
-		post.AuthorID,
 		post.AuthorName,  // Will be NULL if *uuid.UUID is nil
 		post.PublishedAt, // Will be NULL if *time.Time is nil
 		post.CreatedAt,
@@ -60,7 +61,7 @@ func (r *PostRepository) CreatePost(post *model.Post) error {
 		post.Category,
 	).Scan(&post.ID, &post.CreatedAt, &post.UpdatedAt) // Scan the returned values
 
-	return err
+	return post.ID, err
 }
 
 // GetPosts fetches all posts from the database.
@@ -425,6 +426,16 @@ func (r *PostRepository) UpdatePost(post *model.UpdatePost) error {
 	return err
 }
 
+// UpdateImage updates an existing image in the database.
+func (r *PostRepository) UpdateImagesWithPostID(image *model.UpdateImages) error {
+	query := `UPDATE images SET blog_post_id = $2 WHERE id = ANY($1)`
+	_, err := r.db.Exec(query,
+		pq.Array(image.ImageIDs),
+		image.PostID,
+	)
+	return err
+}
+
 // UpdatePost updates an existing post in the database.
 func (r *PostRepository) PublishPost(post *model.Post) error {
 	post.UpdatedAt = time.Now().UTC() // Update the timestamp
@@ -435,16 +446,15 @@ func (r *PostRepository) PublishPost(post *model.Post) error {
 }
 
 // UpdatePost updates an existing post in the database.
-func (r *PostRepository) AddImage(image model.Image) error {
+func (r *PostRepository) AddImage(image model.Image) (uuid.UUID, error) {
 	// Set UUID if not already set (e.g., if client provides it)
 	if image.ID == uuid.Nil {
 		image.ID = uuid.New()
 	}
-	image.BlogPostID = uuid.Nil
 	image.UploadedAt = time.Now().UTC()
 
 	query := `INSERT INTO images (id, filepath, status, blog_post_id, uploaded_at)
-              VALUES ($1, $2, $3, $4, $5) RETURNING id, filepath, uploaded_at`
+              VALUES ($1, $2, $3, NULL, $4) RETURNING id, filepath, uploaded_at`
 
 	// Use QueryRow to get back the generated ID and timestamps (if DB generates)
 	// Or use Exec if you're setting ID in Go and don't need returns
@@ -452,10 +462,9 @@ func (r *PostRepository) AddImage(image model.Image) error {
 		image.ID,
 		image.Filepath,
 		image.Status,
-		image.BlogPostID,
 		image.UploadedAt,
 	).Scan(&image.ID, &image.Filepath, &image.UploadedAt) // Scan the returned values
-	return err
+	return image.ID, err
 }
 
 // DeletePost deletes a post by its ID.

@@ -127,3 +127,24 @@
     }
   });
 </script>
+<style>
+    /* Target the live image preview span within the CodeMirror editor */
+    .CodeMirror span[role="presentation"][data-img-src] {
+        /* Set a fixed size for the preview area */
+        width: 400px !important;
+        /*height: 100px !important; */
+
+        /* Override any default display/positioning if necessary */
+        display: inline-block !important;
+        /* or block, depending on your layout need */
+
+        /* Ensure the background image scales down to fit the new size */
+        background-size: contain !important;
+        /* or cover, depending on desired crop */
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+
+        /* Add a border to visualize the new boundary (optional) */
+        border: 1px solid #ccc;
+    }
+</style>

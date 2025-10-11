@@ -8,10 +8,7 @@
                 <fieldset class="border border-gray-200 rounded-lg p-6 space-y-4">
                     <legend class="text-lg font-semibold text-gray-800 px-2">Post Details</legend>
                     <input type="hidden" id="author" name="author" value="{{.username}}" />
-                    <input type="hidden" id="updateRequestId" name="image_upload_request_id"
-                        value="{{.image_upload_request_id}}">
-
-
+                    <input type="hidden" id="blog_id" name="blog_id" value="{{.blog_id}}" />
                     <div>
                         <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title:</label>
                         <input type="text" name="title" id="title" required placeholder="Enter your post title here"
@@ -19,9 +16,9 @@
                     </div>
 
                     <div>
-                        <label for="category_select" class="block text-sm font-medium text-gray-700 mb-1">Category
+                        <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category
                             (Optional):</label>
-                        <select name="category" id="category_select" required
+                        <select name="category" id="category" required
                             class="block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                             <option value="">--Please choose an option--</option>
                             <option value="football">Football</option>
@@ -67,47 +64,60 @@
         </div>
     </div>
 </div>
+
 <script>
+    // 1. Declare the global data structure (array) to store the UUIDs
+    // This array will hold the list of image IDs for form submission.
+    const uploadedImageUUIDs = [];
+
     const imageMonitorStatus = {
         // The unique name for your status bar item
         className: "image-uuid-monitor",
         // The element to be displayed. Start with a neutral message.
-        defaultValue: "Image Uploads: None"
+        defaultValue: "Image Uploads: None" // The default value set by EasyMDE
     };
 
+    /**
+     * Updates the status bar and, more importantly, adds the new UUID 
+     * to the global uploadedImageUUIDs array.
+     * @param {string} newUUID - The unique ID of the newly uploaded image.
+     */
     function updateImageMonitor(newUUID) {
-        // Get the current status bar element for our monitor
-        const monitorElement = document.querySelector('.image-uuid-monitor');
+        // --- DATA STRUCTURE UPDATE (The Crucial Step) ---
+        // Push the new UUID into the global array.
+        // This is the array you will use for your form submission.
+        uploadedImageUUIDs.push(newUUID);
+        console.log("UUID added to array:", newUUID);
+        console.log("Current UUIDs Array:", uploadedImageUUIDs); // Log the array
 
-        // Get the current list of UUIDs (or the default text)
-        let currentText = monitorElement.textContent;
+        // --- Status Bar Update (Original Logic - Kept for visibility) ---
+        const monitorElement = document.querySelector('.' + imageMonitorStatus.className);
 
-        let uuidList = [];
-
-        // Extract existing UUIDs or start fresh
-        if (currentText.startsWith('Image Uploads:')) {
-            // If it's the default, replace it
-            uuidList.push(newUUID);
-            monitorElement.textContent = `Image Uploads: ${uuidList.join(', ')}`;
-        } else {
-            // If it already contains UUIDs, parse them and append the new one
-            // This is a simplified split; you might need regex for robustness
-            const existingUUIDs = currentText.replace('Image Uploads: ', '').split(', ');
-            uuidList = [...existingUUIDs, newUUID];
-            monitorElement.textContent = `Image Uploads: ${uuidList.join(', ')}`;
+        if (!monitorElement) {
+            console.error("Image Monitor element not found. Check EasyMDE setup.");
+            return;
         }
 
-        console.log("Status bar updated with UUID:", newUUID);
+        // The status bar text can now be directly based on the global array contents
+        if (uploadedImageUUIDs.length === 0) {
+            monitorElement.textContent = imageMonitorStatus.defaultValue;
+        } else {
+            monitorElement.textContent = `Image Uploads: ${uploadedImageUUIDs.join(', ')}`;
+        }
+
+        console.log("Status bar text updated.");
     }
+
+    // You should also consider a function to remove a UUID if an image is removed from the editor, 
+    // but for simple uploading, the above is enough.
 
     async function customImageUpload(file, onSuccess, onError) {
 
         // Use FormData to package the file for the POST request
         const formData = new FormData();
-        formData.append("image", file); // Key must match your Gin backend handler's expected field name
+        formData.append("image", file);
 
         try {
-            // Perform the asynchronous POST request
             const response = await fetch('/blog/uploads/', {
                 method: 'POST',
                 body: formData,
@@ -115,30 +125,22 @@
             });
 
             if (!response.ok) {
-                // If the HTTP status is an error (4xx or 5xx)
                 const errorText = await response.text();
                 console.error("Image upload failed on server:", errorText);
-                onError("Upload Failed: " + errorText); // Call onError callback
+                onError("Upload Failed: " + errorText);
                 return;
             }
 
-            // Assume the backend returns JSON in the format: 
-            // { "image_id": "UUID-STRING", "url": "http://image-path.com/..." }
-            const data = await response.json();
+            const payload = await response.json()
 
-            const imageUUID = data.image_id;
-            const imageUrl = data.url;
-
-            // **CRITICAL STEP 1: Process the UUID from the successful response**
-            updateImageMonitor(imageUUID);
-
-            // **CRITICAL STEP 2: Call the onSuccess callback**
-            // This is what inserts the image URL into the Markdown editor.
-            onSuccess(imageUrl);
+            // Assuming the server response is { data: { image_id: "...", filepath: "..." } }
+            // **This is where the function to update the array is called.**
+            updateImageMonitor(payload.data.image_id);
+            onSuccess(payload.data.filepath);
 
         } catch (error) {
             console.error("Network or parsing error:", error);
-            onError("Network Error: " + error.message); // Call onError callback for network issues
+            onError("Network Error: " + error.message);
         }
     }
 
@@ -149,8 +151,9 @@
         imageAccept: "image/png, image/jpeg, image/jpg, image/webp",
         status: ["autosave", "lines", "words", "cursors", imageMonitorStatus],
         previewImagesInEditor: true,
-        previewClass: "w-sm",
+        previewClass: ["h-200", "w-96", "object-scale-down"],
         imageUploadFunction: customImageUpload,
+        imagePathAbsolute: true,
         placeholder: "Start writing your blog post in Markdown...",
         spellChecker: true,
         toolbar: [
@@ -161,4 +164,49 @@
             "guide"
         ],
     });
+
+
+    document.getElementById('new-blog-post').addEventListener('submit', function (event) {
+        // Prevent the default form submission for now
+        event.preventDefault();
+
+        const title = document.getElementById('title').value;
+        const author = document.getElementById('author').value;
+        const tags = document.getElementById('tags').value;
+        const category = document.getElementById('category').value;
+        const content = easyMDE.value();
+
+        const submissionData = {
+            title: title,
+            content: content,
+            author: author,
+            tags: tags,
+            category: category,
+            image_ids: uploadedImageUUIDs
+        };
+
+        console.log("Data to send to server:", submissionData);
+        fetch('/blog/', { method: 'POST', body: JSON.stringify(submissionData) })
+    });
 </script>
+<style>
+    /* Target the live image preview span within the CodeMirror editor */
+    .CodeMirror span[role="presentation"][data-img-src] {
+        /* Set a fixed size for the preview area */
+        width: 400px !important;
+        /*height: 100px !important; */
+
+        /* Override any default display/positioning if necessary */
+        display: inline-block !important;
+        /* or block, depending on your layout need */
+
+        /* Ensure the background image scales down to fit the new size */
+        background-size: contain !important;
+        /* or cover, depending on desired crop */
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+
+        /* Add a border to visualize the new boundary (optional) */
+        border: 1px solid #ccc;
+    }
+</style>

@@ -16,12 +16,14 @@ type Post struct {
 	Slug        string     `json:"slug"`
 	Content     string     `json:"content"`
 	AuthorID    *uuid.UUID `json:"author_id,omitempty"`    // Nullable in DB
-	AuthorName  string     `json:"author_name,omitempty"`  // Nullable in DB
+	AuthorName  string     `json:"author,omitempty"`       // Nullable in DB
 	PublishedAt *time.Time `json:"published_at,omitempty"` // Nullable in DB
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`
 	Tags        pq.StringArray
-	Category    string
+	TagsString  string   `json:"tags"`
+	Category    string   `json:"category"`
+	ImageIDs    []string `json:"image_ids"`
 }
 
 type UpdatePost struct {
@@ -32,13 +34,17 @@ type UpdatePost struct {
 	Category string    `json:"category"`
 }
 
+type UpdateImages struct {
+	ImageIDs pq.StringArray `json:"image_ids"`
+	PostID   uuid.UUID      `json:"post_id"`
+}
+
 type Image struct {
-	ID                   uuid.UUID `json:"id"`
-	Filepath             string    `json:"title"`
-	Status               string    `json:"content"`
-	BlogPostID           uuid.UUID `json:"tags"`
-	ImageUploadRequestID uuid.UUID `json:"image_upload_request_id"`
-	UploadedAt           time.Time
+	ID         uuid.UUID `json:"id"`
+	Filepath   string    `json:"title"`
+	Status     string    `json:"content"`
+	BlogPostID uuid.UUID `json:"tags"`
+	UploadedAt time.Time
 }
 
 type CategoryCount struct {

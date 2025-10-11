@@ -13,11 +13,11 @@ func BlogRoutes(router *gin.Engine, blogController *controller.BlogController) {
 	postRoutes := router.Group("/blog", middleware.AuthenticateMiddleware)
 	{
 		postRoutes.GET("/", blogController.GetPosts)
+		postRoutes.POST("/", blogController.CreatePost)
 		postRoutes.GET("/:slug", blogController.GetPostBySlug)
 		postRoutes.POST("/uploads", blogController.UploadImage)
 		postRoutes.DELETE("/:id", blogController.DeletePost)
 		postRoutes.PUT("/:id", blogController.UpdatePost)
-		postRoutes.POST("/", blogController.CreatePost)
 		postRoutes.GET("/new", blogController.GetNewPostForm)
 		postRoutes.GET("/edit/:slug", blogController.EditPostForm)
 		postRoutes.PATCH("/publish/:id", blogController.PublishPost)

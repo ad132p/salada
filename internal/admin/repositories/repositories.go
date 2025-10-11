@@ -215,19 +215,19 @@ func (r *AdminRepository) DeletePost(id uuid.UUID) error {
 }
 
 // CreateUser receives an username and returns an id
-func (r *AdminRepository) CreateUser(user model.User) (int, error) {
+func (r *AdminRepository) CreateUser(user model.User) (uuid.UUID, error) {
 	// Hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return 0, err
+		return uuid.Nil, err
 	}
 
 	// SQL query to insert the new user
 	query := `INSERT INTO users (username, password, email) VALUES ($1, $2, $3) RETURNING id`
-	var id int
+	var id uuid.UUID
 	err = r.db.QueryRow(query, user.Username, string(hashedPassword), user.Email).Scan(&id)
 	if err != nil {
-		return 0, err
+		return uuid.Nil, err
 	}
 	return id, nil
 }
