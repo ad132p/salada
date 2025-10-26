@@ -36,6 +36,16 @@ POSTGRES_ROOT_PASSWORD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13)
     -o yaml | \
     podman kube play -
 
+
+If you need a dev db:
+
+podman run -d \
+  --name my-postgres \
+  -e POSTGRES_PASSWORD=$your_secure_password \
+  -p 5432:5432 \
+  -v systemd-salada-db:/var/lib/postgresql/data:Z \
+  docker.io/library/postgres:latest
+
 # Create a registry if you dont have one
 podman container run -dt -p 5000:5000 --name registry docker.io/library/registry:2
 # If you have one, make sure it is up

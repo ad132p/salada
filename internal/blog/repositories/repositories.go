@@ -2,7 +2,7 @@ package repositories
 
 import (
 	"database/sql"
-	"fmt"
+	"strconv"
 
 	"salada/internal/blog"
 	"salada/internal/blog/model"
@@ -33,11 +33,6 @@ func NewAdminRepository(db *sql.DB) *AdminRepository {
 
 // CreatePost inserts a new post into the database.
 func (r *PostRepository) CreatePost(post *model.Post) (uuid.UUID, error) {
-	// Set UUID if not already set (e.g., if client provides it)
-	fmt.Println(post)
-	if post.ID == uuid.Nil {
-		post.ID = uuid.New()
-	}
 	// Set creation/update timestamps
 	post.CreatedAt = time.Now().UTC()
 	post.UpdatedAt = post.CreatedAt
@@ -119,56 +114,6 @@ func (r *PostRepository) GetPosts() ([]model.Post, error) {
 }
 
 // GetPublishedPosts fetches all published posts from the database.
-func (r *PostRepository) GetPublishedPosts() ([]model.Post, error) {
-	query := `SELECT id, title, slug, content, author_id, author_name, published_at, created_at, updated_at, tags, category FROM posts
-	WHERE published_at IS NOT NULL ORDER BY created_at DESC`
-	rows, err := r.db.Query(query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var posts []model.Post
-	for rows.Next() {
-		var post model.Post
-		// Scan into post fields. Use sql.Null* types for nullable columns.
-		var authorID sql.Null[uuid.UUID]
-
-		err := rows.Scan(
-			&post.ID,
-			&post.Title,
-			&post.Slug,
-			&post.Content,
-			&post.AuthorID,
-			&post.AuthorName,
-			&post.PublishedAt,
-			&post.CreatedAt,
-			&post.UpdatedAt,
-			&post.Tags,
-			&post.Category,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		// Assign nullable fields
-		if authorID.Valid {
-			post.AuthorID = &authorID.V
-		} else {
-			post.AuthorID = nil
-		}
-
-		posts = append(posts, post)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return posts, nil
-}
-
-// GetPublishedPosts fetches all published posts from the database.
 func (r *PostRepository) GetCategoryCount() ([]model.CategoryCount, error) {
 	query := `SELECT category, count(category) FROM posts WHERE published_at IS NOT NULL GROUP BY category`
 	rows, err := r.db.Query(query)
@@ -197,35 +142,78 @@ func (r *PostRepository) GetCategoryCount() ([]model.CategoryCount, error) {
 	return categoryCountSet, nil
 }
 
-func (r *PostRepository) GetPublishedPostsByCategory(category string) ([]model.Post, error) {
-	query := `SELECT id, title, slug, content, author_id, author_name, published_at, created_at, updated_at, tags, category FROM posts
-	WHERE published_at IS NOT NULL 
-	AND category = $1
-	ORDER BY created_at DESC`
-	rows, err := r.db.Query(query, category)
+func (r *PostRepository) GetPublishedPosts(category string, q string) ([]model.Post, error) {
+	// 1. Base Query with Lateral Join
+	// The lateral join (LEFT JOIN LATERAL) finds the single best image (thumbnail) for each post.
+	baseQueryTemplate := `
+    SELECT 
+        p.id, p.title, p.slug, p.content, p.author_id, p.author_name, p.published_at, p.created_at, p.updated_at, p.tags, p.category, 
+        t.filepath AS thumbnail_url
+    FROM 
+        posts p
+    LEFT JOIN LATERAL (
+        SELECT filepath 
+        FROM images i
+        WHERE i.blog_post_id = p.id
+        ORDER BY i.uploaded_at ASC -- Sort by upload time (earliest first)
+        LIMIT 1                   -- Take only the first one
+    ) t ON true
+    WHERE 
+        p.published_at IS NOT NULL`
+
+	baseQuery := baseQueryTemplate
+
+	// 2. Initialize slice and counter for dynamic WHERE clauses
+	var args []interface{}
+	paramIndex := 1
+
+	// 3. Handle Category Filtering (Optional)
+	if category != "" {
+		baseQuery += ` AND p.category = $` + strconv.Itoa(paramIndex)
+		args = append(args, category)
+		paramIndex++
+	}
+
+	// 4. Handle Tag/Content Search (Optional)
+	if q != "" {
+		// Note: The $N placeholder must be used for the query 'q'.
+		baseQuery += ` AND ($` + strconv.Itoa(paramIndex) + ` = ANY(p.tags) 
+            OR to_tsvector('english', p.content) @@ websearch_to_tsquery('english', $` + strconv.Itoa(paramIndex) + `))`
+
+		args = append(args, q)
+		paramIndex++
+	}
+
+	// 5. Add the final ordering clause
+	finalQuery := baseQuery + ` ORDER BY p.created_at DESC`
+
+	// 6. Execute the query
+	rows, err := r.db.Query(finalQuery, args...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
+	// 7. Scanning logic
 	var posts []model.Post
 	for rows.Next() {
 		var post model.Post
-		// Scan into post fields. Use sql.Null* types for nullable columns.
 		var authorID sql.Null[uuid.UUID]
+		var thumbnailURL sql.NullString // Use sql.NullString for the optional thumbnail URL
 
 		err := rows.Scan(
 			&post.ID,
 			&post.Title,
 			&post.Slug,
 			&post.Content,
-			&post.AuthorID,
+			&authorID,
 			&post.AuthorName,
 			&post.PublishedAt,
 			&post.CreatedAt,
 			&post.UpdatedAt,
 			&post.Tags,
 			&post.Category,
+			&thumbnailURL, // Scan the new thumbnail_url column
 		)
 		if err != nil {
 			return nil, err
@@ -238,107 +226,11 @@ func (r *PostRepository) GetPublishedPostsByCategory(category string) ([]model.P
 			post.AuthorID = nil
 		}
 
-		posts = append(posts, post)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return posts, nil
-}
-
-func (r *PostRepository) GetPublishedPostsByTag(tag string) ([]model.Post, error) {
-	query := `SELECT id, title, slug, content, author_id, author_name, published_at, created_at, updated_at, tags, category FROM posts
-	WHERE published_at IS NOT NULL 
-	AND $1 = ANY(tags)
-	ORDER BY created_at DESC`
-	rows, err := r.db.Query(query, tag)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var posts []model.Post
-	for rows.Next() {
-		var post model.Post
-		// Scan into post fields. Use sql.Null* types for nullable columns.
-		var authorID sql.Null[uuid.UUID]
-
-		err := rows.Scan(
-			&post.ID,
-			&post.Title,
-			&post.Slug,
-			&post.Content,
-			&post.AuthorID,
-			&post.AuthorName,
-			&post.PublishedAt,
-			&post.CreatedAt,
-			&post.UpdatedAt,
-			&post.Tags,
-			&post.Category,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		// Assign nullable fields
-		if authorID.Valid {
-			post.AuthorID = &authorID.V
+		// Assign the optional Thumbnail URL
+		if thumbnailURL.Valid {
+			post.ThumbnailURL = thumbnailURL.String
 		} else {
-			post.AuthorID = nil
-		}
-
-		posts = append(posts, post)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return posts, nil
-}
-
-func (r *PostRepository) GetPublishedPostsByTagOrContent(q string) ([]model.Post, error) {
-	query := `SELECT id, title, slug, content, author_id, author_name, published_at, created_at, updated_at, tags, category FROM posts
-	WHERE published_at IS NOT NULL 
-	AND $1 = ANY(tags)
-	OR to_tsvector(content) @@ to_tsquery($1)
-	ORDER BY created_at DESC`
-	rows, err := r.db.Query(query, q)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var posts []model.Post
-	for rows.Next() {
-		var post model.Post
-		// Scan into post fields. Use sql.Null* types for nullable columns.
-		var authorID sql.Null[uuid.UUID]
-
-		err := rows.Scan(
-			&post.ID,
-			&post.Title,
-			&post.Slug,
-			&post.Content,
-			&post.AuthorID,
-			&post.AuthorName,
-			&post.PublishedAt,
-			&post.CreatedAt,
-			&post.UpdatedAt,
-			&post.Tags,
-			&post.Category,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		// Assign nullable fields
-		if authorID.Valid {
-			post.AuthorID = &authorID.V
-		} else {
-			post.AuthorID = nil
+			post.ThumbnailURL = "" // Or nil, depending on your model.Post field type
 		}
 
 		posts = append(posts, post)

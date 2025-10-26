@@ -29,7 +29,7 @@ func (pc *BlogController) CreatePost(c *gin.Context) {
 
 	post := model.Post{}
 	if err := c.ShouldBindJSON(&post); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error binding JSON": err.Error()})
 		return
 	}
 
@@ -167,12 +167,7 @@ func (pc *BlogController) GetPosts(c *gin.Context) {
 	}
 
 	category := c.Query("category")
-
-	if category != "" {
-		posts, err = pc.Repo.GetPublishedPostsByCategory(category)
-	} else {
-		posts, err = pc.Repo.GetPublishedPosts()
-	}
+	posts, err = pc.Repo.GetPublishedPosts(category, "")
 
 	if err != nil {
 		c.HTML(http.StatusServiceUnavailable, "blog.html", gin.H{
@@ -231,10 +226,9 @@ func (pc *BlogController) GetPostBySlug(c *gin.Context) {
 	})
 }
 
-// GetPostBySlug handles GET /blog/:slug
 func (pc *BlogController) GetCategory(c *gin.Context) {
 	category := c.Param("name")
-	posts, err := pc.Repo.GetPublishedPostsByCategory(category)
+	posts, err := pc.Repo.GetPublishedPosts(category, "")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
@@ -263,7 +257,7 @@ func (pc *BlogController) GetCategory(c *gin.Context) {
 
 func (pc *BlogController) GetTag(c *gin.Context) {
 	tag := c.Param("name")
-	posts, err := pc.Repo.GetPublishedPostsByTag(tag)
+	posts, err := pc.Repo.GetPublishedPosts("", tag)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
@@ -293,7 +287,7 @@ func (pc *BlogController) GetTag(c *gin.Context) {
 func (pc *BlogController) GetTagOrContent(c *gin.Context) {
 	query := c.Query("q")
 	fmt.Println(query)
-	posts, err := pc.Repo.GetPublishedPostsByTagOrContent(query)
+	posts, err := pc.Repo.GetPublishedPosts("", query)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return

@@ -1,6 +1,4 @@
 {{ template "base" . }}
-
-{{/* Use a simple wrapper for background and minimum height */}}
 <div class="bg-gray-100 min-h-screen py-12">
   <div class="container mx-auto px-4">
 
@@ -13,42 +11,53 @@
         <div class="w-full space-y-6">
           {{if .posts}}
           {{range $index, $element := .posts}}
-          <article
-            class="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
-            <h2 class="text-2xl font-extrabold mb-3">
-              <a href="/blog/{{.Slug}}"
-                class="post_anchor text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-200">
-                {{.Title}}
-              </a>
-            </h2>
-
-            <div class="flex flex-wrap text-sm text-gray-500 mb-4 space-x-4">
-              <p>Published: {{.PublishedAt}}</p>
-              <p>Author: <span class="font-medium text-gray-600">{{.AuthorName}}</span></p>
-              <p>Category:
-                <a href="/blog/category/{{.Category}}" class="text-indigo-500 hover:text-indigo-700 hover:underline">
-                  {{.Category}}
+          <article class="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300
+            flex flex-col sm:flex-row-reverse sm:space-x-reverse space-x-0 sm:space-x-6 space-y-4 sm:space-y-0">
+            {{if .ThumbnailURL}}
+            <a href="/blog/{{.Slug}}" class="sm:w-1/4 flex-shrink-0">
+              <img src="{{.ThumbnailURL}}" alt="Thumbnail for {{.Title}}"
+                class="w-full h-32 object-cover rounded-lg shadow-md transition-opacity duration-300 hover:opacity-90">
+            </a>
+            {{end}}
+            <div class="sm:flex-1">
+              <h2 class="text-2xl font-extrabold mb-3">
+                <a href="/blog/{{.Slug}}"
+                  class="post_anchor text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-200">
+                  {{.Title}}
                 </a>
+              </h2>
+
+              <div class="flex flex-wrap text-sm text-gray-500 mb-4 space-x-4">
+                <p>Published: {{.PublishedAt}}</p>
+                <p>Author: <span class="font-medium text-gray-600">{{.AuthorName}}</span></p>
+                <p>Category:
+                  <a href="/blog/category/{{.Category}}" class="text-indigo-500 hover:text-indigo-700 hover:underline">
+                    {{.Category}}
+                  </a>
+                </p>
+              </div>
+
+              <p class="text-gray-700 mb-4 line-clamp-2">
+                {{ .Content }}
               </p>
-            </div>
-            <p class="text-sm text-gray-500 mb-2">Tags:</p>
-            <div class="flex flex-wrap gap-2">
-              {{range $i, $e := .Tags}}
-              <a class="text-xs font-semibold px-3 py-1 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition-colors duration-150"
-                href="/blog/tags/{{$e}}" id="{{$e}}">
-                #{{ $e }}
-              </a>
-              {{end}}
+
+              <p class="text-sm text-gray-500 mb-2">Tags:</p>
+              <div class="flex flex-wrap gap-2">
+                {{range $i, $e := .Tags}}
+                <a class="text-xs font-semibold px-3 py-1 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition-colors duration-150"
+                  href="/blog/tags/{{$e}}" id="{{$e}}">
+                  #{{ $e }}
+                </a>
+                {{end}}
+              </div>
             </div>
           </article>
           {{end}}
           {{else}}
-          <p class="text-xl text-gray-600 bg-white p-6 rounded-lg shadow-md mt-12">No blog posts available.</p>
-          {{.error}}
+          <p>No blog posts available.</p>
           {{end}}
         </div>
       </main>
-
       <aside class="lg:w-1/4 mt-10 lg:mt-0 space-y-8">
         <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100 sticky top-4">
           <h3 id="query" class="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">Search Posts</h3>

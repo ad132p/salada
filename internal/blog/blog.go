@@ -9,6 +9,7 @@ import (
 	"github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/ast"
 	"github.com/gomarkdown/markdown/html"
+	"github.com/lib/pq"
 )
 
 // createSlug generates a URL-friendly slug from a given title.
@@ -49,14 +50,17 @@ type TailwindRenderer struct {
 	*html.Renderer // This is the key part: struct embedding.
 }
 
-func SplitWithoutEmpty(s, sep string) []string {
+// SplitWithoutEmpty splits a string and filters out empty strings,
+// returning the result as a pq.StringArray.
+func SplitWithoutEmpty(s, sep string) pq.StringArray { // 2. Change the return type
 	// 1. Split the string
 	parts := strings.Split(s, sep)
 
 	// 2. Filter out empty strings
-	var result []string
+	var result pq.StringArray // 3. Use pq.StringArray for the result variable
 	for _, part := range parts {
 		if part != "" {
+			// Trim whitespace and append
 			result = append(result, strings.TrimSpace(part))
 		}
 	}
