@@ -27,7 +27,7 @@ func NewBlogController(repo *repositories.PostRepository) *BlogController {
 
 func (pc *BlogController) CreatePost(c *gin.Context) {
 
-	post := model.Post{}
+	post := model.CreatePost{}
 	if err := c.ShouldBindJSON(&post); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error binding JSON": err.Error()})
 		return
@@ -40,7 +40,7 @@ func (pc *BlogController) CreatePost(c *gin.Context) {
 		return
 	}
 
-	updateRequest := model.UpdateImages{PostID: post.ID, ImageIDs: post.ImageIDs}
+	updateRequest := model.UpdateImages{PostID: postID, ImageIDs: post.ImageIDs}
 
 	err = pc.Repo.UpdateImagesWithPostID(&updateRequest)
 
@@ -322,7 +322,7 @@ func (pc *BlogController) DeletePost(c *gin.Context) {
 		return
 	}
 
-	err = pc.Repo.DeletePost(id)
+	images, err := pc.Repo.DeletePost(id)
 	if err != nil {
 		if err == sql.ErrNoRows { // Check for no rows affected, indicating not found
 			c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
@@ -331,7 +331,8 @@ func (pc *BlogController) DeletePost(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete post", "details": err.Error()})
 		return
 	}
-
+	fmt.Println(images)
+	blog.DeleteFiles(images) // Ignoring error for now
 	c.Status(http.StatusNoContent) // 204 No Content for successful deletion
 	c.Next()
 }

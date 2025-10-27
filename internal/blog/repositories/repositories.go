@@ -7,6 +7,7 @@ import (
 	"salada/internal/blog"
 	"salada/internal/blog/model"
 	"time"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
@@ -32,12 +33,16 @@ func NewAdminRepository(db *sql.DB) *AdminRepository {
 }
 
 // CreatePost inserts a new post into the database.
-func (r *PostRepository) CreatePost(post *model.Post) (uuid.UUID, error) {
-	// Set creation/update timestamps
+func (r *PostRepository) CreatePost(postRequest *model.CreatePost) (uuid.UUID, error) {
+	var post model.Post
+	post.Title = postRequest.Title
+	post.Content = postRequest.Content
+	post.Tags = blog.SplitWithoutEmpty(postRequest.Tags, ",")
+	post.Category = postRequest.Category
 	post.CreatedAt = time.Now().UTC()
 	post.UpdatedAt = post.CreatedAt
-	post.Slug = blog.CreateSlug(post.Title)
-	post.Tags = blog.SplitWithoutEmpty(post.TagsString, ",")
+	post.Slug = blog.CreateSlug(postRequest.Title)
+
 
 	query := `INSERT INTO posts (title, slug, content, author_name, published_at, created_at, updated_at, tags, category)
               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, created_at, updated_at`
@@ -332,8 +337,8 @@ func (r *PostRepository) UpdateImagesWithPostID(image *model.UpdateImages) error
 func (r *PostRepository) PublishPost(post *model.Post) error {
 	post.UpdatedAt = time.Now().UTC() // Update the timestamp
 
-	query := `UPDATE posts SET published_at = NOW()`
-	_, err := r.db.Exec(query)
+	query := `UPDATE posts SET published_at = NOW() WHERE id = $1`
+	_, err := r.db.Exec(query, post.ID)
 	return err
 }
 
@@ -359,19 +364,46 @@ func (r *PostRepository) AddImage(image model.Image) (uuid.UUID, error) {
 	return image.ID, err
 }
 
-// DeletePost deletes a post by its ID.
-func (r *PostRepository) DeletePost(id uuid.UUID) error {
-	query := `DELETE FROM posts WHERE id = $1`
-	res, err := r.db.Exec(query, id)
+// DeletePost deletes a post by its ID and returns the filepaths of associated images.
+func (r *PostRepository) DeletePost(id uuid.UUID) ([]string, error) {
+    // The query attempts to delete the post and associated images, 
+    // returning the filepaths of the deleted images.
+	query := `DELETE FROM posts 
+             USING images 
+             WHERE posts.id = images.blog_post_id
+             AND posts.id = $1
+             RETURNING images.filepath;`
+
+	rows, err := r.db.Query(query, id)
 	if err != nil {
-		return err
+        // Return the error instead of calling log.Fatalf, which stops the program.
+		return nil, fmt.Errorf("error querying database: %w", err)
 	}
-	rowsAffected, err := res.RowsAffected()
-	if err != nil {
-		return err
+	defer rows.Close()
+
+    // 1. Initialize a slice to hold all the filepaths.
+	var filepaths []string 
+	
+    // 2. Loop through all the returned rows.
+	for rows.Next() {
+		var filepath string
+        // 3. Scan the filepath from the current row.
+		err = rows.Scan(&filepath)
+		if err != nil {
+            // Return the error if scanning fails.
+			return nil, fmt.Errorf("error scanning row: %w", err)
+		}
+        // 4. Append the scanned filepath to the slice.
+		filepaths = append(filepaths, filepath) 
 	}
-	if rowsAffected == 0 {
-		return sql.ErrNoRows // Indicate that no row was deleted
+    
+    // 5. Check for any error that occurred during iteration.
+	if err = rows.Err(); err != nil {
+        // Return the iteration error.
+		return nil, fmt.Errorf("error iterating rows: %w", err)
 	}
-	return nil
+    
+    // 6. Return the slice of filepaths and a nil error.
+    // Note: The function's return signature has been changed to ([]string, error).
+	return filepaths, nil
 }

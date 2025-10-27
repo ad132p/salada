@@ -21,7 +21,6 @@ type Post struct {
 	CreatedAt    time.Time  `json:"created_at"`
 	UpdatedAt    time.Time  `json:"updated_at"`
 	Tags         pq.StringArray
-	TagsString   string   `json:"tags"`
 	ThumbnailURL string   `json:"thumbnail"`
 	Category     string   `json:"category"`
 	ImageIDs     []string `json:"image_ids"`
@@ -42,7 +41,7 @@ type CreatePost struct {
 	Category string    `json:"category"`
 	ImageIDs pq.StringArray `json:"image_ids"`
 }
-
+   
 
 type UpdateImages struct {
 	ImageIDs pq.StringArray `json:"image_ids"`

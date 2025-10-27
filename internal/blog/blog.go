@@ -3,6 +3,7 @@ package blog
 import (
 	"fmt"
 	"io"
+	"os"
 	"regexp"
 	"strings"
 
@@ -120,4 +121,29 @@ func (r *TailwindRenderer) RenderHeader(w io.Writer, node ast.Node) {
 	// No-op
 }
 
+
+// DeleteFiles takes a slice of strings (file paths) and attempts to delete
+// the file at each path. It returns a slice of error strings containing
+// details for any paths that could not be deleted.
+func DeleteFiles(filepaths []string) []string {
+	var deletionErrors []string
+
+	for _, path := range filepaths {
+		// os.Remove deletes the named file or directory.
+		// If the path is a directory, it must be empty.
+		err := os.Remove("." + path)
+		
+		if err != nil {
+			// If an error occurs (e.g., file not found, permission denied),
+			// format the error message and append it to the error slice.
+			errMsg := fmt.Sprintf("Error deleting file '%s': %v", path, err)
+			deletionErrors = append(deletionErrors, errMsg)
+		} else {
+			// Optional: Print a success message for files that were deleted.
+			fmt.Printf("Successfully deleted: %s\n", path)
+		}
+	}
+
+	return deletionErrors
+}
 var Categories = [7]string{"football", "cs", "politics", "plants", "cine", "lit", "random"}
