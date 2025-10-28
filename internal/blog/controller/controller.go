@@ -26,7 +26,7 @@ func NewBlogController(repo *repositories.PostRepository) *BlogController {
 }
 
 func (pc *BlogController) CreatePost(c *gin.Context) {
-
+	username, ok := c.MustGet("username").(string)
 	post := model.CreatePost{}
 	if err := c.ShouldBindJSON(&post); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error binding JSON": err.Error()})
