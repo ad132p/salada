@@ -33,9 +33,10 @@ func NewAdminRepository(db *sql.DB) *AdminRepository {
 }
 
 // CreatePost inserts a new post into the database.
-func (r *PostRepository) CreatePost(postRequest *model.CreatePost) (uuid.UUID, error) {
+func (r *PostRepository) CreatePost(postRequest model.CreatePost) (uuid.UUID, error) {
 	var post model.Post
 	post.Title = postRequest.Title
+	post.AuthorName = postRequest.AuthorName
 	post.Content = postRequest.Content
 	post.Tags = blog.SplitWithoutEmpty(postRequest.Tags, ",")
 	post.Category = postRequest.Category

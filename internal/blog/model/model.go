@@ -28,6 +28,7 @@ type Post struct {
 
 type UpdatePost struct {
 	ID       uuid.UUID `json:"id"`
+	AuthorName string
 	Title    string    `json:"title"`
 	Content  string    `json:"content"`
 	Tags     string    `json:"tags"`
@@ -40,6 +41,7 @@ type CreatePost struct {
 	Tags     string    `json:"tags"`
 	Category string    `json:"category"`
 	ImageIDs pq.StringArray `json:"image_ids"`
+	AuthorName string
 }
    
 

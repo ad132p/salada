@@ -26,21 +26,21 @@ func NewBlogController(repo *repositories.PostRepository) *BlogController {
 }
 
 func (pc *BlogController) CreatePost(c *gin.Context) {
-	username, ok := c.MustGet("username").(string)
-	post := model.CreatePost{}
-	if err := c.ShouldBindJSON(&post); err != nil {
+	username, _ := c.MustGet("username").(string) //Skipin for now
+	postRequest := model.CreatePost{AuthorName: username}
+	if err := c.ShouldBindJSON(&postRequest); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error binding JSON": err.Error()})
 		return
 	}
 
-	postID, err := pc.Repo.CreatePost(&post)
+	postID, err := pc.Repo.CreatePost(postRequest)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create post", "details": err.Error()})
 		return
 	}
 
-	updateRequest := model.UpdateImages{PostID: postID, ImageIDs: post.ImageIDs}
+	updateRequest := model.UpdateImages{PostID: postID, ImageIDs: postRequest.ImageIDs}
 
 	err = pc.Repo.UpdateImagesWithPostID(&updateRequest)
 
