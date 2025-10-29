@@ -20,7 +20,7 @@ func Run(router *gin.Engine) {
 	} else {
 		m := autocert.Manager{
 			Prompt:     autocert.AcceptTOS,
-			HostPolicy: autocert.HostWhitelist("salada.dev"),
+			HostPolicy: autocert.HostWhitelist("www.salada.dev", "salada.dev"),
 			Cache:      autocert.DirCache("/var/www/.cache"),
 		}
 
