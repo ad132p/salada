@@ -7,9 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// BlogRoutes initialises and defines all blog-related routes.
 func BlogRoutes(router *gin.Engine, blogController *controller.BlogController) {
-	// Note: I've kept the middleware logic here since it's intrinsic to the route group.
 	postRoutes := router.Group("/blog", middleware.AuthenticateMiddleware)
 	{
 		postRoutes.GET("/", blogController.GetPosts)

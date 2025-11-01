@@ -1,21 +1,28 @@
 {{ define "header" }}
-<nav class="bg-green-400 shadow-md">
-  <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+<nav class="bg-green-400 shadow-md w-full z-20 top-0 start-0 border-b">
+  <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
 
-    <a href="/" class="text-2xl font-bold text-gray-800">
+    <a href="/" class="self-center text-2xl font-semibold whitespace-nowrap">
       salada.dev
     </a>
 
-    <div class="hidden md:flex flex-1 justify-end items-center space-x-8">
-      <ul class="flex space-x-6 md:space-x-8 items-center">
-        <li><a href="/" class="text-gray-600 hover:text-gray-900 transition-colors duration-300 font-medium">Home</a>
+        <button data-collapse-toggle="navbar-hamburger" type="button" class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-green-420 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-green-700 dark:focus:ring-gray-600" aria-controls="navbar-hamburger" aria-expanded="false">
+        <span class="sr-only">Open main menu</span>
+        <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"/>
+        </svg>
+    </button>
+
+    <div class="hidden w-full md:block md:w-auto" id="navbar-hamburger">
+      <ul class="font-medium flex flex-col p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-green-400 md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0">
+        <li><a href="/" class="">Home</a>
         </li>
         <li><a href="/about/"
-            class="text-gray-600 hover:text-gray-900 transition-colors duration-300 font-medium">About</a></li>
+            class="">About</a></li>
         <li><a href="/blog/"
-            class="text-gray-600 hover:text-gray-900 transition-colors duration-300 font-medium">Blog</a></li>
+            class="">Blog</a></li>
         <li><a href="/contact/"
-            class="text-gray-600 hover:text-gray-900 transition-colors duration-300 font-medium">Contact</a></li>
+            class="">Contact</a></li>
       </ul>
     </div>
   </div>
