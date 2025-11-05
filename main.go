@@ -26,5 +26,4 @@ func main() {
 	middleware.SetupMiddleware(router)
 
 	server.Run(router)
-
 }

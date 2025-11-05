@@ -9,6 +9,7 @@ import (
 
 func BlogRoutes(router *gin.Engine, blogController *controller.BlogController) {
 	postRoutes := router.Group("/blog", middleware.AuthenticateMiddleware)
+	postRoutes.Use(middleware.DBLoggerMiddleware())
 	{
 		postRoutes.GET("/", blogController.GetPosts)
 		postRoutes.POST("/", blogController.CreatePost)
