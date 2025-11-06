@@ -1,6 +1,6 @@
 // web/static/js/components/CommentSection.jsx
 import React, { useState, useEffect } from 'react';
-//import CommentList from './CommentList'; 
+import CommentList from './CommentList'; 
 import CommentForm from './CommentForm'; 
 
 /**
@@ -8,7 +8,7 @@ import CommentForm from './CommentForm';
  * @param {object} props
  * @param {string} props.initialPostSlug - The unique slug of the blog post, passed from the server template.
  */
-function CommentSection({ initialPostSlug }) {
+function CommentSection({ initialPostSlug, currentUserName }) {
     const [comments, setComments] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const postSlug = initialPostSlug;
@@ -49,10 +49,13 @@ function CommentSection({ initialPostSlug }) {
 
     return (
         <div className="Comment-ApplicationRoot">
+            <CommentList 
+                comments={comments} 
+                currentUserName={currentUserName} 
+            />
             <CommentForm postSlug={postSlug} onSubmit={handleCommentSubmitted} />
         </div>
     );
 }
 
 export default CommentSection;
-//<CommentList comments={comments} /> 

@@ -69,8 +69,9 @@ if (container) {
     // 2. Get the necessary data (like the post slug) from the DOM element itself.
     // This is how React communicates with your server-rendered template.
     // We assume your HTML template renders a 'data-slug' attribute on the #comment element.
-    const postSlug = container.getAttribute('data-slug'); 
-    
+    const postSlug = container.getAttribute('data-slug');
+    const currentUserName = container.getAttribute('data-current-user');
+
     // 3. Create a root with the modern React 18+ API
     const root = createRoot(container);
 
@@ -78,7 +79,10 @@ if (container) {
     root.render(
         // Use React.StrictMode for development checks
         <React.StrictMode>
-            <CommentSection initialPostSlug={postSlug} />
+            <CommentSection
+                initialPostSlug={postSlug}
+                currentUserName={currentUserName}
+            />
         </React.StrictMode>
     );
 
