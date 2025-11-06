@@ -1,25 +1,56 @@
 const path = require('path');
+// Import HtmlWebpackPlugin to generate the HTML file that loads the bundle
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
-    // Set mode to production for optimized, smaller output
+    // Kept user's production mode setting
     mode: 'production',
-    
-    // The entry point for our JavaScript application
+
+    // Kept user's specific entry point (assuming this is your main React file, e.g., 'index.js' where you call ReactDOM.createRoot())
     entry: './web/static/js/index.js',
-    
-    // How and where to output the final bundle
+
     output: {
+        // Kept user's specific output paths
         filename: 'bundle.js',
-        // Output path resolves to the 'dist' directory relative to the project root
         path: path.resolve(__dirname, './web/assets/js/'),
-        // Clean the 'assets' folder before each build
-        clean: true,
+        clean: true, // Cleans the output directory before build (Webpack 5 feature)
     },
-    
-    // Define external libraries that should not be bundled but are expected to be available 
-    // globally or via CDN (not strictly necessary here, but good practice if you had many dependencies)
+
+    module: {
+        rules: [
+            // Rule to process JavaScript and JSX files with Babel
+            {
+                // Target both .js and .jsx files
+                test: /\.(js|jsx)$/,
+                // Exclude the node_modules folder from being processed
+                exclude: /node_modules/,
+                use: {
+                    loader: 'babel-loader',
+                    // Note: It's often cleaner to put Babel configuration
+                    // in a separate file (e.g., .babelrc or babel.config.js)
+                    // but you can configure it here if you prefer.
+                    options: {
+                        // The @babel/preset-env handles modern JS features.
+                        // The @babel/preset-react handles JSX and React-specific features.
+                        presets: ['@babel/preset-env', '@babel/preset-react'],
+                        // Add plugins here if necessary for features not covered by presets
+                        // e.g., Hot Module Replacement (HMR) for development
+                    },
+                },
+            },
+        ],
+    },
+
+    plugins: [
+        // Generates an index.html file that automatically includes your 'bundle.js'.
+        new HtmlWebpackPlugin({
+            template: './web/static/index.html',
+            filename: '../../index.html',
+        }),
+    ],
+
     resolve: {
-        extensions: ['.js']
+        // Add '.jsx' to the list of extensions so you can import 'Component' instead of 'Component.jsx'
+        extensions: ['.js', '.jsx']
     }
 };
-

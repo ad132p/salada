@@ -54,3 +54,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+
+
+// web/static/js/index.js (Your Webpack Entry Point)
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import CommentSection from './components/CommentSection';
+
+// 1. Find the DOM element where React will be mounted
+const container = document.getElementById('comment');
+
+// Check if the container element exists on the page
+if (container) {
+    // 2. Get the necessary data (like the post slug) from the DOM element itself.
+    // This is how React communicates with your server-rendered template.
+    // We assume your HTML template renders a 'data-slug' attribute on the #comment element.
+    const postSlug = container.getAttribute('data-slug'); 
+    
+    // 3. Create a root with the modern React 18+ API
+    const root = createRoot(container);
+
+    // 4. Render the CommentSection component into the root
+    root.render(
+        // Use React.StrictMode for development checks
+        <React.StrictMode>
+            <CommentSection initialPostSlug={postSlug} />
+        </React.StrictMode>
+    );
+
+} else {
+    // This is useful for debugging if the element is missing
+    console.warn('React root element with id="comment" not found. The comment section will not render.');
+}
