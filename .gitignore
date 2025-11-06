@@ -1,3 +1,12 @@
 images/*
 .env
 web/assets/
+
+
+*scratch*
+.swp
+dont/
+migration.sql
+node_modules/
+uploads/
+
