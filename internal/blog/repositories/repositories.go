@@ -4,10 +4,10 @@ import (
 	"database/sql"
 	"strconv"
 
+	"fmt"
 	"salada/internal/blog"
 	"salada/internal/blog/model"
 	"time"
-	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/lib/pq"
@@ -43,7 +43,6 @@ func (r *PostRepository) CreatePost(postRequest model.CreatePost) (uuid.UUID, er
 	post.CreatedAt = time.Now().UTC()
 	post.UpdatedAt = post.CreatedAt
 	post.Slug = blog.CreateSlug(postRequest.Title)
-
 
 	query := `INSERT INTO posts (title, slug, content, author_name, published_at, created_at, updated_at, tags, category)
               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, created_at, updated_at`
@@ -249,10 +248,25 @@ func (r *PostRepository) GetPublishedPosts(category string, q string) ([]model.P
 	return posts, nil
 }
 
-// GetPostBySlug fetches a single post by its slug.
+// GetPostBySlug fetches a single post by its slug, increments the 'seen' count, and returns the updated post.
 func (r *PostRepository) GetPostBySlug(slug string) (*model.Post, error) {
-	query := `SELECT id, title, slug, content, author_name, published_at, created_at, updated_at, tags, category FROM posts WHERE slug = $1;`
+	// 1. New SQL Query:
+	//    - UPDATE the 'seen' column, incrementing it by 1.
+	//    - RETURNING * selects all columns of the updated row.
+	//    - We list the columns explicitly for safety and clarity.
+	query := `
+        UPDATE posts 
+        SET seen = seen + 1, updated_at = NOW() 
+        WHERE slug = $1
+        RETURNING id, title, slug, content, author_name, published_at, created_at, updated_at, tags, category, seen;
+    `
 	var post model.Post
+
+	// The 'seen' field must be added to your model.Post struct:
+	// type Post struct {
+	//     ... (existing fields)
+	//     Seen int
+	// }
 
 	err := r.db.QueryRow(query, slug).Scan(
 		&post.ID,
@@ -265,14 +279,19 @@ func (r *PostRepository) GetPostBySlug(slug string) (*model.Post, error) {
 		&post.UpdatedAt,
 		&post.Tags,
 		&post.Category,
+		&post.Seen, // 3. Bind the new 'seen' field
 	)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return &post, nil // Return nil, nil if no row is found
+			// Important: If UPDATE...RETURNING finds no rows to update (i.e., slug not found),
+			// it returns sql.ErrNoRows. We return nil, nil to indicate "not found".
+			return nil, nil
 		}
-		return &post, err
+		return nil, fmt.Errorf("error executing UPDATE...RETURNING or scanning row: %w", err)
 	}
+
+	// The post is found, seen count is incremented, and updated post is returned.
 	return &post, nil
 }
 
@@ -367,8 +386,8 @@ func (r *PostRepository) AddImage(image model.Image) (uuid.UUID, error) {
 
 // DeletePost deletes a post by its ID and returns the filepaths of associated images.
 func (r *PostRepository) DeletePost(id uuid.UUID) ([]string, error) {
-    // The query attempts to delete the post and associated images, 
-    // returning the filepaths of the deleted images.
+	// The query attempts to delete the post and associated images,
+	// returning the filepaths of the deleted images.
 	query := `DELETE FROM posts 
              USING images 
              WHERE posts.id = images.blog_post_id
@@ -377,34 +396,34 @@ func (r *PostRepository) DeletePost(id uuid.UUID) ([]string, error) {
 
 	rows, err := r.db.Query(query, id)
 	if err != nil {
-        // Return the error instead of calling log.Fatalf, which stops the program.
+		// Return the error instead of calling log.Fatalf, which stops the program.
 		return nil, fmt.Errorf("error querying database: %w", err)
 	}
 	defer rows.Close()
 
-    // 1. Initialize a slice to hold all the filepaths.
-	var filepaths []string 
-	
-    // 2. Loop through all the returned rows.
+	// 1. Initialize a slice to hold all the filepaths.
+	var filepaths []string
+
+	// 2. Loop through all the returned rows.
 	for rows.Next() {
 		var filepath string
-        // 3. Scan the filepath from the current row.
+		// 3. Scan the filepath from the current row.
 		err = rows.Scan(&filepath)
 		if err != nil {
-            // Return the error if scanning fails.
+			// Return the error if scanning fails.
 			return nil, fmt.Errorf("error scanning row: %w", err)
 		}
-        // 4. Append the scanned filepath to the slice.
-		filepaths = append(filepaths, filepath) 
+		// 4. Append the scanned filepath to the slice.
+		filepaths = append(filepaths, filepath)
 	}
-    
-    // 5. Check for any error that occurred during iteration.
+
+	// 5. Check for any error that occurred during iteration.
 	if err = rows.Err(); err != nil {
-        // Return the iteration error.
+		// Return the iteration error.
 		return nil, fmt.Errorf("error iterating rows: %w", err)
 	}
-    
-    // 6. Return the slice of filepaths and a nil error.
-    // Note: The function's return signature has been changed to ([]string, error).
+
+	// 6. Return the slice of filepaths and a nil error.
+	// Note: The function's return signature has been changed to ([]string, error).
 	return filepaths, nil
 }

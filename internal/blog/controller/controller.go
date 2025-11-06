@@ -212,7 +212,7 @@ func (pc *BlogController) GetPostBySlug(c *gin.Context) {
 	slug := c.Param("slug")
 	post, err := pc.Repo.GetPostBySlug(slug)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve post"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
 	if post == nil { // Check if no record was found by the repository
@@ -332,7 +332,7 @@ func (pc *BlogController) DeletePost(c *gin.Context) {
 		return
 	}
 	fmt.Println(images)
-	blog.DeleteFiles(images) // Ignoring error for now
+	blog.DeleteFiles(images)       // Ignoring error for now
 	c.Status(http.StatusNoContent) // 204 No Content for successful deletion
 	c.Next()
 }

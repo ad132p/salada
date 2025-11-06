@@ -7,6 +7,7 @@
     <div class="prose prose-lg max-w-none text-gray-800">
       {{ .content }}
     </div>
+    <p class="text-center text-xl text-gray-600 font-medium">Accessed {{ .post.Seen }} times.</p>
     {{else}}
     <p class="text-center text-xl text-gray-600 font-medium">No blog post with this slug.</p>
     {{end}}

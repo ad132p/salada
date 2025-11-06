@@ -24,26 +24,26 @@ type Post struct {
 	ThumbnailURL string   `json:"thumbnail"`
 	Category     string   `json:"category"`
 	ImageIDs     []string `json:"image_ids"`
+	Seen         int      `json:"seen"`
 }
 
 type UpdatePost struct {
-	ID       uuid.UUID `json:"id"`
+	ID         uuid.UUID `json:"id"`
 	AuthorName string
-	Title    string    `json:"title"`
-	Content  string    `json:"content"`
-	Tags     string    `json:"tags"`
-	Category string    `json:"category"`
+	Title      string `json:"title"`
+	Content    string `json:"content"`
+	Tags       string `json:"tags"`
+	Category   string `json:"category"`
 }
 
 type CreatePost struct {
-	Title    string    `json:"title"`
-	Content  string    `json:"content"`
-	Tags     string    `json:"tags"`
-	Category string    `json:"category"`
-	ImageIDs pq.StringArray `json:"image_ids"`
+	Title      string         `json:"title"`
+	Content    string         `json:"content"`
+	Tags       string         `json:"tags"`
+	Category   string         `json:"category"`
+	ImageIDs   pq.StringArray `json:"image_ids"`
 	AuthorName string
 }
-   
 
 type UpdateImages struct {
 	ImageIDs pq.StringArray `json:"image_ids"`
