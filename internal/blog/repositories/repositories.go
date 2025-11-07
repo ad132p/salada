@@ -2,9 +2,11 @@ package repositories
 
 import (
 	"database/sql"
+	"encoding/json"
 	"strconv"
 
 	"fmt"
+	"log"
 	"salada/internal/blog"
 	"salada/internal/blog/model"
 	"time"
@@ -116,6 +118,33 @@ func (r *PostRepository) GetPosts() ([]model.Post, error) {
 	}
 
 	return posts, nil
+}
+
+// GetPostBySlug fetches a single post by its slug.
+func (r *PostRepository) GetPostBySlug(slug string) (*model.Post, error) {
+	query := `SELECT id, title, slug, content, author_name, published_at, created_at, updated_at, tags, category FROM posts WHERE slug = $1;`
+	var post model.Post
+
+	err := r.db.QueryRow(query, slug).Scan(
+		&post.ID,
+		&post.Title,
+		&post.Slug,
+		&post.Content,
+		&post.AuthorName,
+		&post.PublishedAt,
+		&post.CreatedAt,
+		&post.UpdatedAt,
+		&post.Tags,
+		&post.Category,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return &post, nil // Return nil, nil if no row is found
+		}
+		return &post, err
+	}
+	return &post, nil
 }
 
 // GetPublishedPosts fetches all published posts from the database.
@@ -248,25 +277,36 @@ func (r *PostRepository) GetPublishedPosts(category string, q string) ([]model.P
 	return posts, nil
 }
 
-// GetPostBySlug fetches a single post by its slug, increments the 'seen' count, and returns the updated post.
-func (r *PostRepository) GetPostBySlug(slug string) (*model.Post, error) {
-	// 1. New SQL Query:
-	//    - UPDATE the 'seen' column, incrementing it by 1.
-	//    - RETURNING * selects all columns of the updated row.
-	//    - We list the columns explicitly for safety and clarity.
+// GetPostAndCommentsBySlug fetches a single post by its slug and includes all associated comments.
+func (r *PostRepository) GetPostAndCommentsBySlug(slug string) (*model.Post, error) {
+	// 1. Separate 'seen' count increment (optional but cleaner than mixing with SELECT)
+	// You can keep the original UPDATE...RETURNING logic separate if you prefer
+	// to track the 'seen' count atomically upon post access.
+	// For simplicity, we'll assume the seen count is updated elsewhere or removed here.
+
+	// 2. New SQL Query: SELECT the post details and aggregate comments into a JSON array.
 	query := `
-        UPDATE posts 
-        SET seen = seen + 1, updated_at = NOW() 
-        WHERE slug = $1
-        RETURNING id, title, slug, content, author_name, published_at, created_at, updated_at, tags, category, seen;
+        SELECT
+            p.id, p.title, p.slug, p.content, p.author_name, p.published_at, 
+            p.created_at, p.updated_at, p.tags, p.category, p.seen,
+            COALESCE(
+                json_agg(
+                    json_build_object(
+                        'id', c.id,
+                        'content', c.content,
+                        'created_at', c.created_at
+                        -- Add other comment fields here
+                    ) ORDER BY c.created_at ASC
+                ) FILTER (WHERE c.id IS NOT NULL), 
+                '[]'
+            ) AS comments_json
+        FROM posts p
+        LEFT JOIN comments c ON p.id = c.blog_post_id
+        WHERE p.slug = $1
+        GROUP BY p.id;
     `
 	var post model.Post
-
-	// The 'seen' field must be added to your model.Post struct:
-	// type Post struct {
-	//     ... (existing fields)
-	//     Seen int
-	// }
+	var commentsJSON []byte // To store the JSON array from the database
 
 	err := r.db.QueryRow(query, slug).Scan(
 		&post.ID,
@@ -279,19 +319,30 @@ func (r *PostRepository) GetPostBySlug(slug string) (*model.Post, error) {
 		&post.UpdatedAt,
 		&post.Tags,
 		&post.Category,
-		&post.Seen, // 3. Bind the new 'seen' field
+		&post.Seen,
+		&commentsJSON, // Bind the JSON output
 	)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			// Important: If UPDATE...RETURNING finds no rows to update (i.e., slug not found),
-			// it returns sql.ErrNoRows. We return nil, nil to indicate "not found".
-			return nil, nil
+			return nil, nil // Post not found
 		}
-		return nil, fmt.Errorf("error executing UPDATE...RETURNING or scanning row: %w", err)
+		return nil, fmt.Errorf("error executing SELECT or scanning row: %w", err)
 	}
 
-	// The post is found, seen count is incremented, and updated post is returned.
+	// 3. Unmarshal the comments JSON into the Post struct's Comments field
+	if len(commentsJSON) > 0 {
+		err = json.Unmarshal(commentsJSON, &post.Comments)
+		if err != nil {
+			return nil, fmt.Errorf("error unmarshaling comments JSON: %w", err)
+		}
+	}
+
+	_, err = r.db.Exec(`UPDATE posts SET seen = seen + 1, updated_at = NOW() WHERE slug = $1;`, slug)
+	if err != nil {
+		log.Printf("Warning: Failed to increment seen count for slug %s: %v", slug, err)
+	}
+
 	return &post, nil
 }
 
@@ -426,4 +477,39 @@ func (r *PostRepository) DeletePost(id uuid.UUID) ([]string, error) {
 	// 6. Return the slice of filepaths and a nil error.
 	// Note: The function's return signature has been changed to ([]string, error).
 	return filepaths, nil
+}
+
+// CreateComment inserts a new comment into the database.
+func (r *PostRepository) CreateComment(req model.CreateCommentRequest) (uuid.UUID, error) {
+	// 1. Prepare data model structure for scanning the returned values
+	var commentID uuid.UUID
+	var createdAt time.Time
+	var updatedAt time.Time
+
+	// 2. Define the SQL query
+	query := `
+        INSERT INTO comments (blog_post_id, content, author_name, created_at, updated_at)
+        VALUES ($1, $2, $3, NOW(), NOW()) 
+        RETURNING id, created_at, updated_at`
+
+	// 3. Execute the query and scan the returned values
+	err := r.db.QueryRow(query,
+		req.PostID,
+		req.Content,
+		req.AuthorName,
+	).Scan(
+		&commentID,
+		&createdAt,
+		&updatedAt,
+	)
+
+	if err != nil {
+		// Check if the error is due to a foreign key violation (e.g., PostID doesn't exist)
+		// Specific error checking depends on your database driver/wrapper,
+		// but a general check is often sufficient.
+		return uuid.Nil, fmt.Errorf("failed to insert comment: %w", err)
+	}
+
+	// 4. Return the newly generated comment ID
+	return commentID, nil
 }

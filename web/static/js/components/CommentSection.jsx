@@ -6,36 +6,44 @@ import CommentForm from './CommentForm';
 /**
  * Main container component for the entire comments section.
  * @param {object} props
- * @param {string} props.initialPostSlug - The unique slug of the blog post, passed from the server template.
+ * @param {string} props.initialPostID - The unique slug of the blog post, passed from the server template.
+ * @param {string} props.currentUserName - The current user's name.
+ * @param {Array<object>} props.initialComments - The initial comments list, likely passed from the server template.
  */
-function CommentSection({ initialPostSlug, currentUserName }) {
-    const [comments, setComments] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const postSlug = initialPostSlug;
+function CommentSection({ initialPostID, currentUserName, initialComments }) {
+    // 1. Initialize local state for comments using the prop's value
+    const [comments, setComments] = useState(initialComments || []); 
     
-    // Function to fetch comments from the API
+    // 2. Local state to track loading
+    const [isLoading, setIsLoading] = useState(false); // Set to false initially if comments are pre-loaded
+    const postID = initialPostID;
+    console.log(initialComments)
+    
+    // Function to fetch and refresh comments from the API
     const fetchComments = async () => {
+        // Only set loading if we're actually fetching (i.e., not the initial render if pre-loaded)
         setIsLoading(true);
-        // Replace with your actual API endpoint: `/api/posts/${postSlug}/comments`
-        // const response = await fetch(`/api/comments?slug=${postSlug}`);
-        // const data = await response.json();
         
-        // --- Placeholder Data ---
-        const data = [
-            { id: 'c3', authorName: 'Carla', authorAvatarUrl: '...', text: 'Nice component!', timestamp: new Date().toISOString() },
-            // ... more comments
-        ];
-        
-        setComments(data);
-        setIsLoading(false);
-    };
+        try {
+            // Replace with your actual API endpoint: `/api/posts/${postID}/comments`
+            // const response = await fetch(`/api/comments?slug=${postID}`);
+            // const data = await response.json();
 
-    // Fetch comments when the component mounts or postSlug changes
-    useEffect(() => {
-        if (postSlug) {
-            fetchComments();
+            // --- Updated Placeholder Data (Simulating a fetch result) ---
+            const data = [
+                { id: 'c3', authorName: 'Carla', authorAvatarUrl: '...', text: 'Nice component!', timestamp: new Date().toISOString() },
+                { id: 'c4', authorName: 'Sam', authorAvatarUrl: '...', text: 'I agree!', timestamp: new Date().toISOString() },
+                // ... potentially new comments from the server
+            ];
+            
+            // 3. Update the local state
+            setComments(data);
+        } catch (error) {
+            console.error("Failed to fetch comments:", error);
+        } finally {
+            setIsLoading(false);
         }
-    }, [postSlug]); 
+    };
 
     // Handler to refresh comments after a successful submission
     const handleCommentSubmitted = () => {
@@ -49,11 +57,11 @@ function CommentSection({ initialPostSlug, currentUserName }) {
 
     return (
         <div className="Comment-ApplicationRoot">
-            <CommentList 
-                comments={comments} 
-                currentUserName={currentUserName} 
-            />
-            <CommentForm postSlug={postSlug} onSubmit={handleCommentSubmitted} />
+            <CommentForm postID={postID} currentUserName={currentUserName} onSubmit={handleCommentSubmitted} />
+
+           <CommentList 
+               comments={comments} // Pass the local state to the list
+           />
         </div>
     );
 }

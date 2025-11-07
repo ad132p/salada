@@ -5,10 +5,11 @@ import React, { useState } from 'react';
  * A form component for submitting a new blog comment.
  *
  * @param {object} props
- * @param {string} props.postSlug - The unique slug of the blog post.
+ * @param {string} props.postID - The unique slug of the blog post.
+ * @param {string} props.currentUserName - The unique slug of the blog post.
  * @param {function} props.onSubmit - Function to call on successful submission (e.g., to refresh comments).
  */
-function CommentForm({ postSlug, onSubmit }) {
+function CommentForm({ postID, currentUserName, onSubmit }) {
     // State to hold the content of the comment textarea
     const [commentText, setCommentText] = useState('');
     // State to handle loading/submission status
@@ -16,8 +17,8 @@ function CommentForm({ postSlug, onSubmit }) {
     // State to hold any submission errors
     const [error, setError] = useState(null);
 
-    // Determines the action URL based on the postSlug prop
-    const formAction = `/comments/${postSlug}`;
+    // Determines the action URL based on the postID prop
+    const formAction = `/blog/comment/${postID}`;
 
     /**
      * Handles the form submission logic.
@@ -45,7 +46,7 @@ function CommentForm({ postSlug, onSubmit }) {
                     // Often include a security token (CSRF token, JWT, etc.) here
                 },
                 // Send the comment data to the server
-                body: JSON.stringify({ comment: commentText }),
+                body: JSON.stringify({ comment: commentText, postID: postID, author_name: currentUserName }),
             });
 
             if (!response.ok) {

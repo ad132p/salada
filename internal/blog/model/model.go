@@ -7,6 +7,14 @@ import (
 	"github.com/lib/pq"
 )
 
+// Comment struct definition
+type Comment struct {
+	ID        string    `json:"id"`
+	Content   string    `json:"content"`
+	CreatedAt time.Time `json:"created_at"`
+	// Add other fields you selected in the json_build_object
+}
+
 // Post represents a blog post.
 // Fields are mapped directly to database columns.
 // Pointers are used for nullable fields in the database.
@@ -21,10 +29,17 @@ type Post struct {
 	CreatedAt    time.Time  `json:"created_at"`
 	UpdatedAt    time.Time  `json:"updated_at"`
 	Tags         pq.StringArray
-	ThumbnailURL string   `json:"thumbnail"`
-	Category     string   `json:"category"`
-	ImageIDs     []string `json:"image_ids"`
-	Seen         int      `json:"seen"`
+	ThumbnailURL string    `json:"thumbnail"`
+	Category     string    `json:"category"`
+	ImageIDs     []string  `json:"image_ids"`
+	Seen         int       `json:"seen"`
+	Comments     []Comment `json:"comments"`
+}
+
+type CreateCommentRequest struct {
+	PostID     uuid.UUID `json:"postID"` // The UUID of the blog post this comment belongs to
+	Content    string    `json:"comment"`
+	AuthorName string    `json:"author_name"`
 }
 
 type UpdatePost struct {

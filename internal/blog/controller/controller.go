@@ -2,8 +2,10 @@ package controller
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 	"path/filepath"
 
@@ -50,6 +52,30 @@ func (pc *BlogController) CreatePost(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusFound, gin.H{"msg": "Success", "ID": postID})
+}
+
+func (pc *BlogController) CreateComment(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
+		return
+	}
+	username, _ := c.MustGet("username").(string) //Skipin for now
+	commentRequest := model.CreateCommentRequest{AuthorName: username, PostID: id}
+	if err := c.ShouldBindJSON(&commentRequest); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error binding JSON": err.Error()})
+		return
+	}
+
+	commentID, err := pc.Repo.CreateComment(commentRequest)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create post", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusFound, gin.H{"msg": "Success", "ID": commentID})
 }
 
 // UpdatePost handles PUT on /blog/:id
@@ -210,7 +236,7 @@ func (pc *BlogController) GetNewPostForm(c *gin.Context) {
 // GetPostBySlug handles GET /blog/:slug
 func (pc *BlogController) GetPostBySlug(c *gin.Context) {
 	slug := c.Param("slug")
-	post, err := pc.Repo.GetPostBySlug(slug)
+	post, err := pc.Repo.GetPostAndCommentsBySlug(slug)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
@@ -219,10 +245,19 @@ func (pc *BlogController) GetPostBySlug(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
 		return
 	}
+
+	commentsJSONBytes, err := json.Marshal(post.Comments)
+	if err != nil {
+		// Handle the error if marshalling fails (e.g., if data is invalid)
+		log.Printf("Error marshalling comments: %v", err)
+		commentsJSONBytes = []byte("[]") // Default to an empty array string on failure
+	}
+
 	c.HTML(http.StatusOK, "blog_post.html", gin.H{
-		"title":   post.Title,
-		"post":    post,
-		"content": template.HTML(blog.RenderMarkdownToHTML(post.Content)),
+		"title":    post.Title,
+		"post":     post,
+		"comments": string(commentsJSONBytes),
+		"content":  template.HTML(blog.RenderMarkdownToHTML(post.Content)),
 	})
 }
 
