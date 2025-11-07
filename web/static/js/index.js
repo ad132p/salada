@@ -73,6 +73,9 @@ if (container) {
     const currentUserName = container.getAttribute('data-current-user');
     const comments = container.getAttribute('data-comments');
 
+    // just checking
+    console.log(currentUserName, 'hi')
+
     // 3. Create a root with the modern React 18+ API
     const root = createRoot(container);
 

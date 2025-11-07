@@ -9,10 +9,10 @@ import (
 
 // Comment struct definition
 type Comment struct {
-	ID        string    `json:"id"`
-	Content   string    `json:"content"`
-	CreatedAt time.Time `json:"created_at"`
-	// Add other fields you selected in the json_build_object
+	ID         string    `json:"id"`
+	Content    string    `json:"content"`
+	CreatedAt  time.Time `json:"created_at"`
+	AuthorName string    `json:"author_name"`
 }
 
 // Post represents a blog post.

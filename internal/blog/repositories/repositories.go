@@ -294,8 +294,8 @@ func (r *PostRepository) GetPostAndCommentsBySlug(slug string) (*model.Post, err
                     json_build_object(
                         'id', c.id,
                         'content', c.content,
-                        'created_at', c.created_at
-                        -- Add other comment fields here
+                        'created_at', c.created_at,
+                        'author_name', c.author_name
                     ) ORDER BY c.created_at ASC
                 ) FILTER (WHERE c.id IS NOT NULL), 
                 '[]'

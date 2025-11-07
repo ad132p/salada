@@ -9,7 +9,7 @@ import React from 'react';
  */
 function Comment({ comment, currentUserName }) {
     // Determine the author's name, falling back to a generic label if needed
-    const authorName = comment.authorName || 'Anonymous';
+    const authorName = currentUserName || 'Anon';
     
     // Format the date for better readability
     const formattedDate = new Date(comment.created_at).toLocaleDateString(undefined, {
@@ -33,7 +33,7 @@ function Comment({ comment, currentUserName }) {
             <header className="flex justify-between items-start mb-2 border-b pb-2">
                 <div className="flex items-center">
                     <span className="font-semibold text-gray-800 mr-2">
-                        {authorName}
+                        {comment.author_name}
                     </span>
                     {isCurrentUser && (
                         <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full">
