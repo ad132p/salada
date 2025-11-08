@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"strings"
 
 	"salada/internal/blog"
 	"salada/internal/blog/model"
@@ -414,4 +415,26 @@ func (pc *BlogController) EditPostForm(c *gin.Context) {
 		"post":       post,
 		"categories": blog.Categories,
 	})
+}
+
+func (pc *BlogController) LikePost(c *gin.Context) {
+	var req model.LikeRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	err := pc.Repo.LikePostByID(req)
+	if err != nil {
+		// Use a more specific status if the post wasn't found
+		if strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update like status"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success"})
 }

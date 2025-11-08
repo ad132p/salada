@@ -63,7 +63,7 @@ if (container) {
     root.render(
         // Use React.StrictMode for development checks
         <React.StrictMode>
-            <LikeButton></LikeButton>
+            <LikeButton initialPostID={postID}></LikeButton>
             <CommentSection
                 initialPostID={postID}
                 initialPostSlug={postSlug}

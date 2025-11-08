@@ -3,12 +3,13 @@ package repositories
 import (
 	"database/sql"
 	"encoding/json"
+	"log"
 	"strconv"
 
 	"fmt"
-	"log"
 	"salada/internal/blog"
 	"salada/internal/blog/model"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -279,7 +280,6 @@ func (r *PostRepository) GetPublishedPosts(category string, q string) ([]model.P
 	return posts, nil
 }
 
-// GetPostAndCommentsBySlug fetches a single post by its slug and includes all associated comments.
 func (r *PostRepository) GetPostAndCommentsBySlug(slug string) (*model.Post, error) {
 	// 1. Separate 'seen' count increment (optional but cleaner than mixing with SELECT)
 	// You can keep the original UPDATE...RETURNING logic separate if you prefer
@@ -346,6 +346,51 @@ func (r *PostRepository) GetPostAndCommentsBySlug(slug string) (*model.Post, err
 	}
 
 	return &post, nil
+}
+
+func (r *PostRepository) LikePostByID(req model.LikeRequest) error {
+	// Normalize action to lowercase for reliable comparison
+	normalizedAction := strings.ToLower(req.Action)
+
+	var updateOperator string
+
+	switch normalizedAction {
+	case "like":
+		// Increment the likes count
+		updateOperator = "+ 1"
+	case "unlike":
+		// Decrement the likes count (and ensure it never goes below zero)
+		updateOperator = "- 1"
+	default:
+		return fmt.Errorf("invalid action specified: %s. Must be 'like' or 'unlike'", req.Action)
+	}
+
+	// SQL command to update the 'likes' count
+	// Using a CASE statement or WHERE clause (e.g., likes > 0) is safer for decrementing,
+	// but the simple update is used here for direct control via the application:
+	query := fmt.Sprintf(`
+		UPDATE posts 
+		SET likes = likes %s, 
+		    updated_at = NOW() 
+		WHERE id = $1
+	`, updateOperator)
+
+	// Execute the update query.
+	result, err := r.db.Exec(query, req.PostID)
+	if err != nil {
+		return fmt.Errorf("error executing like update for PostID %s: %w", req.PostID, err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("error checking rows affected after like update: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("post with ID '%s' not found or no rows updated", req.PostID)
+	}
+
+	return nil
 }
 
 // GetPostByID fetches a single post by its ID.

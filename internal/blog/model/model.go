@@ -42,6 +42,11 @@ type CreateCommentRequest struct {
 	AuthorName string    `json:"author_name"`
 }
 
+type LikeRequest struct {
+	PostID string `json:"post_id"` // Assuming this holds the slug
+	Action string `json:"action"`
+}
+
 type UpdatePost struct {
 	ID         uuid.UUID `json:"id"`
 	AuthorName string

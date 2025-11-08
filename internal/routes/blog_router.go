@@ -17,6 +17,7 @@ func BlogRoutes(router *gin.Engine, blogController *controller.BlogController) {
 		postRoutes.GET("/:slug", blogController.GetPostBySlug)
 		postRoutes.GET("/comment/:slug", blogController.GetCommentsBySlug)
 		postRoutes.POST("/uploads", blogController.UploadImage)
+		postRoutes.POST("/like", blogController.LikePost)
 		postRoutes.DELETE("/:id", blogController.DeletePost)
 		postRoutes.PUT("/:id", blogController.UpdatePost)
 		postRoutes.GET("/new", blogController.GetNewPostForm)
