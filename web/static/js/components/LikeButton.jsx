@@ -24,7 +24,7 @@ const HeartIcon = ({ filled, className }) => (
  * @param {number} props.initialLikes - The starting number of likes.
  * @param {boolean} props.hasUserLiked - True if the current user has already liked the post.
  */
-function LikeButton({ initialPostID, initialLikes = 0, hasUserLiked = false }) {
+function LikeButton({ initialPostID, initialLikes, hasUserLiked = false }) {
     const [likes, setLikes] = useState(initialLikes);
     const [isLiked, setIsLiked] = useState(hasUserLiked);
     const [isLoading, setIsLoading] = useState(false);
@@ -44,7 +44,7 @@ function LikeButton({ initialPostID, initialLikes = 0, hasUserLiked = false }) {
         const endpoint = '/blog/like';
 
         // APPLY OPTIMISTIC UPDATE *NOW*
-        setLikes(action === 'like' ? likes + 1 : likes - 1);
+        setLikes(action === 'like' ? Number(likes) + 1 : likes - 1);
         setIsLiked(!isLiked);
 
         try {

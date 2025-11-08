@@ -55,6 +55,7 @@ if (container) {
     const postSlug = container.getAttribute('data-slug');
     const currentUserName = container.getAttribute('data-current-user');
     const comments = container.getAttribute('data-comments');
+    const likes = container.getAttribute('data-like');
 
     // 3. Create a root with the modern React 18+ API
     const root = createRoot(container);
@@ -63,7 +64,7 @@ if (container) {
     root.render(
         // Use React.StrictMode for development checks
         <React.StrictMode>
-            <LikeButton initialPostID={postID}></LikeButton>
+            <LikeButton initialPostID={postID} initialLikes={likes}></LikeButton>
             <CommentSection
                 initialPostID={postID}
                 initialPostSlug={postSlug}

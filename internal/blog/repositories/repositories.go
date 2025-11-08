@@ -290,7 +290,7 @@ func (r *PostRepository) GetPostAndCommentsBySlug(slug string) (*model.Post, err
 	query := `
         SELECT
             p.id, p.title, p.slug, p.content, p.author_name, p.published_at, 
-            p.created_at, p.updated_at, p.tags, p.category, p.seen,
+            p.created_at, p.updated_at, p.tags, p.category, p.seen, p.likes,
             COALESCE(
                 json_agg(
                     json_build_object(
@@ -322,6 +322,7 @@ func (r *PostRepository) GetPostAndCommentsBySlug(slug string) (*model.Post, err
 		&post.Tags,
 		&post.Category,
 		&post.Seen,
+		&post.Likes,
 		&commentsJSON, // Bind the JSON output
 	)
 

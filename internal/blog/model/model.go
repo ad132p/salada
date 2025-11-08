@@ -33,6 +33,7 @@ type Post struct {
 	Category     string    `json:"category"`
 	ImageIDs     []string  `json:"image_ids"`
 	Seen         int       `json:"seen"`
+	Likes        int       `json:"likes"`
 	Comments     []Comment `json:"comments"`
 }
 
