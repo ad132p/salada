@@ -70,11 +70,9 @@ if (container) {
     // This is how React communicates with your server-rendered template.
     // We assume your HTML template renders a 'data-slug' attribute on the #comment element.
     const postID = container.getAttribute('data-id');
+    const postSlug = container.getAttribute('data-slug');
     const currentUserName = container.getAttribute('data-current-user');
     const comments = container.getAttribute('data-comments');
-
-    // just checking
-    console.log(currentUserName, 'hi')
 
     // 3. Create a root with the modern React 18+ API
     const root = createRoot(container);
@@ -85,6 +83,7 @@ if (container) {
         <React.StrictMode>
             <CommentSection
                 initialPostID={postID}
+                initialPostSlug={postSlug}
                 currentUserName={currentUserName}
                 initialComments={comments}
             />

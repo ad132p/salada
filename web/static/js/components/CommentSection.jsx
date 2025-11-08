@@ -10,14 +10,14 @@ import CommentForm from './CommentForm';
  * @param {string} props.currentUserName - The current user's name.
  * @param {Array<object>} props.initialComments - The initial comments list, likely passed from the server template.
  */
-function CommentSection({ initialPostID, currentUserName, initialComments }) {
+function CommentSection({ initialPostID, initialPostSlug, currentUserName, initialComments }) {
     // 1. Initialize local state for comments using the prop's value
     const [comments, setComments] = useState(initialComments || []); 
     
     // 2. Local state to track loading
     const [isLoading, setIsLoading] = useState(false); // Set to false initially if comments are pre-loaded
     const postID = initialPostID;
-    console.log(initialComments)
+    const postSlug = initialPostSlug;
     
     // Function to fetch and refresh comments from the API
     const fetchComments = async () => {
@@ -26,18 +26,11 @@ function CommentSection({ initialPostID, currentUserName, initialComments }) {
         
         try {
             // Replace with your actual API endpoint: `/api/posts/${postID}/comments`
-            // const response = await fetch(`/api/comments?slug=${postID}`);
-            // const data = await response.json();
+            const response = await fetch(`/blog/comment/${postSlug}`);
+            const data = await response.json();
 
-            // --- Updated Placeholder Data (Simulating a fetch result) ---
-            const data = [
-                { id: 'c3', authorName: 'Carla', authorAvatarUrl: '...', text: 'Nice component!', timestamp: new Date().toISOString() },
-                { id: 'c4', authorName: 'Sam', authorAvatarUrl: '...', text: 'I agree!', timestamp: new Date().toISOString() },
-                // ... potentially new comments from the server
-            ];
-            
             // 3. Update the local state
-            setComments(data);
+            setComments(data.comments);
         } catch (error) {
             console.error("Failed to fetch comments:", error);
         } finally {

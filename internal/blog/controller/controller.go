@@ -75,7 +75,7 @@ func (pc *BlogController) CreateComment(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusFound, gin.H{"msg": "Success", "ID": commentID})
+	c.JSON(http.StatusOK, gin.H{"msg": "Success", "ID": commentID})
 }
 
 // UpdatePost handles PUT on /blog/:id
@@ -258,6 +258,31 @@ func (pc *BlogController) GetPostBySlug(c *gin.Context) {
 		"post":     post,
 		"comments": string(commentsJSONBytes),
 		"content":  template.HTML(blog.RenderMarkdownToHTML(post.Content)),
+	})
+}
+
+// GetPostBySlug handles GET /blog/comments/:slug
+func (pc *BlogController) GetCommentsBySlug(c *gin.Context) {
+	slug := c.Param("slug")
+	post, err := pc.Repo.GetPostAndCommentsBySlug(slug)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+	if post == nil { // Check if no record was found by the repository
+		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
+		return
+	}
+
+	commentsJSONBytes, err := json.Marshal(post.Comments)
+	if err != nil {
+		// Handle the error if marshalling fails (e.g., if data is invalid)
+		log.Printf("Error marshalling comments: %v", err)
+		commentsJSONBytes = []byte("[]") // Default to an empty array string on failure
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"comments": string(commentsJSONBytes),
 	})
 }
 
