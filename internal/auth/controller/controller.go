@@ -68,7 +68,7 @@ func (pc *AuthController) Login(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("token", tokenString, 3600, "/", os.Getenv("SALADA_HOST"), false, true)
+	c.SetCookie("token", tokenString, 3600*12, "/", os.Getenv("SALADA_HOST"), false, true)
 
 	c.Redirect(http.StatusFound, "/blog/")
 }

@@ -62,25 +62,103 @@
 </div>
 {{ template "footer" . }}
 <script>
-  const easyMDE = new EasyMDE({
-    element: document.getElementById('content'),
-    autofocus: true,
-    imageMaxSize: 1024 * 1024 * 8,
-    imageAccept: "image/png, image/jpeg, image/jpg, image/webp",
-    previewImagesInEditor: true,
-    previewClass: "w-sm",
-    imageUploadEndpoint: "/blog/uploads",
-    placeholder: "Start writing your blog post in Markdown...",
-    spellChecker: true,
-    maxHeight: 200,
-    toolbar: [
-      "bold", "italic", "heading", "|",
-      "unordered-list", "ordered-list", "code", "quote", "|",
-      "link", "image", "upload-image", "|",
-      "preview", "side-by-side", "fullscreen", "|",
-      "guide"
-    ],
-  });
+   // 1. Declare the global data structure (array) to store the UUIDs
+    // This array will hold the list of image IDs for form submission.
+    const uploadedImageUUIDs = [];
+
+    const imageMonitorStatus = {
+        // The unique name for your status bar item
+        className: "image-uuid-monitor",
+        // The element to be displayed. Start with a neutral message.
+        defaultValue: "Image Uploads: None" // The default value set by EasyMDE
+    };
+
+    /**
+     * Updates the status bar and, more importantly, adds the new UUID 
+     * to the global uploadedImageUUIDs array.
+     * @param {string} newUUID - The unique ID of the newly uploaded image.
+     */
+    function updateImageMonitor(newUUID) {
+        // Push the new UUID into the global array.
+        // This is the array you will use for your form submission.
+        uploadedImageUUIDs.push(newUUID);
+        console.log("UUID added to array:", newUUID);
+        console.log("Current UUIDs Array:", uploadedImageUUIDs); // Log the array
+
+        // --- Status Bar Update (Original Logic - Kept for visibility) ---
+        const monitorElement = document.querySelector('.' + imageMonitorStatus.className);
+
+        if (!monitorElement) {
+            console.error("Image Monitor element not found. Check EasyMDE setup.");
+            return;
+        }
+
+        // The status bar text can now be directly based on the global array contents
+        if (uploadedImageUUIDs.length === 0) {
+            monitorElement.textContent = imageMonitorStatus.defaultValue;
+        } else {
+            monitorElement.textContent = `Image Uploads: ${uploadedImageUUIDs.join(', ')}`;
+        }
+
+        console.log("Status bar text updated.");
+    }
+
+    // You should also consider a function to remove a UUID if an image is removed from the editor, 
+    // but for simple uploading, the above is enough.
+
+    async function customImageUpload(file, onSuccess, onError) {
+
+        // Use FormData to package the file for the POST request
+        const formData = new FormData();
+        formData.append("image", file);
+
+        try {
+            const response = await fetch('/blog/uploads/', {
+                method: 'POST',
+                body: formData,
+                // Add any necessary headers like JWT/CSRF tokens here
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error("Image upload failed on server:", errorText);
+                onError("Upload Failed: " + errorText);
+                return;
+            }
+
+            const payload = await response.json()
+
+            // Assuming the server response is { data: { image_id: "...", filepath: "..." } }
+            // **This is where the function to update the array is called.**
+            updateImageMonitor(payload.data.image_id);
+            onSuccess(payload.data.filepath);
+
+        } catch (error) {
+            console.error("Network or parsing error:", error);
+            onError("Network Error: " + error.message);
+        }
+    }
+
+    const easyMDE = new EasyMDE({
+        element: document.getElementById('content'),
+        autofocus: true,
+        imageMaxSize: 1024 * 1024 * 8,
+        imageAccept: "image/png, image/jpeg, image/jpg, image/webp",
+        status: ["autosave", "lines", "words", "cursors", imageMonitorStatus],
+        previewImagesInEditor: true,
+        previewClass: ["h-200", "w-96", "object-scale-down"],
+        imageUploadFunction: customImageUpload,
+        imagePathAbsolute: true,
+        placeholder: "Start writing your blog post in Markdown...",
+        spellChecker: true,
+        toolbar: [
+            "bold", "italic", "heading", "|",
+            "unordered-list", "ordered-list", "code", "quote", "|",
+            "link", "upload-image", "|",
+            "preview", "side-by-side", "fullscreen", "|",
+            "guide"
+        ],
+    });
 
   const editButton = document.getElementById("edit_button");
   const messageDisplay = document.getElementById("message");

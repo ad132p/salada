@@ -92,15 +92,6 @@ func DBLogger(c *gin.Context) {
 	// Convert latency to milliseconds for storage
 	latencyMs := int64(latency.Milliseconds())
 
-	// --- Log to standard output ---
-	log.Printf("✅ [GIN] %s | %d | %dms | %s %s",
-		clientIP,
-		statusCode,
-		latencyMs, // Log the latency
-		method,
-		path,
-	)
-
 	// --- Log to PostgreSQL ---
 	_, err := db.DB.Exec(`
         INSERT INTO access_logs (client_ip, method, path, status_code, latency_ms)

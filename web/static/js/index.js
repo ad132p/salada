@@ -74,8 +74,4 @@ if (container) {
             <Share></Share>
         </React.StrictMode>
     );
-
-} else {
-    // This is useful for debugging if the element is missing
-    console.warn('React root element with id="comment" not found. The comment section will not render.');
 }
