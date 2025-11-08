@@ -25,26 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // 3. Optional options with custom callback functions
-        const options = {
-            onCollapse: () => {
-                console.log('Mobile menu has been collapsed');
-            },
-            onExpand: () => {
-                console.log('Mobile menu has been expanded');
-            },
-            onToggle: () => {
-                console.log('Mobile menu has been toggled');
-            },
-        };
-
-        // 4. Create a new instance of the Collapse object
-        // NOTE: Flowbite automatically hooks up the trigger element's click 
-        // handler to the target element's collapse/expand functionality 
-        // when both are passed to the Collapse constructor.
-        const collapse = new Collapse($targetEl, $triggerEl, options);
-
-        console.log('Flowbite Collapse initialized programmatically for navbar-hamburger.');
+        const collapse = new Collapse($targetEl, $triggerEl);
 
         // Optional: Expose the collapse object globally for debugging
         window.mobileMenuCollapse = collapse;
