@@ -267,6 +267,8 @@ func (r *PostRepository) GetPublishedPosts(category string, q string) ([]model.P
 			post.ThumbnailURL = "" // Or nil, depending on your model.Post field type
 		}
 
+		post.Content = blog.GetContentSummary(post.Content, 100)
+
 		posts = append(posts, post)
 	}
 

@@ -6,6 +6,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/ast"
@@ -121,7 +122,6 @@ func (r *TailwindRenderer) RenderHeader(w io.Writer, node ast.Node) {
 	// No-op
 }
 
-
 // DeleteFiles takes a slice of strings (file paths) and attempts to delete
 // the file at each path. It returns a slice of error strings containing
 // details for any paths that could not be deleted.
@@ -132,7 +132,7 @@ func DeleteFiles(filepaths []string) []string {
 		// os.Remove deletes the named file or directory.
 		// If the path is a directory, it must be empty.
 		err := os.Remove("." + path)
-		
+
 		if err != nil {
 			// If an error occurs (e.g., file not found, permission denied),
 			// format the error message and append it to the error slice.
@@ -146,4 +146,41 @@ func DeleteFiles(filepaths []string) []string {
 
 	return deletionErrors
 }
+
+// stripMarkdownLinks replaces any Markdown links or image references: [text](url) or ![text](url).
+func stripMarkdownLinks(content string) string {
+	// UPDATED REGEX: !? matches an optional exclamation mark.
+	// This catches both images (e.g., ![alt](url)) and plain links (e.g., [text](url)).
+	re := regexp.MustCompile(`!?\[.*?\]\(.*?\)`)
+
+	// Replace all matches with an empty string.
+	cleanedContent := re.ReplaceAllString(content, "")
+
+	// Optional: Clean up any double spaces that might result from the replacement
+	cleanedContent = strings.ReplaceAll(cleanedContent, "  ", " ")
+
+	return cleanedContent
+}
+
+// GetContentSummary extracts the first N characters of a post after stripping
+// sensitive/structural Markdown, ensuring it handles multi-byte UTF-8 characters correctly.
+func GetContentSummary(fullContent string, maxChars int) string {
+	// 1. Strip the file references (links/images)
+	cleanedContent := stripMarkdownLinks(fullContent)
+
+	// 2. Safely truncate the string based on runes (characters), not bytes.
+	if utf8.RuneCountInString(cleanedContent) <= maxChars {
+		return cleanedContent
+	}
+
+	// Iterate over the string as runes (characters)
+	runes := []rune(cleanedContent)
+
+	// Truncate to the desired length
+	truncated := string(runes[:maxChars])
+
+	// Add an ellipsis (...) for visual indication of truncation
+	return truncated + "..."
+}
+
 var Categories = [7]string{"football", "cs", "politics", "plants", "cine", "lit", "random"}
