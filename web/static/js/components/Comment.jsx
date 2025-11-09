@@ -8,8 +8,6 @@ import React from 'react';
  * @param {string} props.currentUserName - Name of the current authenticated user (optional for highlighting).
  */
 function Comment({ comment, currentUserName }) {
-    // Determine the author's name, falling back to a generic label if needed
-    const authorName = currentUserName || 'Anon';
     
     // Format the date for better readability
     const formattedDate = new Date(comment.created_at).toLocaleDateString(undefined, {
@@ -21,7 +19,7 @@ function Comment({ comment, currentUserName }) {
     });
     
     // Highlight the current user's comment (assuming authorName is available)
-    const isCurrentUser = currentUserName && authorName === currentUserName;
+    const isCurrentUser = currentUserName && comment.author_name === currentUserName;
     const baseClasses = "p-4 my-4 rounded-lg shadow-md transition duration-150 ease-in-out";
     const commentClasses = isCurrentUser 
         ? `${baseClasses} bg-blue-50 border-2 border-blue-400`
