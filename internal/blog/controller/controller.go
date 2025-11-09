@@ -183,30 +183,7 @@ func (pc *BlogController) UploadImage(c *gin.Context) {
 
 // GetPosts handles GET /blog/
 func (pc *BlogController) GetPosts(c *gin.Context) {
-	username, exists := c.Get("username")
-
-	if !exists {
-		// Handle the case where the "username" key is missing
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Username not found in context"})
-		return
-	}
-
-	// 2. Safely assert the type
-	username, ok := username.(string)
-	if !ok {
-		// Handle the case where the value is not a string
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Internal server error: Username is of the wrong type"})
-		return
-	}
-
 	var posts []model.Post
-
-	if !ok {
-		// This should not happen if the middleware is correctly set up.
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Username not found in context"})
-		return
-	}
-
 	category := c.Query("category")
 	posts, err := pc.Repo.GetPublishedPosts(category, "")
 
@@ -230,7 +207,6 @@ func (pc *BlogController) GetPosts(c *gin.Context) {
 	c.HTML(http.StatusOK, "blog.html", gin.H{
 		"title":      "Blog Posts",
 		"posts":      posts,
-		"username":   username,
 		"categories": categories,
 	})
 }
