@@ -444,6 +444,7 @@ func (r *PostRepository) UpdatePost(post *model.UpdatePost) error {
 
 // UpdateImage updates an existing image in the database.
 func (r *PostRepository) UpdateImagesWithPostID(image *model.UpdateImages) error {
+	fmt.Println(image)
 	query := `UPDATE images SET blog_post_id = $2 WHERE id = ANY($1)`
 	_, err := r.db.Exec(query,
 		pq.Array(image.ImageIDs),
