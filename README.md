@@ -10,8 +10,10 @@ and under Rocky Linux you should be able to run commands such as:
 # Pre requisites
 
 git
-ansible
-Rocky Linux 9
+podman
+golang
+postgres 18
+pnpm
 
 
 ```
@@ -47,6 +49,12 @@ podman exec -ti salada-db bash
 
 # Bring salada up
 podman run -d -p 80:80 -p 443:443 --network host --name salada --replace salada
+
+
+# You should also build frontend with pnpm
+
+pnpm i
+pnpm run build
 
 ```
 
