@@ -31,7 +31,7 @@ podman run -d \
 podman build -t salada .
 
 #Migrate
-podman exec -i salada-db psql -d "host=localhost port=5432 dbname=postgres user=postgres" < internal/db/migration.sql
+podman exec -i salada-db psql -d "host=localhost port=5432 dbname=postgres user=postgres" < internal/db/schema_dump.sql
 
 
 #DB Ip should be
