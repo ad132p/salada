@@ -29,7 +29,10 @@ func NewBlogController(repo *repositories.PostRepository) *BlogController {
 }
 
 func (pc *BlogController) CreatePost(c *gin.Context) {
-	username, _ := c.MustGet("username").(string) //Skipin for now
+	username, err := c.MustGet("username").(string) //Skipin for now
+	if err != nil
+		username = 'anon'
+	}
 	postRequest := model.CreatePost{AuthorName: username}
 	if err := c.ShouldBindJSON(&postRequest); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error binding JSON": err.Error()})
@@ -107,6 +110,15 @@ func (pc *BlogController) UpdatePost(c *gin.Context) {
 
 	if err := pc.Repo.UpdatePost(&updatePost); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update post", "details": err.Error()})
+		return
+	}
+
+	updateRequest := model.UpdateImages{PostID: updatePost.ID, ImageIDs: updatePost.ImageIDs}
+
+	err = pc.Repo.UpdateImagesWithPostID(&updateRequest)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update images of post", "details": err.Error()})
 		return
 	}
 
