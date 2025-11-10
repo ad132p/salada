@@ -110,6 +110,20 @@ func (r *TailwindRenderer) RenderNode(w io.Writer, node ast.Node, entering bool)
 		// Since <img> is a self-closing tag, we don't need a separate "leaving" case.
 		// We can just skip rendering the children (the alt text inside the markdown).
 		return ast.SkipChildren
+	case *ast.Link:
+		if entering {
+			// Cast the node to *ast.Link to access its fields.
+			link := node
+			dest := string(link.Destination)
+
+			// Write the opening <a> tag with href and Tailwind classes.
+			// You'll want to choose appropriate Tailwind classes for a link (e.g., text-blue-600 hover:underline).
+			w.Write([]byte(fmt.Sprintf(`<a href="%s" class="text-blue-600 hover:text-blue-800 transition duration-150">`, dest)))
+		} else {
+			// Write the closing </a> tag.
+			w.Write([]byte(`</a>`))
+		}
+		return ast.GoToNext
 	}
 
 	// For any other nodes not handled, just continue the traversal.
