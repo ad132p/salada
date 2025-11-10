@@ -44,3 +44,6 @@ psql -d "host=localhost port=5432 dbname=salada user=postgres"
 podman exec -ti salada-db bash
 
 ```
+
+# Bring salada up
+podman run -d -p 80:80 -p 443:443 --network host --name salada --replace salada
