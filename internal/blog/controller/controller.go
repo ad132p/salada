@@ -31,8 +31,7 @@ func NewBlogController(repo *repositories.PostRepository) *BlogController {
 func (pc *BlogController) CreatePost(c *gin.Context) {
 	username, ok := c.Get("username")
 	if !ok {
-		c.Redirect(http.StatusSeeOther, "/login")
-		return
+		username = "anon"
 	}
 
 	postRequest := model.CreatePost{AuthorName: username.(string)}
