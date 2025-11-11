@@ -31,7 +31,9 @@ func NewBlogController(repo *repositories.PostRepository) *BlogController {
 func (pc *BlogController) CreatePost(c *gin.Context) {
 	username, ok := c.Get("username")
 	if !ok {
-		username = "anon"
+		// If authentication is required, block anonymous access here
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Authentication required"})
+		return
 	}
 
 	postRequest := model.CreatePost{AuthorName: username.(string)}
