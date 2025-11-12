@@ -41,7 +41,17 @@ func setupPublicPages(router *gin.Engine) {
 	})
 
 	router.GET("/login", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "login.html", gin.H{"title": "Login"})
+		intendedRoute := c.Query("goto")
+
+		if intendedRoute == "" {
+			intendedRoute = "/blog"
+		}
+
+		c.HTML(http.StatusOK, "login.html", gin.H{
+			"title": "Login",
+			// Pass the variable so the template can access it as {{.IntendedRoute}}
+			"IntendedRoute": intendedRoute,
+		})
 	})
 
 	router.GET("/register", func(c *gin.Context) {

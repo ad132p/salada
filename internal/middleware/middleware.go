@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"salada/internal/auth"
 	"salada/internal/db"
 	"time"
@@ -38,11 +39,15 @@ func SetupMiddleware(router *gin.Engine) {
 // Function to verify JWT tokens
 func AuthenticateMiddleware(c *gin.Context) {
 	// Retrieve the token from the cookie
+
+	intendedRoute := c.Request.URL.Path
+	redirectURL := "/login?goto=" + url.QueryEscape(intendedRoute)
+
 	tokenString, err := c.Cookie("token")
 	if err != nil {
 		fmt.Println("Token missing in cookie")
-		c.Redirect(http.StatusSeeOther, "/login")
 		c.Abort()
+		c.Redirect(http.StatusSeeOther, redirectURL)
 		return
 	}
 
@@ -50,8 +55,8 @@ func AuthenticateMiddleware(c *gin.Context) {
 	token, err := auth.VerifyToken(tokenString)
 	if err != nil {
 		fmt.Printf("Token verification failed: %v\\n", err)
-		c.Redirect(http.StatusSeeOther, "/login")
 		c.Abort()
+		c.Redirect(http.StatusSeeOther, redirectURL)
 		return
 	}
 
@@ -59,6 +64,8 @@ func AuthenticateMiddleware(c *gin.Context) {
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		fmt.Println("Could not get claims from token")
+		c.AbortWithStatus(http.StatusUnauthorized)
+		c.Redirect(http.StatusSeeOther, redirectURL)
 		return
 	}
 

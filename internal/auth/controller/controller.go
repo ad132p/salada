@@ -39,7 +39,7 @@ func (pc *AuthController) Login(c *gin.Context) {
 	var loginInput model.LoginInput
 	loginInput.Username = c.PostForm("username")
 	loginInput.Password = c.PostForm("password")
-
+	intendedRoute := c.PostForm("goto")
 	// Best Practice: The username/email should come from the JSON body,
 	// not a URL parameter. This is what the user provides in the form.
 	password, err := pc.Repo.GetUserPassword(loginInput.Username)
@@ -70,7 +70,7 @@ func (pc *AuthController) Login(c *gin.Context) {
 
 	c.SetCookie("token", tokenString, 3600*12, "/", os.Getenv("SALADA_HOST"), false, true)
 
-	c.Redirect(http.StatusFound, "/blog/")
+	c.Redirect(http.StatusFound, intendedRoute)
 }
 
 func (pc *AuthController) Logout(c *gin.Context) {
