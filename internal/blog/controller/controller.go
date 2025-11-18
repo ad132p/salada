@@ -207,13 +207,13 @@ func (pc *BlogController) GetAllPosts(c *gin.Context) {
 	categories, err := pc.Repo.GetCategoryCount()
 
 	if err != nil {
-		c.HTML(http.StatusServiceUnavailable, "blog.html", gin.H{
+		c.HTML(http.StatusServiceUnavailable, "blog_post_list.html", gin.H{
 			"title": "Blog Posts",
 			"error": err,
 		})
 		return
 	}
-	c.HTML(http.StatusOK, "blog.html", gin.H{
+	c.HTML(http.StatusOK, "blog_post_list.html", gin.H{
 		"title":      "Blog Posts",
 		"posts":      posts,
 		"categories": categories,
