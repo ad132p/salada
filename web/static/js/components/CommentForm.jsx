@@ -6,7 +6,7 @@ import React, { useState } from 'react';
  *
  * @param {object} props
  * @param {string} props.postID - The unique slug of the blog post.
- * @param {string} props.currentUserName - The unique slug of the blog post.
+ * @param {string} props.currentUserName - Logged in username
  * @param {function} props.onSubmit - Function to call on successful submission (e.g., to refresh comments).
  */
 function CommentForm({ postID, currentUserName, onSubmit }) {
@@ -18,7 +18,7 @@ function CommentForm({ postID, currentUserName, onSubmit }) {
     const [error, setError] = useState(null);
 
     // Determines the action URL based on the postID prop
-    const formAction = `/blog/comment/${postID}`;
+    const formAction = `/blog/comment/`;
 
     /**
      * Handles the form submission logic.

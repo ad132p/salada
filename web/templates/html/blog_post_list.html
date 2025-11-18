@@ -1,0 +1,40 @@
+{{ template "base" . }}
+<div class="container mx-auto px-4 py-8">
+  <div class="max-w-3xl mx-auto">
+    <h1 class="text-4xl font-extrabold text-gray-900 mb-8">{{.title}}</h1>
+
+    {{if .posts}}
+    <ul class="divide-y divide-gray-200 border-t border-b border-gray-200">
+      {{range .posts}}
+      <li class="py-4 hover:bg-gray-50 transition duration-150 ease-in-out">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+          
+          <div class="flex-grow mb-2 sm:mb-0">
+            <h2 class="text-xl font-semibold text-gray-800 leading-tight">
+              <a href="/blog/{{.Slug}}" class="hover:text-indigo-600 transition-colors duration-200">
+                {{.Title}}
+              </a>
+            </h2>
+            <p class="text-base text-gray-600 mt-1 line-clamp-1">
+                {{ or .Content "A brief summary of the post content goes here." }}
+            </p>
+          </div>
+
+          <div class="text-sm text-right flex-shrink-0">
+            <p class="text-gray-500 mb-1">
+              <span class="font-medium text-gray-700">Published:</span> {{ or .PublishedAt "NO" }}
+            </p>
+            <p class="text-gray-500">
+              <span class="font-medium text-gray-700">Author:</span> {{ or .AuthorName "anon" }}
+            </p>
+          </div>
+
+        </div>
+      </li>
+      {{end}}
+    </ul>
+    {{else}}
+    <p class="text-center text-lg text-gray-600 mt-12">{{.error}}</p>
+    {{end}}
+  </div>
+</div>

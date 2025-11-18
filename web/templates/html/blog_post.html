@@ -27,7 +27,7 @@
       Accessed {{ .post.Seen }} times.
     </p>
     <div id="comment" data-id="{{.post.ID}}" data-slug="{{.post.Slug}}" data-comments="{{.comments}}"
-      data-like="{{.post.Likes}}" class="mt-12 pt-6 border-t border-gray-200" data-current-user="{{.post.AuthorName}}">
+      data-like="{{.post.Likes}}" class="mt-12 pt-6 border-t border-gray-200" data-current-user="{{.username}}">
       <p class="text-center text-gray-500">Loading interactive comments...</p>
     </div>
     {{else}}

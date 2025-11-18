@@ -62,14 +62,8 @@ func (pc *BlogController) CreatePost(c *gin.Context) {
 }
 
 func (pc *BlogController) CreateComment(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := uuid.Parse(idStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
-		return
-	}
-	username, _ := c.MustGet("username").(string) //Skipin for now
-	commentRequest := model.CreateCommentRequest{AuthorName: username, PostID: id}
+
+	commentRequest := model.CreateCommentRequest{}
 	if err := c.ShouldBindJSON(&commentRequest); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error binding JSON": err.Error()})
 		return
@@ -197,10 +191,40 @@ func (pc *BlogController) UploadImage(c *gin.Context) {
 }
 
 // GetPosts handles GET /blog/
-func (pc *BlogController) GetPosts(c *gin.Context) {
+func (pc *BlogController) GetAllPosts(c *gin.Context) {
 	var posts []model.Post
 	category := c.Query("category")
-	posts, err := pc.Repo.GetPublishedPosts(category, "")
+	posts, err := pc.Repo.GetPublishedPosts(category, "", 0)
+
+	if err != nil {
+		c.HTML(http.StatusServiceUnavailable, "blog_post_list.html", gin.H{
+			"title": "Blog Posts",
+			"error": err,
+		})
+		return
+	}
+
+	categories, err := pc.Repo.GetCategoryCount()
+
+	if err != nil {
+		c.HTML(http.StatusServiceUnavailable, "blog.html", gin.H{
+			"title": "Blog Posts",
+			"error": err,
+		})
+		return
+	}
+	c.HTML(http.StatusOK, "blog.html", gin.H{
+		"title":      "Blog Posts",
+		"posts":      posts,
+		"categories": categories,
+	})
+}
+
+// GetPosts handles GET /blog/
+func (pc *BlogController) GetRecentPosts(c *gin.Context) {
+	var posts []model.Post
+	category := c.Query("category")
+	posts, err := pc.Repo.GetPublishedPosts(category, "", 3)
 
 	if err != nil {
 		c.HTML(http.StatusServiceUnavailable, "blog.html", gin.H{
@@ -239,17 +263,26 @@ func (pc *BlogController) GetNewPostForm(c *gin.Context) {
 	})
 }
 
-// GetPostBySlug handles GET /blog/:slug
-func (pc *BlogController) GetPostBySlug(c *gin.Context) {
+// GetPostAndCommentsBySlug handles GET /blog/:slug
+func (pc *BlogController) GetPostAndCommentsBySlug(c *gin.Context) {
 	slug := c.Param("slug")
 	post, err := pc.Repo.GetPostAndCommentsBySlug(slug)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()}) // Use err.Error() for proper JSON output
 		return
 	}
 	if post == nil { // Check if no record was found by the repository
 		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
 		return
+	}
+
+	// 1. Attempt to retrieve the username from Gin context (c.Get)
+	// The username is typically stored in the context by a preceding middleware.
+	username, err := c.Cookie("username")
+
+	if err != nil {
+		// let anon comment
+		username = "anon"
 	}
 
 	commentsJSONBytes, err := json.Marshal(post.Comments)
@@ -259,11 +292,13 @@ func (pc *BlogController) GetPostBySlug(c *gin.Context) {
 		commentsJSONBytes = []byte("[]") // Default to an empty array string on failure
 	}
 
+	// 3. Include the username in the HTML response data
 	c.HTML(http.StatusOK, "blog_post.html", gin.H{
 		"title":    post.Title,
 		"post":     post,
 		"comments": string(commentsJSONBytes),
 		"content":  template.HTML(blog.RenderMarkdownToHTML(post.Content)),
+		"username": username,
 	})
 }
 
@@ -294,7 +329,7 @@ func (pc *BlogController) GetCommentsBySlug(c *gin.Context) {
 
 func (pc *BlogController) GetCategory(c *gin.Context) {
 	category := c.Param("name")
-	posts, err := pc.Repo.GetPublishedPosts(category, "")
+	posts, err := pc.Repo.GetPublishedPosts(category, "", 0)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
@@ -323,7 +358,7 @@ func (pc *BlogController) GetCategory(c *gin.Context) {
 
 func (pc *BlogController) GetTag(c *gin.Context) {
 	tag := c.Param("name")
-	posts, err := pc.Repo.GetPublishedPosts("", tag)
+	posts, err := pc.Repo.GetPublishedPosts("", tag, 0)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
@@ -353,7 +388,7 @@ func (pc *BlogController) GetTag(c *gin.Context) {
 func (pc *BlogController) GetTagOrContent(c *gin.Context) {
 	query := c.Query("q")
 	fmt.Println(query)
-	posts, err := pc.Repo.GetPublishedPosts("", query)
+	posts, err := pc.Repo.GetPublishedPosts("", query, 0)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return

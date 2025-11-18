@@ -177,7 +177,7 @@ func (r *PostRepository) GetCategoryCount() ([]model.CategoryCount, error) {
 	return categoryCountSet, nil
 }
 
-func (r *PostRepository) GetPublishedPosts(category string, q string) ([]model.Post, error) {
+func (r *PostRepository) GetPublishedPosts(category string, q string, limit int) ([]model.Post, error) {
 	// 1. Base Query with Lateral Join
 	// The lateral join (LEFT JOIN LATERAL) finds the single best image (thumbnail) for each post.
 	baseQueryTemplate := `
@@ -222,14 +222,23 @@ func (r *PostRepository) GetPublishedPosts(category string, q string) ([]model.P
 	// 5. Add the final ordering clause
 	finalQuery := baseQuery + ` ORDER BY p.created_at DESC`
 
-	// 6. Execute the query
+	// --- ENHANCEMENT START ---
+	// 6. Handle Limit Parameter (Optional)
+	if limit > 0 {
+		finalQuery += ` LIMIT $` + strconv.Itoa(paramIndex)
+		args = append(args, limit)
+		// No need to increment paramIndex here unless another parameter follows
+	}
+	// --- ENHANCEMENT END ---
+
+	// 7. Execute the query
 	rows, err := r.db.Query(finalQuery, args...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	// 7. Scanning logic
+	// 8. Scanning logic (Remains the same)
 	var posts []model.Post
 	for rows.Next() {
 		var post model.Post
@@ -268,6 +277,7 @@ func (r *PostRepository) GetPublishedPosts(category string, q string) ([]model.P
 			post.ThumbnailURL = "" // Or nil, depending on your model.Post field type
 		}
 
+		// Apply content summary logic
 		post.Content = blog.GetContentSummary(post.Content, 100)
 
 		posts = append(posts, post)

@@ -69,11 +69,13 @@ func (pc *AuthController) Login(c *gin.Context) {
 	}
 
 	c.SetCookie("token", tokenString, 3600*12, "/", os.Getenv("SALADA_HOST"), false, true)
+	c.SetCookie("username", loginInput.Username, 3600*12, "/", os.Getenv("SALADA_HOST"), false, true)
 
 	c.Redirect(http.StatusFound, intendedRoute)
 }
 
 func (pc *AuthController) Logout(c *gin.Context) {
 	c.SetCookie("token", "", -1, "/", os.Getenv("SALADA_HOST"), false, true)
+	c.SetCookie("username", "", -1, "/", os.Getenv("SALADA_HOST"), false, true)
 	c.Redirect(http.StatusSeeOther, "/")
 }
