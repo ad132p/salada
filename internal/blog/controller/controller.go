@@ -341,14 +341,14 @@ func (pc *BlogController) GetCategory(c *gin.Context) {
 
 	categories, err := pc.Repo.GetCategoryCount()
 	if err != nil {
-		c.HTML(http.StatusServiceUnavailable, "blog.html", gin.H{
+		c.HTML(http.StatusServiceUnavailable, "blog_post_list.html", gin.H{
 			"title": "Posts by Category",
 			"error": err,
 		})
 		return
 	}
 
-	c.HTML(http.StatusOK, "blog.html", gin.H{
+	c.HTML(http.StatusOK, "blog_post_list.html", gin.H{
 		"title":      "Posts by Category",
 		"posts":      posts,
 		"category":   category,
@@ -370,14 +370,14 @@ func (pc *BlogController) GetTag(c *gin.Context) {
 
 	categories, err := pc.Repo.GetCategoryCount()
 	if err != nil {
-		c.HTML(http.StatusServiceUnavailable, "blog.html", gin.H{
+		c.HTML(http.StatusServiceUnavailable, "blog_post_list.html", gin.H{
 			"title": "Posts by Tag",
 			"error": err,
 		})
 		return
 	}
 
-	c.HTML(http.StatusOK, "blog.html", gin.H{
+	c.HTML(http.StatusOK, "blog_post_list.html", gin.H{
 		"title":      "Posts by Tag",
 		"posts":      posts,
 		"tag":        tag,
@@ -387,7 +387,6 @@ func (pc *BlogController) GetTag(c *gin.Context) {
 
 func (pc *BlogController) GetTagOrContent(c *gin.Context) {
 	query := c.Query("q")
-	fmt.Println(query)
 	posts, err := pc.Repo.GetPublishedPosts("", query, 0)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
@@ -407,7 +406,7 @@ func (pc *BlogController) GetTagOrContent(c *gin.Context) {
 		return
 	}
 
-	c.HTML(http.StatusOK, "blog.html", gin.H{
+	c.HTML(http.StatusOK, "blog_post_list.html", gin.H{
 		"title":      "Posts by Tag",
 		"posts":      posts,
 		"categories": categories,
