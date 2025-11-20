@@ -177,9 +177,8 @@ func (r *PostRepository) GetCategoryCount() ([]model.CategoryCount, error) {
 	return categoryCountSet, nil
 }
 
-func (r *PostRepository) GetPublishedPosts(category string, q string, limit int) ([]model.Post, error) {
+func (r *PostRepository) GetPublishedPosts(category string, q string, limit int, cursorPublishedAt *time.Time, cursorID *uuid.UUID) ([]model.Post, string, error) {
 	// 1. Base Query with Lateral Join
-	// The lateral join (LEFT JOIN LATERAL) finds the single best image (thumbnail) for each post.
 	baseQueryTemplate := `
     SELECT 
         p.id, p.title, p.slug, p.content, p.author_id, p.author_name, p.published_at, p.created_at, p.updated_at, p.tags, p.category, 
@@ -190,8 +189,8 @@ func (r *PostRepository) GetPublishedPosts(category string, q string, limit int)
         SELECT filepath 
         FROM images i
         WHERE i.blog_post_id = p.id
-        ORDER BY i.uploaded_at ASC -- Sort by upload time (earliest first)
-        LIMIT 1                   -- Take only the first one
+        ORDER BY i.uploaded_at ASC
+        LIMIT 1
     ) t ON true
     WHERE 
         p.published_at IS NOT NULL`
@@ -202,48 +201,54 @@ func (r *PostRepository) GetPublishedPosts(category string, q string, limit int)
 	var args []interface{}
 	paramIndex := 1
 
-	// 3. Handle Category Filtering (Optional)
+	// 3. Handle Category Filtering
 	if category != "" {
 		baseQuery += ` AND p.category = $` + strconv.Itoa(paramIndex)
 		args = append(args, category)
 		paramIndex++
 	}
 
-	// 4. Handle Tag/Content Search (Optional)
+	// 4. Handle Tag/Content Search
 	if q != "" {
-		// Note: The $N placeholder must be used for the query 'q'.
 		baseQuery += ` AND ($` + strconv.Itoa(paramIndex) + ` = ANY(p.tags) 
             OR to_tsvector('english', p.content) @@ websearch_to_tsquery('english', $` + strconv.Itoa(paramIndex) + `))`
-
 		args = append(args, q)
 		paramIndex++
 	}
 
-	// 5. Add the final ordering clause
-	finalQuery := baseQuery + ` ORDER BY p.created_at DESC`
-
-	// --- ENHANCEMENT START ---
-	// 6. Handle Limit Parameter (Optional)
-	if limit > 0 {
-		finalQuery += ` LIMIT $` + strconv.Itoa(paramIndex)
-		args = append(args, limit)
-		// No need to increment paramIndex here unless another parameter follows
+	// 5. Handle Cursor (Keyset Pagination)
+	if cursorPublishedAt != nil && cursorID != nil {
+		baseQuery += ` AND (p.published_at < $` + strconv.Itoa(paramIndex) + ` 
+			OR (p.published_at = $` + strconv.Itoa(paramIndex) + ` AND p.id < $` + strconv.Itoa(paramIndex+1) + `))`
+		args = append(args, cursorPublishedAt, cursorID)
+		paramIndex += 2
 	}
-	// --- ENHANCEMENT END ---
 
-	// 7. Execute the query
-	rows, err := r.db.Query(finalQuery, args...)
+	// 6. Add ordering
+	// We order by published_at DESC, then id DESC for deterministic tie-breaking
+	baseQuery += ` ORDER BY p.published_at DESC, p.id DESC`
+
+	// 7. Handle Limit
+	// Fetch one extra item to determine if there is a next page
+	fetchLimit := limit + 1
+	if limit > 0 {
+		baseQuery += ` LIMIT $` + strconv.Itoa(paramIndex)
+		args = append(args, fetchLimit)
+	}
+
+	// 8. Execute the query
+	rows, err := r.db.Query(baseQuery, args...)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	defer rows.Close()
 
-	// 8. Scanning logic (Remains the same)
+	// 9. Scanning logic
 	var posts []model.Post
 	for rows.Next() {
 		var post model.Post
 		var authorID sql.Null[uuid.UUID]
-		var thumbnailURL sql.NullString // Use sql.NullString for the optional thumbnail URL
+		var thumbnailURL sql.NullString
 
 		err := rows.Scan(
 			&post.ID,
@@ -257,37 +262,42 @@ func (r *PostRepository) GetPublishedPosts(category string, q string, limit int)
 			&post.UpdatedAt,
 			&post.Tags,
 			&post.Category,
-			&thumbnailURL, // Scan the new thumbnail_url column
+			&thumbnailURL,
 		)
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 
-		// Assign nullable fields
 		if authorID.Valid {
 			post.AuthorID = &authorID.V
-		} else {
-			post.AuthorID = nil
 		}
-
-		// Assign the optional Thumbnail URL
 		if thumbnailURL.Valid {
 			post.ThumbnailURL = thumbnailURL.String
-		} else {
-			post.ThumbnailURL = "" // Or nil, depending on your model.Post field type
 		}
 
-		// Apply content summary logic
 		post.Content = blog.GetContentSummary(post.Content, 100)
-
 		posts = append(posts, post)
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
-	return posts, nil
+	// 10. Determine Next Cursor
+	var nextCursor string
+	if limit > 0 && len(posts) > limit {
+		// Remove the extra item we fetched
+		posts = posts[:limit]
+		lastPost := posts[len(posts)-1]
+		
+		// Create cursor string: "published_at_timestamp,uuid"
+		// We use UnixMicro for precision if needed, or RFC3339Nano
+		if lastPost.PublishedAt != nil {
+			nextCursor = fmt.Sprintf("%d,%s", lastPost.PublishedAt.UnixMicro(), lastPost.ID.String())
+		}
+	}
+
+	return posts, nextCursor, nil
 }
 
 func (r *PostRepository) GetPostAndCommentsBySlug(slug string) (*model.Post, error) {

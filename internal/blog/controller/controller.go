@@ -2,13 +2,16 @@ package controller
 
 import (
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"time"
 
 	"salada/internal/blog"
 	"salada/internal/blog/model"
@@ -194,7 +197,30 @@ func (pc *BlogController) UploadImage(c *gin.Context) {
 func (pc *BlogController) GetAllPosts(c *gin.Context) {
 	var posts []model.Post
 	category := c.Query("category")
-	posts, err := pc.Repo.GetPublishedPosts(category, "", 0)
+	cursor := c.Query("cursor")
+
+	var cursorPublishedAt *time.Time
+	var cursorID *uuid.UUID
+
+	if cursor != "" {
+		decodedCursor, err := base64.StdEncoding.DecodeString(cursor)
+		if err == nil {
+			parts := strings.Split(string(decodedCursor), ",")
+			if len(parts) == 2 {
+				ts, err := strconv.ParseInt(parts[0], 10, 64)
+				if err == nil {
+					t := time.UnixMicro(ts).UTC()
+					cursorPublishedAt = &t
+				}
+				id, err := uuid.Parse(parts[1])
+				if err == nil {
+					cursorID = &id
+				}
+			}
+		}
+	}
+
+	posts, nextCursor, err := pc.Repo.GetPublishedPosts(category, "", 10, cursorPublishedAt, cursorID)
 
 	if err != nil {
 		c.HTML(http.StatusServiceUnavailable, "blog_post_list.html", gin.H{
@@ -213,10 +239,17 @@ func (pc *BlogController) GetAllPosts(c *gin.Context) {
 		})
 		return
 	}
+
+	encodedNextCursor := ""
+	if nextCursor != "" {
+		encodedNextCursor = base64.StdEncoding.EncodeToString([]byte(nextCursor))
+	}
+
 	c.HTML(http.StatusOK, "blog_post_list.html", gin.H{
-		"title":      "Blog Posts",
-		"posts":      posts,
-		"categories": categories,
+		"title":       "Blog Posts",
+		"posts":       posts,
+		"categories":  categories,
+		"next_cursor": encodedNextCursor,
 	})
 }
 
@@ -224,7 +257,7 @@ func (pc *BlogController) GetAllPosts(c *gin.Context) {
 func (pc *BlogController) GetRecentPosts(c *gin.Context) {
 	var posts []model.Post
 	category := c.Query("category")
-	posts, err := pc.Repo.GetPublishedPosts(category, "", 3)
+	posts, _, err := pc.Repo.GetPublishedPosts(category, "", 3, nil, nil)
 
 	if err != nil {
 		c.HTML(http.StatusServiceUnavailable, "blog.html", gin.H{
@@ -329,7 +362,7 @@ func (pc *BlogController) GetCommentsBySlug(c *gin.Context) {
 
 func (pc *BlogController) GetCategory(c *gin.Context) {
 	category := c.Param("name")
-	posts, err := pc.Repo.GetPublishedPosts(category, "", 0)
+	posts, _, err := pc.Repo.GetPublishedPosts(category, "", 0, nil, nil)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
@@ -358,7 +391,7 @@ func (pc *BlogController) GetCategory(c *gin.Context) {
 
 func (pc *BlogController) GetTag(c *gin.Context) {
 	tag := c.Param("name")
-	posts, err := pc.Repo.GetPublishedPosts("", tag, 0)
+	posts, _, err := pc.Repo.GetPublishedPosts("", tag, 0, nil, nil)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
@@ -387,7 +420,7 @@ func (pc *BlogController) GetTag(c *gin.Context) {
 
 func (pc *BlogController) GetTagOrContent(c *gin.Context) {
 	query := c.Query("q")
-	posts, err := pc.Repo.GetPublishedPosts("", query, 0)
+	posts, _, err := pc.Repo.GetPublishedPosts("", query, 0, nil, nil)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return

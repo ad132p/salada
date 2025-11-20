@@ -51,6 +51,16 @@
     {{else}}
     <p class="text-center text-lg text-gray-600 mt-12">{{.error}}</p>
     {{end}}
-    <a href="/blog/">Go back</a>
+    {{if .next_cursor}}
+    <div class="mt-8 flex justify-center">
+      <a href="?cursor={{.next_cursor}}{{if .category}}&category={{.category}}{{end}}{{if .q}}&q={{.q}}{{end}}"
+        class="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+        Load More
+      </a>
+    </div>
+    {{end}}
+    <div class="mt-8 text-center">
+      <a href="/blog/" class="text-indigo-600 hover:text-indigo-500">Go back</a>
+    </div>
   </div>
 </div>
