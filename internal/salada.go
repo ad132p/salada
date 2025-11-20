@@ -4,11 +4,13 @@ import (
 	"net/http"
 	admin_controller "salada/internal/admin/controller"
 	admin_repositories "salada/internal/admin/repositories"
+	admin_routes "salada/internal/admin/routes"
 	auth_controller "salada/internal/auth/controller"
+	auth_routes "salada/internal/auth/routes"
 	blog_controller "salada/internal/blog/controller"
 	blog_repositories "salada/internal/blog/repositories"
+	blog_routes "salada/internal/blog/routes"
 	"salada/internal/db"
-	"salada/internal/routes"
 
 	// NEW: Import the routes package
 	"github.com/gin-gonic/gin"
@@ -90,7 +92,7 @@ func setupDependenciesAndGroups(router *gin.Engine) {
 	adminController := admin_controller.NewAdminController(adminRepo)
 
 	// 3. Register Modular Routes
-	routes.BlogRoutes(router, blogController)
-	routes.AuthRoutes(router, authController)
-	routes.AdminRoutes(router, adminController, blogController)
+	blog_routes.BlogRoutes(router, blogController)
+	auth_routes.AuthRoutes(router, authController)
+	admin_routes.AdminRoutes(router, adminController, blogController)
 }
