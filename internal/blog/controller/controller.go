@@ -15,19 +15,36 @@ import (
 
 	"salada/internal/blog"
 	"salada/internal/blog/model"
-	"salada/internal/blog/repositories"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
-// BlogController handles blog post-related requests.
-type BlogController struct {
-	Repo *repositories.PostRepository
+// PostRepository defines the interface for post-related data operations.
+// This allows for mocking in tests.
+type PostRepository interface {
+	CreatePost(postRequest model.CreatePost) (uuid.UUID, error)
+	UpdateImagesWithPostID(image *model.UpdateImages) error
+	CreateComment(req model.CreateCommentRequest) (uuid.UUID, error)
+	GetPostByID(id uuid.UUID) (*model.Post, error)
+	UpdatePost(post *model.UpdatePost) error
+	PublishPost(post *model.Post) error
+	AddImage(image model.Image) (uuid.UUID, error)
+	GetPublishedPosts(category string, q string, limit int, cursorPublishedAt *time.Time, cursorID *uuid.UUID) ([]model.Post, string, error)
+	GetCategoryCount() ([]model.CategoryCount, error)
+	GetPostAndCommentsBySlug(slug string) (*model.Post, error)
+	DeletePost(id uuid.UUID) ([]string, error)
+	GetPostBySlug(slug string) (*model.Post, error)
+	LikePostByID(req model.LikeRequest) error
 }
 
-// NewPostController creates a new PostController instance.
-func NewBlogController(repo *repositories.PostRepository) *BlogController {
+// BlogController handles blog post-related requests.
+type BlogController struct {
+	Repo PostRepository
+}
+
+// NewBlogController creates a new BlogController instance.
+func NewBlogController(repo PostRepository) *BlogController {
 	return &BlogController{Repo: repo}
 }
 
