@@ -1,5 +1,11 @@
 {{ template "base" . }}
-<div class="container mx-auto px-4 py-8">
+{{if .post.ThumbnailURL}}
+<div class="w-full h-[20vh] min-h-[200px]">
+  <img src="{{.post.ThumbnailURL}}" alt="{{.title}}" class="w-full h-full object-cover">
+</div>
+{{end}}
+
+<div class="container mx-auto px-4 py-8 {{if .post.ThumbnailURL}}-mt-12{{end}} relative z-10">
   <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-xl p-8 lg:p-12">
     {{if .post}}
     <h1 class="text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight mb-4">{{.title}}</h1>
@@ -13,13 +19,13 @@
     </p>
 
     <p class="text-start text-sm text-gray-600 font-medium mb-12 border-t pt-4">
-    Tags:
-    {{range $i, $e := .post.Tags}}
-    <a class="text-xs font-semibold px-3 py-1 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition-colors duration-150"
-      href="/blog/tags/{{$e}}" id="{{$e}}">
-      #{{ $e }}
-    </a>
-    {{end}}
+      Tags:
+      {{range $i, $e := .post.Tags}}
+      <a class="text-xs font-semibold px-3 py-1 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition-colors duration-150"
+        href="/blog/tags/{{$e}}" id="{{$e}}">
+        #{{ $e }}
+      </a>
+      {{end}}
     </p>
 
 

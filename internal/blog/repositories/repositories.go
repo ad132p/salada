@@ -289,7 +289,7 @@ func (r *PostRepository) GetPublishedPosts(category string, q string, limit int,
 		// Remove the extra item we fetched
 		posts = posts[:limit]
 		lastPost := posts[len(posts)-1]
-		
+
 		// Create cursor string: "published_at_timestamp,uuid"
 		// We use UnixMicro for precision if needed, or RFC3339Nano
 		if lastPost.PublishedAt != nil {
@@ -311,6 +311,13 @@ func (r *PostRepository) GetPostAndCommentsBySlug(slug string) (*model.Post, err
         SELECT
             p.id, p.title, p.slug, p.content, p.author_name, p.published_at, 
             p.created_at, p.updated_at, p.tags, p.category, p.seen, p.likes,
+            (
+                SELECT filepath 
+                FROM images i
+                WHERE i.blog_post_id = p.id
+                ORDER BY i.uploaded_at ASC
+                LIMIT 1
+            ) AS thumbnail_url,
             COALESCE(
                 json_agg(
                     json_build_object(
@@ -329,6 +336,7 @@ func (r *PostRepository) GetPostAndCommentsBySlug(slug string) (*model.Post, err
     `
 	var post model.Post
 	var commentsJSON []byte // To store the JSON array from the database
+	var thumbnailURL sql.NullString
 
 	err := r.db.QueryRow(query, slug).Scan(
 		&post.ID,
@@ -343,8 +351,13 @@ func (r *PostRepository) GetPostAndCommentsBySlug(slug string) (*model.Post, err
 		&post.Category,
 		&post.Seen,
 		&post.Likes,
+		&thumbnailURL,
 		&commentsJSON, // Bind the JSON output
 	)
+
+	if thumbnailURL.Valid {
+		post.ThumbnailURL = thumbnailURL.String
+	}
 
 	if err != nil {
 		if err == sql.ErrNoRows {
