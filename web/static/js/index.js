@@ -75,3 +75,24 @@ if (container) {
         </React.StrictMode>
     );
 }
+
+import HeroImageCropper from './components/HeroImageCropper';
+
+const heroCropperContainer = document.getElementById('hero-cropper');
+if (heroCropperContainer) {
+    const root = createRoot(heroCropperContainer);
+    const hiddenInput = document.getElementById('thumbnail_position');
+
+    const handleCropChange = (pos) => {
+        if (hiddenInput) {
+            // Format: "center 50%"
+            hiddenInput.value = `center ${pos}%`;
+        }
+    };
+
+    root.render(
+        <React.StrictMode>
+            <HeroImageCropper onCropChange={handleCropChange} />
+        </React.StrictMode>
+    );
+}

@@ -47,8 +47,8 @@ func (r *PostRepository) CreatePost(postRequest model.CreatePost) (uuid.UUID, er
 	post.UpdatedAt = post.CreatedAt
 	post.Slug = blog.CreateSlug(postRequest.Title)
 
-	query := `INSERT INTO posts (title, slug, content, author_name, published_at, created_at, updated_at, tags, category)
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, created_at, updated_at`
+	query := `INSERT INTO posts (title, slug, content, author_name, published_at, created_at, updated_at, tags, category, thumbnail_position)
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, created_at, updated_at`
 
 	// Use QueryRow to get back the generated ID and timestamps (if DB generates)
 	// Or use Exec if you're setting ID in Go and don't need returns
@@ -62,6 +62,7 @@ func (r *PostRepository) CreatePost(postRequest model.CreatePost) (uuid.UUID, er
 		post.UpdatedAt,
 		pq.Array(post.Tags),
 		post.Category,
+		post.ThumbnailPosition,
 	).Scan(&post.ID, &post.CreatedAt, &post.UpdatedAt) // Scan the returned values
 
 	return post.ID, err
@@ -69,7 +70,7 @@ func (r *PostRepository) CreatePost(postRequest model.CreatePost) (uuid.UUID, er
 
 // GetPosts fetches all posts from the database.
 func (r *PostRepository) GetPosts() ([]model.Post, error) {
-	query := `SELECT id, title, slug, content, author_id, published_at, created_at, updated_at, tags, category FROM posts ORDER BY created_at DESC`
+	query := `SELECT id, title, slug, content, author_id, published_at, created_at, updated_at, tags, category, thumbnail_position FROM posts ORDER BY created_at DESC`
 	rows, err := r.db.Query(query)
 	if err != nil {
 		return nil, err
@@ -94,6 +95,7 @@ func (r *PostRepository) GetPosts() ([]model.Post, error) {
 			&post.UpdatedAt,
 			&post.Tags,
 			&post.Category,
+			&post.ThumbnailPosition,
 		)
 		if err != nil {
 			return nil, err
@@ -123,7 +125,7 @@ func (r *PostRepository) GetPosts() ([]model.Post, error) {
 
 // GetPostBySlug fetches a single post by its slug.
 func (r *PostRepository) GetPostBySlug(slug string) (*model.Post, error) {
-	query := `SELECT id, title, slug, content, author_name, published_at, created_at, updated_at, tags, category FROM posts WHERE slug = $1;`
+	query := `SELECT id, title, slug, content, author_name, published_at, created_at, updated_at, tags, category, thumbnail_position FROM posts WHERE slug = $1;`
 	var post model.Post
 
 	err := r.db.QueryRow(query, slug).Scan(
@@ -137,6 +139,7 @@ func (r *PostRepository) GetPostBySlug(slug string) (*model.Post, error) {
 		&post.UpdatedAt,
 		&post.Tags,
 		&post.Category,
+		&post.ThumbnailPosition,
 	)
 
 	if err != nil {
@@ -181,7 +184,7 @@ func (r *PostRepository) GetPublishedPosts(category string, q string, limit int,
 	// 1. Base Query with Lateral Join
 	baseQueryTemplate := `
     SELECT 
-        p.id, p.title, p.slug, p.content, p.author_id, p.author_name, p.published_at, p.created_at, p.updated_at, p.tags, p.category, 
+        p.id, p.title, p.slug, p.content, p.author_id, p.author_name, p.published_at, p.created_at, p.updated_at, p.tags, p.category, p.thumbnail_position, 
         t.filepath AS thumbnail_url
     FROM 
         posts p
@@ -262,6 +265,7 @@ func (r *PostRepository) GetPublishedPosts(category string, q string, limit int,
 			&post.UpdatedAt,
 			&post.Tags,
 			&post.Category,
+			&post.ThumbnailPosition,
 			&thumbnailURL,
 		)
 		if err != nil {
@@ -310,7 +314,7 @@ func (r *PostRepository) GetPostAndCommentsBySlug(slug string) (*model.Post, err
 	query := `
         SELECT
             p.id, p.title, p.slug, p.content, p.author_name, p.published_at, 
-            p.created_at, p.updated_at, p.tags, p.category, p.seen, p.likes,
+            p.created_at, p.updated_at, p.tags, p.category, p.seen, p.likes, p.thumbnail_position,
             (
                 SELECT filepath 
                 FROM images i
@@ -351,6 +355,7 @@ func (r *PostRepository) GetPostAndCommentsBySlug(slug string) (*model.Post, err
 		&post.Category,
 		&post.Seen,
 		&post.Likes,
+		&post.ThumbnailPosition,
 		&thumbnailURL,
 		&commentsJSON, // Bind the JSON output
 	)
@@ -429,7 +434,7 @@ func (r *PostRepository) LikePostByID(req model.LikeRequest) error {
 
 // GetPostByID fetches a single post by its ID.
 func (r *PostRepository) GetPostByID(id uuid.UUID) (*model.Post, error) {
-	query := `SELECT id, title, slug, content, author_name, published_at, created_at, updated_at, tags, category FROM posts WHERE id = $1`
+	query := `SELECT id, title, slug, content, author_name, published_at, created_at, updated_at, tags, category, thumbnail_position FROM posts WHERE id = $1`
 	var post model.Post
 	var publishedAt sql.NullTime
 
@@ -444,6 +449,7 @@ func (r *PostRepository) GetPostByID(id uuid.UUID) (*model.Post, error) {
 		&post.UpdatedAt,
 		&post.Tags,
 		&post.Category,
+		&post.ThumbnailPosition,
 	)
 
 	if err != nil {
@@ -464,13 +470,14 @@ func (r *PostRepository) GetPostByID(id uuid.UUID) (*model.Post, error) {
 
 // UpdatePost updates an existing post in the database.
 func (r *PostRepository) UpdatePost(post *model.UpdatePost) error {
-	query := `UPDATE posts SET title = $2, content = $3, updated_at = NOW(), tags = $4, category = $5 WHERE id = $1`
+	query := `UPDATE posts SET title = $2, content = $3, updated_at = NOW(), tags = $4, category = $5, thumbnail_position = $6 WHERE id = $1`
 	_, err := r.db.Exec(query,
 		post.ID,
 		post.Title,
 		post.Content,
 		pq.Array(blog.SplitWithoutEmpty(post.Tags, ",")),
 		post.Category,
+		post.ThumbnailPosition,
 	)
 	return err
 }

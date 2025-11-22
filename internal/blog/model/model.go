@@ -19,22 +19,23 @@ type Comment struct {
 // Fields are mapped directly to database columns.
 // Pointers are used for nullable fields in the database.
 type Post struct {
-	ID           uuid.UUID  `json:"id"`
-	Title        string     `json:"title"`
-	Slug         string     `json:"slug"`
-	Content      string     `json:"content"`
-	AuthorID     *uuid.UUID `json:"author_id,omitempty"`    // Nullable in DB
-	AuthorName   string     `json:"author,omitempty"`       // Nullable in DB
-	PublishedAt  *time.Time `json:"published_at,omitempty"` // Nullable in DB
-	CreatedAt    time.Time  `json:"created_at"`
-	UpdatedAt    time.Time  `json:"updated_at"`
-	Tags         pq.StringArray
-	ThumbnailURL string    `json:"thumbnail"`
-	Category     string    `json:"category"`
-	ImageIDs     []string  `json:"image_ids"`
-	Seen         int       `json:"seen"`
-	Likes        int       `json:"likes"`
-	Comments     []Comment `json:"comments"`
+	ID                uuid.UUID  `json:"id"`
+	Title             string     `json:"title"`
+	Slug              string     `json:"slug"`
+	Content           string     `json:"content"`
+	AuthorID          *uuid.UUID `json:"author_id,omitempty"`    // Nullable in DB
+	AuthorName        string     `json:"author,omitempty"`       // Nullable in DB
+	PublishedAt       *time.Time `json:"published_at,omitempty"` // Nullable in DB
+	CreatedAt         time.Time  `json:"created_at"`
+	UpdatedAt         time.Time  `json:"updated_at"`
+	Tags              pq.StringArray
+	ThumbnailURL      string    `json:"thumbnail"`
+	ThumbnailPosition string    `json:"thumbnail_position"`
+	Category          string    `json:"category"`
+	ImageIDs          []string  `json:"image_ids"`
+	Seen              int       `json:"seen"`
+	Likes             int       `json:"likes"`
+	Comments          []Comment `json:"comments"`
 }
 
 type CreateCommentRequest struct {
@@ -49,22 +50,24 @@ type LikeRequest struct {
 }
 
 type UpdatePost struct {
-	ID         uuid.UUID `json:"id"`
-	AuthorName string
-	Title      string         `json:"title"`
-	Content    string         `json:"content"`
-	Tags       string         `json:"tags"`
-	Category   string         `json:"category"`
-	ImageIDs   pq.StringArray `json:"image_ids"`
+	ID                uuid.UUID `json:"id"`
+	AuthorName        string
+	Title             string         `json:"title"`
+	Content           string         `json:"content"`
+	Tags              string         `json:"tags"`
+	Category          string         `json:"category"`
+	ThumbnailPosition string         `json:"thumbnail_position"`
+	ImageIDs          pq.StringArray `json:"image_ids"`
 }
 
 type CreatePost struct {
-	Title      string         `json:"title"`
-	Content    string         `json:"content"`
-	Tags       string         `json:"tags"`
-	Category   string         `json:"category"`
-	ImageIDs   pq.StringArray `json:"image_ids"`
-	AuthorName string
+	Title             string         `json:"title"`
+	Content           string         `json:"content"`
+	Tags              string         `json:"tags"`
+	Category          string         `json:"category"`
+	ThumbnailPosition string         `json:"thumbnail_position"`
+	ImageIDs          pq.StringArray `json:"image_ids"`
+	AuthorName        string
 }
 
 type UpdateImages struct {
