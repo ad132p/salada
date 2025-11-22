@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "webpack --mode production",
+    "build": "pnpm run build:css && webpack --mode production",
+    "build:css": "tailwindcss -i ./web/static/css/input.css -o ./web/assets/css/output.css",
+    "watch:css": "tailwindcss -i ./web/static/css/input.css -o ./web/assets/css/output.css --watch",
     "test": "echo 'Error: no test specified' && exit 1"
   },
   "keywords": [],
