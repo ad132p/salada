@@ -29,17 +29,17 @@ func setupConfiguration(router *gin.Engine) {
 	router.Static("/assets/", "./web/assets")
 	router.Static("/images/", "./web/images")
 	router.Static("/uploads/", "./uploads")
-	router.LoadHTMLGlob("web/templates/html/*")
+	router.LoadHTMLGlob("web/templates/html/*/*")
 }
 
 // setupPublicPages defines simple GET routes for static HTML pages.
 func setupPublicPages(router *gin.Engine) {
 	router.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index.html", gin.H{"title": "Home"})
+		c.HTML(http.StatusOK, "pages/index.html", gin.H{"title": "Home"})
 	})
 
 	router.GET("/about", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "about.html", gin.H{"title": "About"})
+		c.HTML(http.StatusOK, "pages/about.html", gin.H{"title": "About"})
 	})
 
 	router.GET("/login", func(c *gin.Context) {
@@ -49,7 +49,7 @@ func setupPublicPages(router *gin.Engine) {
 			intendedRoute = "/blog"
 		}
 
-		c.HTML(http.StatusOK, "login.html", gin.H{
+		c.HTML(http.StatusOK, "auth/login.html", gin.H{
 			"title": "Login",
 			// Pass the variable so the template can access it as {{.IntendedRoute}}
 			"IntendedRoute": intendedRoute,
@@ -57,22 +57,22 @@ func setupPublicPages(router *gin.Engine) {
 	})
 
 	router.GET("/register", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "register.html", gin.H{"title": "Register"})
+		c.HTML(http.StatusOK, "auth/register.html", gin.H{"title": "Register"})
 	})
 
 	router.GET("/contact", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "contact.html", gin.H{"title": "Contact"})
+		c.HTML(http.StatusOK, "pages/contact.html", gin.H{"title": "Contact"})
 	})
 
 	router.GET("/thankyou", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "thankyou.html", gin.H{"title": "Thank you"})
+		c.HTML(http.StatusOK, "pages/thankyou.html", gin.H{"title": "Thank you"})
 	})
 }
 
 // setupErrorHandlers configures the 404 and 405 responses.
 func setupErrorHandlers(router *gin.Engine) {
 	router.NoRoute(func(c *gin.Context) {
-		c.HTML(http.StatusNotFound, "404.html", gin.H{"title": "404"})
+		c.HTML(http.StatusNotFound, "pages/404.html", gin.H{"title": "404"})
 	})
 
 	router.NoMethod(func(c *gin.Context) {

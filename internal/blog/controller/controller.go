@@ -240,7 +240,7 @@ func (pc *BlogController) GetAllPosts(c *gin.Context) {
 	posts, nextCursor, err := pc.Repo.GetPublishedPosts(category, "", 10, cursorPublishedAt, cursorID)
 
 	if err != nil {
-		c.HTML(http.StatusServiceUnavailable, "blog_post_list.html", gin.H{
+		c.HTML(http.StatusServiceUnavailable, "blog/blog_post_list.html", gin.H{
 			"title": "Blog Posts",
 			"error": err,
 		})
@@ -250,7 +250,7 @@ func (pc *BlogController) GetAllPosts(c *gin.Context) {
 	categories, err := pc.Repo.GetCategoryCount()
 
 	if err != nil {
-		c.HTML(http.StatusServiceUnavailable, "blog_post_list.html", gin.H{
+		c.HTML(http.StatusServiceUnavailable, "blog/blog_post_list.html", gin.H{
 			"title": "Blog Posts",
 			"error": err,
 		})
@@ -262,7 +262,7 @@ func (pc *BlogController) GetAllPosts(c *gin.Context) {
 		encodedNextCursor = base64.StdEncoding.EncodeToString([]byte(nextCursor))
 	}
 
-	c.HTML(http.StatusOK, "blog_post_list.html", gin.H{
+	c.HTML(http.StatusOK, "blog/blog_post_list.html", gin.H{
 		"title":       "Blog Posts",
 		"posts":       posts,
 		"categories":  categories,
@@ -277,7 +277,7 @@ func (pc *BlogController) GetRecentPosts(c *gin.Context) {
 	posts, _, err := pc.Repo.GetPublishedPosts(category, "", 3, nil, nil)
 
 	if err != nil {
-		c.HTML(http.StatusServiceUnavailable, "blog.html", gin.H{
+		c.HTML(http.StatusServiceUnavailable, "blog/blog.html", gin.H{
 			"title": "Blog Posts",
 			"error": err,
 		})
@@ -287,13 +287,13 @@ func (pc *BlogController) GetRecentPosts(c *gin.Context) {
 	categories, err := pc.Repo.GetCategoryCount()
 
 	if err != nil {
-		c.HTML(http.StatusServiceUnavailable, "blog.html", gin.H{
+		c.HTML(http.StatusServiceUnavailable, "blog/blog.html", gin.H{
 			"title": "Blog Posts",
 			"error": err,
 		})
 		return
 	}
-	c.HTML(http.StatusOK, "blog.html", gin.H{
+	c.HTML(http.StatusOK, "blog/blog.html", gin.H{
 		"title":      "Blog Posts",
 		"posts":      posts,
 		"categories": categories,
@@ -307,7 +307,7 @@ func (pc *BlogController) GetNewPostForm(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Username not found in context"})
 		return
 	}
-	c.HTML(http.StatusOK, "blog_new.html", gin.H{
+	c.HTML(http.StatusOK, "blog/blog_new.html", gin.H{
 		"title":    "New Blog Entry",
 		"username": username,
 	})
@@ -343,7 +343,7 @@ func (pc *BlogController) GetPostAndCommentsBySlug(c *gin.Context) {
 	}
 
 	// 3. Include the username in the HTML response data
-	c.HTML(http.StatusOK, "blog_post.html", gin.H{
+	c.HTML(http.StatusOK, "blog/blog_post.html", gin.H{
 		"title":    post.Title,
 		"post":     post,
 		"comments": string(commentsJSONBytes),
@@ -391,14 +391,14 @@ func (pc *BlogController) GetCategory(c *gin.Context) {
 
 	categories, err := pc.Repo.GetCategoryCount()
 	if err != nil {
-		c.HTML(http.StatusServiceUnavailable, "blog_post_list.html", gin.H{
+		c.HTML(http.StatusServiceUnavailable, "blog/blog_post_list.html", gin.H{
 			"title": "Posts by Category",
 			"error": err,
 		})
 		return
 	}
 
-	c.HTML(http.StatusOK, "blog_post_list.html", gin.H{
+	c.HTML(http.StatusOK, "blog/blog_post_list.html", gin.H{
 		"title":      "Posts by Category",
 		"posts":      posts,
 		"category":   category,
@@ -420,14 +420,14 @@ func (pc *BlogController) GetTag(c *gin.Context) {
 
 	categories, err := pc.Repo.GetCategoryCount()
 	if err != nil {
-		c.HTML(http.StatusServiceUnavailable, "blog_post_list.html", gin.H{
+		c.HTML(http.StatusServiceUnavailable, "blog/blog_post_list.html", gin.H{
 			"title": "Posts by Tag",
 			"error": err,
 		})
 		return
 	}
 
-	c.HTML(http.StatusOK, "blog_post_list.html", gin.H{
+	c.HTML(http.StatusOK, "blog/blog_post_list.html", gin.H{
 		"title":      "Posts by Tag",
 		"posts":      posts,
 		"tag":        tag,
@@ -443,20 +443,20 @@ func (pc *BlogController) GetTagOrContent(c *gin.Context) {
 		return
 	}
 	if len(posts) == 0 { // Check if no record was found by the repository
-		c.HTML(http.StatusNotFound, "blog.html", gin.H{"error": "No post has such tag."})
+		c.HTML(http.StatusNotFound, "blog/blog.html", gin.H{"error": "No post has such tag."})
 		return
 	}
 
 	categories, err := pc.Repo.GetCategoryCount()
 	if err != nil {
-		c.HTML(http.StatusServiceUnavailable, "blog.html", gin.H{
+		c.HTML(http.StatusServiceUnavailable, "blog/blog.html", gin.H{
 			"title": "Posts by Tag",
 			"error": err,
 		})
 		return
 	}
 
-	c.HTML(http.StatusOK, "blog_post_list.html", gin.H{
+	c.HTML(http.StatusOK, "blog/blog_post_list.html", gin.H{
 		"title":      "Posts by Tag",
 		"posts":      posts,
 		"categories": categories,
@@ -499,7 +499,7 @@ func (pc *BlogController) EditPostForm(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
 		return
 	}
-	c.HTML(http.StatusOK, "edit_post_form.html", gin.H{
+	c.HTML(http.StatusOK, "blog/edit_post_form.html", gin.H{
 		"title":      post.Title,
 		"post":       post,
 		"categories": blog.Categories,

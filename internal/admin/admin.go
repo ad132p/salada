@@ -44,7 +44,7 @@ func AdminRoleRequired(c *gin.Context) {
 	}
 
 	if role != "super" {
-		c.HTML(http.StatusForbidden, "denied.html", gin.H{
+		c.HTML(http.StatusForbidden, "pages/denied.html", gin.H{
 			"message": "Access Denied: You must be an administrator.",
 		})
 		// Abort the request to prevent the next handler from running.

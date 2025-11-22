@@ -117,7 +117,7 @@ func TestGetRecentPosts(t *testing.T) {
 	// we can use a custom engine or just accept that we are testing the logic up to rendering.
 	// But wait, the controller calls c.HTML.
 	// Let's try to load the templates from the actual path.
-	router.LoadHTMLGlob("../../../web/templates/html/*")
+	router.LoadHTMLGlob("../../../web/templates/html/*/*")
 
 	router.GET("/blog", controller.GetRecentPosts)
 

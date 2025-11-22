@@ -22,20 +22,20 @@ func NewAdminController(repo *repositories.AdminRepository) *AdminController {
 func (pc *AdminController) GetPendingPosts(c *gin.Context) {
 	posts, err := pc.Repo.GetPosts()
 	if err != nil {
-		c.HTML(http.StatusServiceUnavailable, "blog_admin.html", gin.H{
+		c.HTML(http.StatusServiceUnavailable, "admin/blog_admin.html", gin.H{
 			"title": "Blog Posts - Admin Page",
 			"error": err,
 		})
 		return
 	}
-	c.HTML(http.StatusOK, "blog_admin.html", gin.H{
+	c.HTML(http.StatusOK, "admin/blog_admin.html", gin.H{
 		"title": "Blog Posts - Admin Page",
 		"posts": posts,
 	})
 }
 
 func (pc *AdminController) GetAdminMain(c *gin.Context) {
-	c.HTML(http.StatusOK, "admin.html", gin.H{
+	c.HTML(http.StatusOK, "admin/admin.html", gin.H{
 		"title": "New Blog Entry",
 	})
 }
@@ -52,7 +52,7 @@ func (pc *AdminController) GetPostBySlug(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
 		return
 	}
-	c.HTML(http.StatusOK, "admin_blog_post.html", gin.H{
+	c.HTML(http.StatusOK, "admin/admin_blog_post.html", gin.H{
 		"title": post.Title,
 		"post":  post,
 	})

@@ -29,7 +29,7 @@ func (pc *AuthController) Register(c *gin.Context) {
 	_, err := pc.Repo.CreateUser(newUser)
 
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "register.html", gin.H{"error": err})
+		c.HTML(http.StatusInternalServerError, "auth/register.html", gin.H{"error": err})
 		return
 	}
 	c.Redirect(http.StatusFound, "/login/")
@@ -46,7 +46,7 @@ func (pc *AuthController) Login(c *gin.Context) {
 	if err != nil {
 		// Consolidate all login-related errors into a single "Invalid credentials" message
 		// to prevent user enumeration attacks.
-		c.HTML(http.StatusUnauthorized, "login.html", gin.H{
+		c.HTML(http.StatusUnauthorized, "auth/login.html", gin.H{
 			"error": "Username not registered",
 		})
 		return
@@ -55,7 +55,7 @@ func (pc *AuthController) Login(c *gin.Context) {
 	// Compare the provided password with the stored hash
 	if err := bcrypt.CompareHashAndPassword([]byte(password), []byte(loginInput.Password)); err != nil {
 		// Return the same generic error for password mismatch as for user not found
-		c.HTML(http.StatusUnauthorized, "login.html", gin.H{
+		c.HTML(http.StatusUnauthorized, "auth/login.html", gin.H{
 			"error": "Invalid credentials",
 		})
 		return

@@ -1,3 +1,4 @@
+{{ define "blog/blog_post.html" }}
 {{ template "base" . }}
 {{if .post.ThumbnailURL}}
 <div class="w-full h-[20vh] min-h-[200px]">
@@ -41,3 +42,4 @@
     {{end}}
   </div>
 </div>
+{{ end }}
