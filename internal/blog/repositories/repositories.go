@@ -206,7 +206,7 @@ func (r *PostRepository) GetPublishedPosts(category string, q string, limit int,
 	// 4. Handle Tag/Content Search
 	if q != "" {
 		baseQuery += ` AND ($` + strconv.Itoa(paramIndex) + ` = ANY(p.tags) 
-            OR to_tsvector('english', p.content) @@ websearch_to_tsquery('english', $` + strconv.Itoa(paramIndex) + `))`
+            OR to_tsvector('english', p.title || ' ' || p.content) @@ websearch_to_tsquery('english', $` + strconv.Itoa(paramIndex) + `))`
 		args = append(args, q)
 		paramIndex++
 	}
