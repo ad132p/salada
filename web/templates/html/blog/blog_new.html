@@ -178,7 +178,15 @@
         const content = easyMDE.value();
         // Regex to find the first image in markdown: ![alt](url)
         const match = content.match(/!\[.*?\]\((.*?)\)/);
-        const firstImage = match ? match[1] : null;
+        let firstImage = match ? match[1] : null;
+
+        if (firstImage) {
+            // Strip title if present (e.g. url "title")
+            const titleIndex = firstImage.indexOf(' "');
+            if (titleIndex !== -1) {
+                firstImage = firstImage.substring(0, titleIndex);
+            }
+        }
 
         window.dispatchEvent(new CustomEvent('hero-image-change', { detail: { filepath: firstImage } }));
     });

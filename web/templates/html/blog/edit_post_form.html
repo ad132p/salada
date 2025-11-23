@@ -172,8 +172,17 @@
   easyMDE.codemirror.on("change", function () {
     const content = easyMDE.value();
     // Regex to find the first image in markdown: ![alt](url)
-    const match = content.match(/!\[.*?\]\(([^)\s"]+)/);
-    const firstImage = match ? match[1] : null;
+    // Capture everything inside the parentheses
+    const match = content.match(/!\[.*?\]\((.*?)\)/);
+    let firstImage = match ? match[1] : null;
+
+    if (firstImage) {
+      // Strip title if present (e.g. url "title")
+      const titleIndex = firstImage.indexOf(' "');
+      if (titleIndex !== -1) {
+        firstImage = firstImage.substring(0, titleIndex);
+      }
+    }
 
     window.dispatchEvent(new CustomEvent('hero-image-change', { detail: { filepath: firstImage } }));
   });
