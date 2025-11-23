@@ -181,20 +181,12 @@ func (r *PostRepository) GetCategoryCount() ([]model.CategoryCount, error) {
 }
 
 func (r *PostRepository) GetPublishedPosts(category string, q string, limit int, cursorPublishedAt *time.Time, cursorID *uuid.UUID) ([]model.Post, string, error) {
-	// 1. Base Query with Lateral Join
+	// 1. Base Query (Removed Lateral Join for thumbnail)
 	baseQueryTemplate := `
     SELECT 
-        p.id, p.title, p.slug, p.content, p.author_id, p.author_name, p.published_at, p.created_at, p.updated_at, p.tags, p.category, p.thumbnail_position, 
-        t.filepath AS thumbnail_url
+        p.id, p.title, p.slug, p.content, p.author_id, p.author_name, p.published_at, p.created_at, p.updated_at, p.tags, p.category, p.thumbnail_position
     FROM 
         posts p
-    LEFT JOIN LATERAL (
-        SELECT filepath 
-        FROM images i
-        WHERE i.blog_post_id = p.id
-        ORDER BY i.uploaded_at ASC
-        LIMIT 1
-    ) t ON true
     WHERE 
         p.published_at IS NOT NULL`
 
@@ -251,7 +243,6 @@ func (r *PostRepository) GetPublishedPosts(category string, q string, limit int,
 	for rows.Next() {
 		var post model.Post
 		var authorID sql.Null[uuid.UUID]
-		var thumbnailURL sql.NullString
 
 		err := rows.Scan(
 			&post.ID,
@@ -266,7 +257,6 @@ func (r *PostRepository) GetPublishedPosts(category string, q string, limit int,
 			&post.Tags,
 			&post.Category,
 			&post.ThumbnailPosition,
-			&thumbnailURL,
 		)
 		if err != nil {
 			return nil, "", err
@@ -275,9 +265,9 @@ func (r *PostRepository) GetPublishedPosts(category string, q string, limit int,
 		if authorID.Valid {
 			post.AuthorID = &authorID.V
 		}
-		if thumbnailURL.Valid {
-			post.ThumbnailURL = thumbnailURL.String
-		}
+
+		// Extract thumbnail from content
+		post.ThumbnailURL = blog.GetFirstImage(post.Content)
 
 		post.Content = blog.GetContentSummary(post.Content, 100)
 		posts = append(posts, post)
@@ -315,13 +305,6 @@ func (r *PostRepository) GetPostAndCommentsBySlug(slug string) (*model.Post, err
         SELECT
             p.id, p.title, p.slug, p.content, p.author_name, p.published_at, 
             p.created_at, p.updated_at, p.tags, p.category, p.seen, p.likes, p.thumbnail_position,
-            (
-                SELECT filepath 
-                FROM images i
-                WHERE i.blog_post_id = p.id
-                ORDER BY i.uploaded_at ASC
-                LIMIT 1
-            ) AS thumbnail_url,
             COALESCE(
                 json_agg(
                     json_build_object(
@@ -340,7 +323,6 @@ func (r *PostRepository) GetPostAndCommentsBySlug(slug string) (*model.Post, err
     `
 	var post model.Post
 	var commentsJSON []byte // To store the JSON array from the database
-	var thumbnailURL sql.NullString
 
 	err := r.db.QueryRow(query, slug).Scan(
 		&post.ID,
@@ -356,13 +338,11 @@ func (r *PostRepository) GetPostAndCommentsBySlug(slug string) (*model.Post, err
 		&post.Seen,
 		&post.Likes,
 		&post.ThumbnailPosition,
-		&thumbnailURL,
 		&commentsJSON, // Bind the JSON output
 	)
 
-	if thumbnailURL.Valid {
-		post.ThumbnailURL = thumbnailURL.String
-	}
+	// Extract thumbnail from content
+	post.ThumbnailURL = blog.GetFirstImage(post.Content)
 
 	if err != nil {
 		if err == sql.ErrNoRows {

@@ -90,9 +90,16 @@ if (heroCropperContainer) {
         }
     };
 
+    const initialImage = heroCropperContainer.getAttribute('data-initial-image');
+    const initialPosition = heroCropperContainer.getAttribute('data-initial-position');
+
     root.render(
         <React.StrictMode>
-            <HeroImageCropper onCropChange={handleCropChange} />
+            <HeroImageCropper
+                initialImage={initialImage}
+                initialPosition={initialPosition}
+                onCropChange={handleCropChange}
+            />
         </React.StrictMode>
     );
 }

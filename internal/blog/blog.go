@@ -198,3 +198,15 @@ func GetContentSummary(fullContent string, maxChars int) string {
 }
 
 var Categories = [7]string{"football", "cs", "politics", "plants", "cine", "lit", "random"}
+
+// GetFirstImage extracts the URL of the first image found in the markdown content.
+func GetFirstImage(content string) string {
+	// Regex to match markdown images: ![alt](url)
+	// Captures the URL in the first group.
+	re := regexp.MustCompile(`!\[.*?\]\(([^)\s"]+)`)
+	match := re.FindStringSubmatch(content)
+	if len(match) > 1 {
+		return match[1]
+	}
+	return ""
+}

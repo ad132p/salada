@@ -1,30 +1,31 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const HeroImageCropper = ({ initialImage, onCropChange }) => {
+const HeroImageCropper = ({ initialImage, initialPosition, onCropChange }) => {
     const [imageSrc, setImageSrc] = useState(initialImage);
-    const [position, setPosition] = useState(50); // 0 to 100
+
+    // Parse initial position (e.g., "center 50%") to get the number
+    let startPosVal = 50;
+    if (initialPosition) {
+        const match = initialPosition.match(/(\d+(\.\d+)?)/);
+        if (match) {
+            startPosVal = parseFloat(match[0]);
+        }
+    }
+
+    const [position, setPosition] = useState(startPosVal); // 0 to 100
     const [isDragging, setIsDragging] = useState(false);
     const startY = useRef(0);
     const startPos = useRef(50);
 
     useEffect(() => {
-        // Listen for image uploads from EasyMDE
-        const handleImageUpload = (e) => {
-            // e.detail should contain the filepath
-            if (e.detail && e.detail.filepath) {
-                // Only update if it's the first image or if we want to allow replacing
-                // For now, let's just update it so the user sees the latest uploaded image as potential hero
-                // Or we could check if imageSrc is empty.
-                // User said "rendering the first image tied to my blog post".
-                // So maybe we should only set it if it's null?
-                // But if they delete and upload another?
-                // Let's just update it.
-                setImageSrc(e.detail.filepath);
-            }
+        // Listen for image changes from EasyMDE (based on content order)
+        const handleImageChange = (e) => {
+            // e.detail.filepath can be null if no image exists
+            setImageSrc(e.detail.filepath);
         };
 
-        window.addEventListener('hero-image-uploaded', handleImageUpload);
-        return () => window.removeEventListener('hero-image-uploaded', handleImageUpload);
+        window.addEventListener('hero-image-change', handleImageChange);
+        return () => window.removeEventListener('hero-image-change', handleImageChange);
     }, []);
 
     const handleMouseDown = (e) => {

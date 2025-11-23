@@ -140,9 +140,9 @@
             // **This is where the function to update the array is called.**
             updateImageMonitor(payload.data.image_id);
 
-            // Dispatch event for HeroImageCropper
-            const event = new CustomEvent('hero-image-uploaded', { detail: { filepath: payload.data.filepath } });
-            window.dispatchEvent(event);
+            // Dispatch event for HeroImageCropper - REMOVED in favor of content watching
+            // const event = new CustomEvent('hero-image-uploaded', { detail: { filepath: payload.data.filepath } });
+            // window.dispatchEvent(event);
 
             onSuccess(payload.data.filepath);
 
@@ -171,6 +171,16 @@
             "preview", "side-by-side", "fullscreen", "|",
             "guide"
         ],
+    });
+
+    // Watch for changes in the editor content to update the Hero Image Preview
+    easyMDE.codemirror.on("change", function () {
+        const content = easyMDE.value();
+        // Regex to find the first image in markdown: ![alt](url)
+        const match = content.match(/!\[.*?\]\((.*?)\)/);
+        const firstImage = match ? match[1] : null;
+
+        window.dispatchEvent(new CustomEvent('hero-image-change', { detail: { filepath: firstImage } }));
     });
 
 
