@@ -203,10 +203,52 @@ var Categories = [7]string{"football", "cs", "politics", "plants", "cine", "lit"
 func GetFirstImage(content string) string {
 	// Regex to match markdown images: ![alt](url)
 	// Captures the URL in the first group.
-	re := regexp.MustCompile(`!\[.*?\]\(([^)\s"]+)`)
+	// We use a non-greedy match for the URL part to handle potential titles or closing parens.
+	// The previous regex `([^)\s"]+)` stopped at spaces, which broke URLs with spaces.
+	// This new regex `\(([^)]+)\)` captures everything inside the parentheses.
+	// However, markdown links can have titles: `(url "title")`.
+	// So we should capture until the first space OR closing paren if no space.
+	// But wait, if the URL has spaces (not encoded), standard markdown might break,
+	// but the user says they are rendering it, so it might be valid in their context.
+	// Let's try to capture everything inside `(` and `)` and then strip potential title?
+	// Or just be more permissive.
+	//
+	// If the input is `![alt](/uploads/foo bar.jpg)`, we want `/uploads/foo bar.jpg`.
+	// If the input is `![alt](/uploads/foo.jpg "title")`, we want `/uploads/foo.jpg`.
+	//
+	// Let's use a regex that matches `(` then captures until `)` or ` "`.
+	// actually, `!\[.*?\]\((.*?)\)` captures everything.
+	// Then we can trim the title if present.
+	re := regexp.MustCompile(`!\[.*?\]\((.*?)\)`)
 	match := re.FindStringSubmatch(content)
 	if len(match) > 1 {
-		return match[1]
+		url := match[1]
+		// If there's a title (e.g. `url "title"`), strip it.
+		// We split by space followed by a quote, or just the first space if we assume URLs don't have spaces...
+		// BUT the user explicitly said "strings with spaces are not being handled", implying the URL HAS spaces.
+		// Markdown standard says URLs with spaces should be encoded or wrapped in <>.
+		// But if the user has raw spaces, we should probably take the whole thing?
+		//
+		// If we have `foo bar.jpg "title"`, splitting by space breaks the URL.
+		// If we have `foo bar.jpg`, splitting by space breaks the URL.
+		//
+		// If the user is using standard markdown, URLs with spaces MUST be encoded (%20).
+		// If they are NOT encoded, it's technically invalid markdown, but some parsers handle it.
+		//
+		// However, if the user says "it only shows 'WhatsApp' string", it means my previous regex `([^)\s"]+)` stopped at the space.
+		//
+		// If I change it to `(.*?)`, it will capture `WhatsApp Image... .jpeg`.
+		// But what if there is a title? `WhatsApp Image... .jpeg "My Title"`.
+		// Then I capture the title too.
+		//
+		// A common heuristic: if there is a quote `"`, the URL ends before it.
+		// Let's try to capture everything, then check for quotes.
+
+		// Check for title starting with "
+		if idx := strings.Index(url, " \""); idx != -1 {
+			return url[:idx]
+		}
+		return url
 	}
 	return ""
 }
