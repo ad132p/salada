@@ -506,45 +506,42 @@ func (r *PostRepository) AddImage(image model.Image) (uuid.UUID, error) {
 
 // DeletePost deletes a post by its ID and returns the filepaths of associated images.
 func (r *PostRepository) DeletePost(id uuid.UUID) ([]string, error) {
-	// The query attempts to delete the post and associated images,
-	// returning the filepaths of the deleted images.
-	query := `DELETE FROM posts 
-             USING images 
-             WHERE posts.id = images.blog_post_id
-             AND posts.id = $1
-             RETURNING images.filepath;`
-
-	rows, err := r.db.Query(query, id)
+	// 1. Fetch filepaths of associated images
+	queryImages := `SELECT filepath FROM images WHERE blog_post_id = $1`
+	rows, err := r.db.Query(queryImages, id)
 	if err != nil {
-		// Return the error instead of calling log.Fatalf, which stops the program.
-		return nil, fmt.Errorf("error querying database: %w", err)
+		return nil, fmt.Errorf("error querying images: %w", err)
 	}
 	defer rows.Close()
 
-	// 1. Initialize a slice to hold all the filepaths.
 	var filepaths []string
-
-	// 2. Loop through all the returned rows.
 	for rows.Next() {
 		var filepath string
-		// 3. Scan the filepath from the current row.
-		err = rows.Scan(&filepath)
-		if err != nil {
-			// Return the error if scanning fails.
-			return nil, fmt.Errorf("error scanning row: %w", err)
+		if err := rows.Scan(&filepath); err != nil {
+			return nil, fmt.Errorf("error scanning image filepath: %w", err)
 		}
-		// 4. Append the scanned filepath to the slice.
 		filepaths = append(filepaths, filepath)
 	}
-
-	// 5. Check for any error that occurred during iteration.
-	if err = rows.Err(); err != nil {
-		// Return the iteration error.
-		return nil, fmt.Errorf("error iterating rows: %w", err)
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating image rows: %w", err)
 	}
 
-	// 6. Return the slice of filepaths and a nil error.
-	// Note: The function's return signature has been changed to ([]string, error).
+	// 2. Delete the post (images will be deleted via ON DELETE CASCADE)
+	queryDelete := `DELETE FROM posts WHERE id = $1`
+	result, err := r.db.Exec(queryDelete, id)
+	if err != nil {
+		return nil, fmt.Errorf("error deleting post: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return nil, fmt.Errorf("error checking rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return nil, sql.ErrNoRows
+	}
+
 	return filepaths, nil
 }
 
