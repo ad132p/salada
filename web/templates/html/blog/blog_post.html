@@ -3,7 +3,7 @@
 {{if .post.ThumbnailURL}}
 <div class="w-full h-[20vh] min-h-[200px]">
   <img src="{{.post.ThumbnailURL}}" alt="{{.title}}" class="w-full h-full object-cover"
-    style="object-position: {{if .post.ThumbnailPosition}}{{.post.ThumbnailPosition}}{{else}}center{{end}}">
+    style="object-position: {{ or .post.ThumbnailPosition " center" }}">
 </div>
 {{end}}
 

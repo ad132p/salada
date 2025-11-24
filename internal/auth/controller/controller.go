@@ -42,7 +42,7 @@ func (pc *AuthController) Login(c *gin.Context) {
 	intendedRoute := c.PostForm("goto")
 	// Best Practice: The username/email should come from the JSON body,
 	// not a URL parameter. This is what the user provides in the form.
-	password, err := pc.Repo.GetUserPassword(loginInput.Username)
+	realUsername, password, err := pc.Repo.GetUserPassword(loginInput.Username)
 	if err != nil {
 		// Consolidate all login-related errors into a single "Invalid credentials" message
 		// to prevent user enumeration attacks.
@@ -61,7 +61,7 @@ func (pc *AuthController) Login(c *gin.Context) {
 		return
 	}
 
-	tokenString, err := auth.CreateToken(loginInput.Username)
+	tokenString, err := auth.CreateToken(realUsername)
 
 	if err != nil {
 		c.String(http.StatusInternalServerError, "Error creating token")
@@ -69,7 +69,7 @@ func (pc *AuthController) Login(c *gin.Context) {
 	}
 
 	c.SetCookie("token", tokenString, 3600*12, "/", os.Getenv("SALADA_HOST"), false, true)
-	c.SetCookie("username", loginInput.Username, 3600*12, "/", os.Getenv("SALADA_HOST"), false, true)
+	c.SetCookie("username", realUsername, 3600*12, "/", os.Getenv("SALADA_HOST"), false, true)
 
 	c.Redirect(http.StatusFound, intendedRoute)
 }

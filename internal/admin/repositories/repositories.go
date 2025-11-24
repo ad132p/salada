@@ -233,13 +233,13 @@ func (r *AdminRepository) CreateUser(user model.User) (uuid.UUID, error) {
 }
 
 // Login
-func (r *AdminRepository) GetUserPassword(username string) (string, error) {
-	query := `SELECT password FROM users WHERE username = $1`
-	var password string
-	err := r.db.QueryRow(query, username).Scan(&password)
+func (r *AdminRepository) GetUserPassword(identifier string) (string, string, error) {
+	query := `SELECT username, password FROM users WHERE username = $1 OR email = $1`
+	var username, password string
+	err := r.db.QueryRow(query, identifier).Scan(&username, &password)
 	if err != nil {
-		return password, err
+		return "", "", err
 	} else {
-		return password, nil
+		return username, password, nil
 	}
 }
