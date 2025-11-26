@@ -19,11 +19,11 @@ func main() {
 	router := gin.Default()
 	gin.SetMode(gin.DebugMode)
 
-	// Setup routes
-	salada.SetupRoutes(router)
-
 	//Setup middleware configuration
 	middleware.SetupMiddleware(router)
+
+	// Setup routes
+	salada.SetupRoutes(router)
 
 	server.Run(router)
 }

@@ -35,11 +35,17 @@ func setupConfiguration(router *gin.Engine) {
 // setupPublicPages defines simple GET routes for static HTML pages.
 func setupPublicPages(router *gin.Engine) {
 	router.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "pages/index.html", gin.H{"title": "Home"})
+		c.HTML(http.StatusOK, "pages/index.html", gin.H{
+			"title":        "Home",
+			"is_logged_in": c.GetBool("is_logged_in"),
+		})
 	})
 
 	router.GET("/about", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "pages/about.html", gin.H{"title": "About"})
+		c.HTML(http.StatusOK, "pages/about.html", gin.H{
+			"title":        "About",
+			"is_logged_in": c.GetBool("is_logged_in"),
+		})
 	})
 
 	router.GET("/login", func(c *gin.Context) {
@@ -53,19 +59,29 @@ func setupPublicPages(router *gin.Engine) {
 			"title": "Login",
 			// Pass the variable so the template can access it as {{.IntendedRoute}}
 			"IntendedRoute": intendedRoute,
+			"is_logged_in":  c.GetBool("is_logged_in"),
 		})
 	})
 
 	router.GET("/register", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "auth/register.html", gin.H{"title": "Register"})
+		c.HTML(http.StatusOK, "auth/register.html", gin.H{
+			"title":        "Register",
+			"is_logged_in": c.GetBool("is_logged_in"),
+		})
 	})
 
 	router.GET("/contact", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "pages/contact.html", gin.H{"title": "Contact"})
+		c.HTML(http.StatusOK, "pages/contact.html", gin.H{
+			"title":        "Contact",
+			"is_logged_in": c.GetBool("is_logged_in"),
+		})
 	})
 
 	router.GET("/thankyou", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "pages/thankyou.html", gin.H{"title": "Thank you"})
+		c.HTML(http.StatusOK, "pages/thankyou.html", gin.H{
+			"title":        "Thank you",
+			"is_logged_in": c.GetBool("is_logged_in"),
+		})
 	})
 }
 

@@ -29,7 +29,10 @@ func (pc *AuthController) Register(c *gin.Context) {
 	_, err := pc.Repo.CreateUser(newUser)
 
 	if err != nil {
-		c.HTML(http.StatusInternalServerError, "auth/register.html", gin.H{"error": err})
+		c.HTML(http.StatusInternalServerError, "auth/register.html", gin.H{
+			"error":        err,
+			"is_logged_in": c.GetBool("is_logged_in"),
+		})
 		return
 	}
 	c.Redirect(http.StatusFound, "/login/")
@@ -47,7 +50,8 @@ func (pc *AuthController) Login(c *gin.Context) {
 		// Consolidate all login-related errors into a single "Invalid credentials" message
 		// to prevent user enumeration attacks.
 		c.HTML(http.StatusUnauthorized, "auth/login.html", gin.H{
-			"error": "Username not registered",
+			"error":        "Username not registered",
+			"is_logged_in": c.GetBool("is_logged_in"),
 		})
 		return
 	}
@@ -56,7 +60,8 @@ func (pc *AuthController) Login(c *gin.Context) {
 	if err := bcrypt.CompareHashAndPassword([]byte(password), []byte(loginInput.Password)); err != nil {
 		// Return the same generic error for password mismatch as for user not found
 		c.HTML(http.StatusUnauthorized, "auth/login.html", gin.H{
-			"error": "Invalid credentials",
+			"error":        "Invalid credentials",
+			"is_logged_in": c.GetBool("is_logged_in"),
 		})
 		return
 	}
@@ -77,5 +82,5 @@ func (pc *AuthController) Login(c *gin.Context) {
 func (pc *AuthController) Logout(c *gin.Context) {
 	c.SetCookie("token", "", -1, "/", os.Getenv("SALADA_HOST"), false, true)
 	c.SetCookie("username", "", -1, "/", os.Getenv("SALADA_HOST"), false, true)
-	c.Redirect(http.StatusSeeOther, "/")
+	c.HTML(http.StatusOK, "pages/logout.html", nil)
 }

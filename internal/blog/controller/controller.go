@@ -241,8 +241,9 @@ func (pc *BlogController) GetAllPosts(c *gin.Context) {
 
 	if err != nil {
 		c.HTML(http.StatusServiceUnavailable, "blog/blog_post_list.html", gin.H{
-			"title": "Blog Posts",
-			"error": err,
+			"title":        "Blog Posts",
+			"error":        err,
+			"is_logged_in": c.GetBool("is_logged_in"),
 		})
 		return
 	}
@@ -251,8 +252,9 @@ func (pc *BlogController) GetAllPosts(c *gin.Context) {
 
 	if err != nil {
 		c.HTML(http.StatusServiceUnavailable, "blog/blog_post_list.html", gin.H{
-			"title": "Blog Posts",
-			"error": err,
+			"title":        "Blog Posts",
+			"error":        err,
+			"is_logged_in": c.GetBool("is_logged_in"),
 		})
 		return
 	}
@@ -263,10 +265,11 @@ func (pc *BlogController) GetAllPosts(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "blog/blog_post_list.html", gin.H{
-		"title":       "Blog Posts",
-		"posts":       posts,
-		"categories":  categories,
-		"next_cursor": encodedNextCursor,
+		"title":        "Blog Posts",
+		"posts":        posts,
+		"categories":   categories,
+		"next_cursor":  encodedNextCursor,
+		"is_logged_in": c.GetBool("is_logged_in"),
 	})
 }
 
@@ -278,8 +281,9 @@ func (pc *BlogController) GetRecentPosts(c *gin.Context) {
 
 	if err != nil {
 		c.HTML(http.StatusServiceUnavailable, "blog/blog.html", gin.H{
-			"title": "Blog Posts",
-			"error": err,
+			"title":        "Blog Posts",
+			"error":        err,
+			"is_logged_in": c.GetBool("is_logged_in"),
 		})
 		return
 	}
@@ -288,15 +292,17 @@ func (pc *BlogController) GetRecentPosts(c *gin.Context) {
 
 	if err != nil {
 		c.HTML(http.StatusServiceUnavailable, "blog/blog.html", gin.H{
-			"title": "Blog Posts",
-			"error": err,
+			"title":        "Blog Posts",
+			"error":        err,
+			"is_logged_in": c.GetBool("is_logged_in"),
 		})
 		return
 	}
 	c.HTML(http.StatusOK, "blog/blog.html", gin.H{
-		"title":      "Blog Posts",
-		"posts":      posts,
-		"categories": categories,
+		"title":        "Blog Posts",
+		"posts":        posts,
+		"categories":   categories,
+		"is_logged_in": c.GetBool("is_logged_in"),
 	})
 }
 
@@ -308,8 +314,9 @@ func (pc *BlogController) GetNewPostForm(c *gin.Context) {
 		return
 	}
 	c.HTML(http.StatusOK, "blog/blog_new.html", gin.H{
-		"title":    "New Blog Entry",
-		"username": username,
+		"title":        "New Blog Entry",
+		"username":     username,
+		"is_logged_in": c.GetBool("is_logged_in"),
 	})
 }
 
@@ -344,11 +351,12 @@ func (pc *BlogController) GetPostAndCommentsBySlug(c *gin.Context) {
 
 	// 3. Include the username in the HTML response data
 	c.HTML(http.StatusOK, "blog/blog_post.html", gin.H{
-		"title":    post.Title,
-		"post":     post,
-		"comments": string(commentsJSONBytes),
-		"content":  template.HTML(blog.RenderMarkdownToHTML(post.Content)),
-		"username": username,
+		"title":        post.Title,
+		"post":         post,
+		"comments":     string(commentsJSONBytes),
+		"content":      template.HTML(blog.RenderMarkdownToHTML(post.Content)),
+		"username":     username,
+		"is_logged_in": c.GetBool("is_logged_in"),
 	})
 }
 
@@ -392,17 +400,19 @@ func (pc *BlogController) GetCategory(c *gin.Context) {
 	categories, err := pc.Repo.GetCategoryCount()
 	if err != nil {
 		c.HTML(http.StatusServiceUnavailable, "blog/blog_post_list.html", gin.H{
-			"title": "Posts by Category",
-			"error": err,
+			"title":        "Posts by Category",
+			"error":        err,
+			"is_logged_in": c.GetBool("is_logged_in"),
 		})
 		return
 	}
 
 	c.HTML(http.StatusOK, "blog/blog_post_list.html", gin.H{
-		"title":      "Posts by Category",
-		"posts":      posts,
-		"category":   category,
-		"categories": categories,
+		"title":        "Posts by Category",
+		"posts":        posts,
+		"category":     category,
+		"categories":   categories,
+		"is_logged_in": c.GetBool("is_logged_in"),
 	})
 }
 
@@ -421,17 +431,19 @@ func (pc *BlogController) GetTag(c *gin.Context) {
 	categories, err := pc.Repo.GetCategoryCount()
 	if err != nil {
 		c.HTML(http.StatusServiceUnavailable, "blog/blog_post_list.html", gin.H{
-			"title": "Posts by Tag",
-			"error": err,
+			"title":        "Posts by Tag",
+			"error":        err,
+			"is_logged_in": c.GetBool("is_logged_in"),
 		})
 		return
 	}
 
 	c.HTML(http.StatusOK, "blog/blog_post_list.html", gin.H{
-		"title":      "Posts by Tag",
-		"posts":      posts,
-		"tag":        tag,
-		"categories": categories,
+		"title":        "Posts by Tag",
+		"posts":        posts,
+		"tag":          tag,
+		"categories":   categories,
+		"is_logged_in": c.GetBool("is_logged_in"),
 	})
 }
 
@@ -443,23 +455,28 @@ func (pc *BlogController) GetTagOrContent(c *gin.Context) {
 		return
 	}
 	if len(posts) == 0 { // Check if no record was found by the repository
-		c.HTML(http.StatusNotFound, "blog/blog.html", gin.H{"error": "No post has such tag."})
+		c.HTML(http.StatusNotFound, "blog/blog.html", gin.H{
+			"error":        "No post has such tag.",
+			"is_logged_in": c.GetBool("is_logged_in"),
+		})
 		return
 	}
 
 	categories, err := pc.Repo.GetCategoryCount()
 	if err != nil {
 		c.HTML(http.StatusServiceUnavailable, "blog/blog.html", gin.H{
-			"title": "Posts by Tag",
-			"error": err,
+			"title":        "Posts by Tag",
+			"error":        err,
+			"is_logged_in": c.GetBool("is_logged_in"),
 		})
 		return
 	}
 
 	c.HTML(http.StatusOK, "blog/blog_post_list.html", gin.H{
-		"title":      "Posts by Tag",
-		"posts":      posts,
-		"categories": categories,
+		"title":        "Posts by Tag",
+		"posts":        posts,
+		"categories":   categories,
+		"is_logged_in": c.GetBool("is_logged_in"),
 	})
 }
 
@@ -500,9 +517,10 @@ func (pc *BlogController) EditPostForm(c *gin.Context) {
 		return
 	}
 	c.HTML(http.StatusOK, "blog/edit_post_form.html", gin.H{
-		"title":      post.Title,
-		"post":       post,
-		"categories": blog.Categories,
+		"title":        post.Title,
+		"post":         post,
+		"categories":   blog.Categories,
+		"is_logged_in": c.GetBool("is_logged_in"),
 	})
 }
 
