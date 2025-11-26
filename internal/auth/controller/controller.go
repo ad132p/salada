@@ -82,5 +82,5 @@ func (pc *AuthController) Login(c *gin.Context) {
 func (pc *AuthController) Logout(c *gin.Context) {
 	c.SetCookie("token", "", -1, "/", os.Getenv("SALADA_HOST"), false, true)
 	c.SetCookie("username", "", -1, "/", os.Getenv("SALADA_HOST"), false, true)
-	c.HTML(http.StatusOK, "pages/logout.html", nil)
+	c.HTML(http.StatusOK, "auth/logout.html", nil)
 }
