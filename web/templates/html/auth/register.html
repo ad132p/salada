@@ -37,11 +37,12 @@
       <p id="number" class="invalid">A <b>number</b></p>
       <p id="length" class="invalid">Minimum <b>8 characters</b></p>
     </div>
-
+    {{if .error}}
     <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
       <strong class="font-bold">Error!</strong>
       <span class="block sm:inline">{{.error}}</span>
     </div>
+    {{ end }}
   </div>
 </div>
 {{ end }}
