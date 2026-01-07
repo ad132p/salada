@@ -11,6 +11,7 @@ import (
 	"github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/ast"
 	"github.com/gomarkdown/markdown/html"
+	"github.com/gomarkdown/markdown/parser"
 	"github.com/lib/pq"
 )
 
@@ -42,9 +43,17 @@ func GetTailwindRenderer() *TailwindRenderer {
 
 // RenderMarkdownToHTML converts a markdown string to an HTML string.
 func RenderMarkdownToHTML(md string) string {
+	extensions := parser.CommonExtensions | parser.AutoHeadingIDs | parser.HardLineBreak
+	p := parser.NewWithExtensions(extensions)
+
 	renderer := GetTailwindRenderer()
-	// The `markdown.ToHTML` function parses the markdown and returns the HTML as a byte slice.
-	htmlBytes := markdown.ToHTML([]byte(md), nil, renderer)
+
+	// Parse the markdown using the configured parser
+	doc := p.Parse([]byte(md))
+
+	// Create the HTML renderer
+	htmlBytes := markdown.Render(doc, renderer)
+
 	return string(htmlBytes)
 }
 
