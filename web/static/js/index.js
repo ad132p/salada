@@ -41,7 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import CommentSection from './components/CommentSection';
-import Share from './components/Share';
 import LikeButton from './components/LikeButton';
 // 1. Find the DOM element where React will be mounted
 const container = document.getElementById('comment');
@@ -71,7 +70,6 @@ if (container) {
                 currentUserName={currentUserName}
                 initialComments={comments}
             />
-            <Share></Share>
         </React.StrictMode>
     );
 }
