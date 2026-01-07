@@ -124,6 +124,13 @@ func (r *TailwindRenderer) RenderNode(w io.Writer, node ast.Node, entering bool)
 			w.Write([]byte(`</a>`))
 		}
 		return ast.GoToNext
+	case *ast.CodeBlock:
+		// Render code blocks with Tailwind styling
+		w.Write([]byte(`<pre class="bg-gray-800 text-white p-4 rounded-lg overflow-x-auto my-4 text-sm font-mono shadow-inner"><code class="block">`))
+		// Escape HTML characters in the code content
+		html.EscapeHTML(w, node.Literal)
+		w.Write([]byte(`</code></pre>`))
+		return ast.SkipChildren
 	}
 
 	// For any other nodes not handled, just continue the traversal.
