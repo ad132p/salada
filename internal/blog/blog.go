@@ -48,6 +48,13 @@ func RenderMarkdownToHTML(md string) string {
 
 	renderer := GetTailwindRenderer()
 
+	// Pre-process markdown to handle empty newlines
+	// We replace double newlines with a newline + zero-width space + newline
+	// This prevents markdown from creating new paragraphs while maintaining the visual line break
+	for strings.Contains(md, "\n\n") {
+		md = strings.ReplaceAll(md, "\n\n", "\n\u200B\n")
+	}
+
 	// Parse the markdown using the configured parser
 	doc := p.Parse([]byte(md))
 
@@ -95,7 +102,7 @@ func (r *TailwindRenderer) RenderNode(w io.Writer, node ast.Node, entering bool)
 		}
 	case *ast.Text:
 		// For text nodes, just write the content.
-		w.Write(node.Literal)
+		html.EscapeHTML(w, node.Literal)
 		return ast.GoToNext
 	case *ast.Paragraph:
 		if entering {
