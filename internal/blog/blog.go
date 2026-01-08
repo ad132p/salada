@@ -140,6 +140,9 @@ func (r *TailwindRenderer) RenderNode(w io.Writer, node ast.Node, entering bool)
 		html.EscapeHTML(w, node.Literal)
 		w.Write([]byte(`</code></pre>`))
 		return ast.SkipChildren
+	case *ast.Hardbreak:
+		w.Write([]byte(`<br>`))
+		return ast.GoToNext
 	}
 
 	// For any other nodes not handled, just continue the traversal.
