@@ -89,17 +89,33 @@ func SplitWithoutEmpty(s, sep string) pq.StringArray { // 2. Change the return t
 func (r *TailwindRenderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.WalkStatus {
 	switch node := node.(type) {
 	case *ast.Heading:
-		if node.Level == 1 {
+		switch node.Level {
+		case 1:
 			if entering {
-				// Write the opening <h1> tag with Tailwind classes.
 				w.Write([]byte(`<h1 class="text-4xl font-extrabold text-blue-800">`))
 			} else {
-				// Write the closing </h1> tag.
 				w.Write([]byte(`</h1>`))
 			}
-			// Continue the traversal to the next node.
-			return ast.GoToNext
+		case 2:
+			if entering {
+				w.Write([]byte(`<h2 class="text-3xl font-bold text-blue-800 mt-8 mb-4">`))
+			} else {
+				w.Write([]byte(`</h2>`))
+			}
+		case 3:
+			if entering {
+				w.Write([]byte(`<h3 class="text-2xl font-semibold text-blue-800 mt-6 mb-3">`))
+			} else {
+				w.Write([]byte(`</h3>`))
+			}
+		default:
+			if entering {
+				w.Write([]byte(fmt.Sprintf(`<h%d class="text-xl font-semibold text-blue-800 mt-4 mb-2">`, node.Level)))
+			} else {
+				w.Write([]byte(fmt.Sprintf(`</h%d>`, node.Level)))
+			}
 		}
+		return ast.GoToNext
 	case *ast.Strong:
 		if entering {
 			w.Write([]byte("<strong>"))
