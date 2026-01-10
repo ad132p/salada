@@ -100,6 +100,13 @@ func (r *TailwindRenderer) RenderNode(w io.Writer, node ast.Node, entering bool)
 			// Continue the traversal to the next node.
 			return ast.GoToNext
 		}
+	case *ast.Strong:
+		if entering {
+			w.Write([]byte("<strong>"))
+		} else {
+			w.Write([]byte("</strong>"))
+		}
+		return ast.GoToNext
 	case *ast.Text:
 		// For text nodes, just write the content.
 		html.EscapeHTML(w, node.Literal)
