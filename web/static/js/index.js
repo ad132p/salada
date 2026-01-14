@@ -1,4 +1,8 @@
 import { Collapse } from 'flowbite';
+import hljs from 'highlight.js';
+
+// Initialize syntax highlighting
+hljs.highlightAll();
 
 // Wait for the DOM to be fully loaded before initializing components
 document.addEventListener('DOMContentLoaded', () => {
