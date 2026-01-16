@@ -144,7 +144,7 @@ func (r *TailwindRenderer) RenderNode(w io.Writer, node ast.Node, entering bool)
 
 			// Write the <img> tag with the source and alt attributes.
 			// You can also add Tailwind classes here if desired.
-			w.Write([]byte(fmt.Sprintf(`<img class="w-96 h-auto object-scale-down" src="%s" alt="%s" />`, dest, altText)))
+			w.Write([]byte(fmt.Sprintf(`<img class="w-full h-auto" src="%s" alt="%s" />`, dest, altText)))
 		}
 		// Since <img> is a self-closing tag, we don't need a separate "leaving" case.
 		// We can just skip rendering the children (the alt text inside the markdown).
