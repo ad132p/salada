@@ -214,28 +214,7 @@ func (pc *BlogController) UploadImage(c *gin.Context) {
 func (pc *BlogController) GetAllPosts(c *gin.Context) {
 	var posts []model.Post
 	category := c.Query("category")
-	cursor := c.Query("cursor")
-
-	var cursorPublishedAt *time.Time
-	var cursorID *uuid.UUID
-
-	if cursor != "" {
-		decodedCursor, err := base64.StdEncoding.DecodeString(cursor)
-		if err == nil {
-			parts := strings.Split(string(decodedCursor), ",")
-			if len(parts) == 2 {
-				ts, err := strconv.ParseInt(parts[0], 10, 64)
-				if err == nil {
-					t := time.UnixMicro(ts).UTC()
-					cursorPublishedAt = &t
-				}
-				id, err := uuid.Parse(parts[1])
-				if err == nil {
-					cursorID = &id
-				}
-			}
-		}
-	}
+	cursorPublishedAt, cursorID := getCursorFromContext(c)
 
 	posts, nextCursor, err := pc.Repo.GetPublishedPosts(category, "", 10, cursorPublishedAt, cursorID)
 
@@ -265,11 +244,12 @@ func (pc *BlogController) GetAllPosts(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "blog/blog_post_list.html", gin.H{
-		"title":        "Blog Posts",
-		"posts":        posts,
-		"categories":   categories,
-		"next_cursor":  encodedNextCursor,
-		"is_logged_in": c.GetBool("is_logged_in"),
+		"title":         "Blog Posts",
+		"posts":         posts,
+		"categories":    categories,
+		"next_cursor":   encodedNextCursor,
+		"is_logged_in":  c.GetBool("is_logged_in"),
+		"is_first_page": c.Query("cursor") == "",
 	})
 }
 
@@ -387,12 +367,14 @@ func (pc *BlogController) GetCommentsBySlug(c *gin.Context) {
 
 func (pc *BlogController) GetCategory(c *gin.Context) {
 	category := c.Param("name")
-	posts, _, err := pc.Repo.GetPublishedPosts(category, "", 0, nil, nil)
+	cursorPublishedAt, cursorID := getCursorFromContext(c)
+
+	posts, nextCursor, err := pc.Repo.GetPublishedPosts(category, "", 10, cursorPublishedAt, cursorID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
-	if len(posts) == 0 { // Check if no record was found by the repository
+	if len(posts) == 0 && c.Query("cursor") == "" { // Check if no record was found by the repository (only on first page)
 		c.JSON(http.StatusNotFound, gin.H{"error": "Category does not have any posts yet,"})
 		return
 	}
@@ -407,12 +389,19 @@ func (pc *BlogController) GetCategory(c *gin.Context) {
 		return
 	}
 
+	encodedNextCursor := ""
+	if nextCursor != "" {
+		encodedNextCursor = base64.StdEncoding.EncodeToString([]byte(nextCursor))
+	}
+
 	c.HTML(http.StatusOK, "blog/blog_post_list.html", gin.H{
-		"title":        "Posts by Category",
-		"posts":        posts,
-		"category":     category,
-		"categories":   categories,
-		"is_logged_in": c.GetBool("is_logged_in"),
+		"title":         "Posts by Category",
+		"posts":         posts,
+		"category":      category,
+		"categories":    categories,
+		"next_cursor":   encodedNextCursor,
+		"is_logged_in":  c.GetBool("is_logged_in"),
+		"is_first_page": c.Query("cursor") == "",
 	})
 }
 
@@ -439,11 +428,12 @@ func (pc *BlogController) GetTag(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "blog/blog_post_list.html", gin.H{
-		"title":        "Posts by Tag",
-		"posts":        posts,
-		"tag":          tag,
-		"categories":   categories,
-		"is_logged_in": c.GetBool("is_logged_in"),
+		"title":         "Posts by Tag",
+		"posts":         posts,
+		"tag":           tag,
+		"categories":    categories,
+		"is_logged_in":  c.GetBool("is_logged_in"),
+		"is_first_page": true,
 	})
 }
 
@@ -473,10 +463,11 @@ func (pc *BlogController) GetTagOrContent(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "blog/blog_post_list.html", gin.H{
-		"title":        "Posts by Tag",
-		"posts":        posts,
-		"categories":   categories,
-		"is_logged_in": c.GetBool("is_logged_in"),
+		"title":         "Posts by Tag",
+		"posts":         posts,
+		"categories":    categories,
+		"is_logged_in":  c.GetBool("is_logged_in"),
+		"is_first_page": true,
 	})
 }
 
@@ -544,4 +535,34 @@ func (pc *BlogController) LikePost(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "success"})
+}
+
+func getCursorFromContext(c *gin.Context) (*time.Time, *uuid.UUID) {
+	cursor := c.Query("cursor")
+	if cursor == "" {
+		return nil, nil
+	}
+
+	decodedCursor, err := base64.StdEncoding.DecodeString(cursor)
+	if err != nil {
+		return nil, nil
+	}
+
+	parts := strings.Split(string(decodedCursor), ",")
+	if len(parts) != 2 {
+		return nil, nil
+	}
+
+	ts, err := strconv.ParseInt(parts[0], 10, 64)
+	if err != nil {
+		return nil, nil
+	}
+
+	t := time.UnixMicro(ts).UTC()
+	id, err := uuid.Parse(parts[1])
+	if err != nil {
+		return nil, nil
+	}
+
+	return &t, &id
 }

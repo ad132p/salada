@@ -4,6 +4,19 @@
   <div class="bg-white rounded-lg shadow-xl p-8 space-y-8 prose max-w-none">
     <h1 class="text-3xl font-bold text-gray-800 text-center mb-6">{{.title}}</h1>
 
+    <div class="flex flex-wrap justify-center gap-2 mb-8">
+      <a href="/blog/all"
+        class="px-4 py-2 rounded-full text-sm font-medium transition-colors duration-150 {{if not .category}}bg-indigo-600 text-white shadow-md{{else}}bg-gray-100 text-gray-700 hover:bg-gray-200{{end}}">
+        All
+      </a>
+      {{range .categories}}
+      <a href="/blog/category/{{.Category}}"
+        class="px-4 py-2 rounded-full text-sm font-medium transition-colors duration-150 {{if eq $.category .Category}}bg-indigo-600 text-white shadow-md{{else}}bg-gray-100 text-gray-700 hover:bg-gray-200{{end}}">
+        {{.Category}} <span class="ml-1 opacity-75 text-xs">({{.Count}})</span>
+      </a>
+      {{end}}
+    </div>
+
     {{if .posts}}
     <div class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
       <table class="min-w-full divide-y divide-gray-200">
@@ -61,7 +74,12 @@
     </div>
     {{end}}
     <div class="mt-8 text-center">
-      <a href="/blog/" class="text-indigo-600 hover:text-indigo-500">Go back</a>
+      {{if .is_first_page}}
+      <a href="/blog" class="text-indigo-600 hover:text-indigo-500">Go back</a>
+      {{else}}
+      <a href="{{if .category}}/blog/category/{{.category}}{{else}}/blog/all{{end}}"
+        onclick="history.back(); return false;" class="text-indigo-600 hover:text-indigo-500">Go back</a>
+      {{end}}
     </div>
   </div>
 </div>
