@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict 2nzVYBfleePMQ3AYAJl9i8HVvhADM6kpSluNXFxWSBFows46mcaCDkdJh2ca4xB
+\restrict FU1normnuAkibep5Ea1rETD6g4i0qOuWfsbzhiumRQ6x8xNrieydfCimIhZaWPt
 
 -- Dumped from database version 18.0 (Debian 18.0-1.pgdg13+3)
--- Dumped by pg_dump version 18.0
+-- Dumped by pg_dump version 18.0 (Debian 18.0-1.pgdg13+3)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -127,7 +127,8 @@ CREATE TABLE public.posts (
     tags text[],
     category public.category,
     seen integer DEFAULT 0 NOT NULL,
-    likes integer DEFAULT 0
+    likes integer DEFAULT 0,
+    thumbnail_position text DEFAULT 'center'::text
 );
 
 
@@ -202,7 +203,7 @@ ALTER TABLE ONLY public.users
 --
 
 ALTER TABLE ONLY public.posts
-    ADD CONSTRAINT fk_author_name FOREIGN KEY (author_name) REFERENCES public.users(username) ON UPDATE RESTRICT ON DELETE RESTRICT;
+    ADD CONSTRAINT fk_author_name FOREIGN KEY (author_name) REFERENCES public.users(username) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 
 --
@@ -225,5 +226,5 @@ ALTER TABLE ONLY public.images
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 2nzVYBfleePMQ3AYAJl9i8HVvhADM6kpSluNXFxWSBFows46mcaCDkdJh2ca4xB
+\unrestrict FU1normnuAkibep5Ea1rETD6g4i0qOuWfsbzhiumRQ6x8xNrieydfCimIhZaWPt
 

@@ -180,6 +180,34 @@ func (r *PostRepository) GetCategoryCount() ([]model.CategoryCount, error) {
 	return categoryCountSet, nil
 }
 
+func (r *PostRepository) GetTagCount() ([]model.TagCount, error) {
+	query := `SELECT unnest(tags) as tag, count(*) FROM posts WHERE published_at IS NOT NULL GROUP BY tag`
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tagCountSet []model.TagCount
+	for rows.Next() {
+		var tagCount model.TagCount
+		err := rows.Scan(
+			&tagCount.Tag,
+			&tagCount.Count,
+		)
+		if err != nil {
+			return nil, err
+		}
+		tagCountSet = append(tagCountSet, tagCount)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return tagCountSet, nil
+}
+
 func (r *PostRepository) GetPublishedPosts(category string, q string, limit int, cursorPublishedAt *time.Time, cursorID *uuid.UUID) ([]model.Post, string, error) {
 	// 1. Base Query (Removed Lateral Join for thumbnail)
 	baseQueryTemplate := `

@@ -32,6 +32,7 @@ type PostRepository interface {
 	AddImage(image model.Image) (uuid.UUID, error)
 	GetPublishedPosts(category string, q string, limit int, cursorPublishedAt *time.Time, cursorID *uuid.UUID) ([]model.Post, string, error)
 	GetCategoryCount() ([]model.CategoryCount, error)
+	GetTagCount() ([]model.TagCount, error)
 	GetPostAndCommentsBySlug(slug string) (*model.Post, error)
 	DeletePost(id uuid.UUID) ([]string, error)
 	GetPostBySlug(slug string) (*model.Post, error)
@@ -417,7 +418,7 @@ func (pc *BlogController) GetTag(c *gin.Context) {
 		return
 	}
 
-	categories, err := pc.Repo.GetCategoryCount()
+	tags, err := pc.Repo.GetTagCount()
 	if err != nil {
 		c.HTML(http.StatusServiceUnavailable, "blog/blog_post_list.html", gin.H{
 			"title":        "Posts by Tag",
@@ -431,7 +432,7 @@ func (pc *BlogController) GetTag(c *gin.Context) {
 		"title":         "Posts by Tag",
 		"posts":         posts,
 		"tag":           tag,
-		"categories":    categories,
+		"tags":          tags,
 		"is_logged_in":  c.GetBool("is_logged_in"),
 		"is_first_page": true,
 	})
@@ -452,7 +453,7 @@ func (pc *BlogController) GetTagOrContent(c *gin.Context) {
 		return
 	}
 
-	categories, err := pc.Repo.GetCategoryCount()
+	tags, err := pc.Repo.GetTagCount()
 	if err != nil {
 		c.HTML(http.StatusServiceUnavailable, "blog/blog.html", gin.H{
 			"title":        "Posts by Tag",
@@ -465,7 +466,7 @@ func (pc *BlogController) GetTagOrContent(c *gin.Context) {
 	c.HTML(http.StatusOK, "blog/blog_post_list.html", gin.H{
 		"title":         "Posts by Tag",
 		"posts":         posts,
-		"categories":    categories,
+		"tags":          tags,
 		"is_logged_in":  c.GetBool("is_logged_in"),
 		"is_first_page": true,
 	})

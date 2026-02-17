@@ -87,3 +87,8 @@ type CategoryCount struct {
 	Category string
 	Count    int
 }
+
+type TagCount struct {
+	Tag   string
+	Count int
+}

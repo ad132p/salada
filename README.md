@@ -23,10 +23,10 @@ sudo dnf install podman -y
 If you need a dev db:
 
 podman run -d \
-  --name my-postgres \
+  --name salada-db \
   -e POSTGRES_PASSWORD=$your_secure_password \
   -p 5432:5432 \
-  -v systemd-salada-db:/var/lib/postgresql/data:Z \
+  -v systemd-salada-db:/var/lib/postgresql/18/data:Z \
   docker.io/library/postgres:latest
 
 # Build  salada image
