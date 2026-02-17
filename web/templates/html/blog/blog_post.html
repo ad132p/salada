@@ -7,40 +7,151 @@
 </div>
 {{end}}
 
-<div class="container mx-auto px-4 pb-8 pt-4 {{if .post.ThumbnailURL}}-mt-40{{end}} relative z-10">
-  <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-xl p-8 lg:p-12">
-    {{if .post}}
-    <h1 class="text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight mb-4">{{.title}}</h1>
+<!-- Mobile Table of Contents Button (fixed position) -->
+{{if .toc}}
+<button id="toc-mobile-button" type="button"
+  class="fixed bottom-6 right-6 z-50 lg:hidden bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-full shadow-lg flex items-center gap-2 transition-colors duration-200"
+  onclick="openTocModal()">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+  </svg>
+  <span class="font-medium">Contents</span>
+</button>
 
-    <div class="prose prose-lg max-w-none text-gray-800 mb-8 break-words overflow-hidden">
-      {{ .content }}
+<!-- Mobile Table of Contents Modal -->
+<div id="toc-modal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+  <!-- Background backdrop -->
+  <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity" onclick="closeTocModal()"></div>
+
+  <div class="fixed inset-0 z-10 overflow-y-auto">
+    <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+      <div
+        class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-sm">
+        <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900" id="modal-title">Contents</h3>
+            <button type="button" class="text-gray-400 hover:text-gray-600 transition-colors" onclick="closeTocModal()">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <nav class="space-y-1">
+            {{range .toc}}
+            <a href="#{{.ID}}" onclick="closeTocModal()"
+              class="block px-3 py-2 rounded-md text-sm {{if eq .Level 2}}font-medium text-gray-900{{else}}font-normal text-gray-600 pl-6{{end}} hover:bg-gray-100 hover:text-blue-600 transition-colors">
+              {{.Text}}
+            </a>
+            {{end}}
+          </nav>
+        </div>
+      </div>
     </div>
-
-    <p class="text-start text-lg text-gray-600 font-medium mb-12 border-t pt-4">
-      Author: {{ .post.AuthorName }}
-    </p>
-
-    <p class="text-start text-sm text-gray-600 font-medium mb-12 border-t pt-4">
-      Tags:
-      {{range $i, $e := .post.Tags}}
-      <a class="text-xs font-semibold px-3 py-1 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition-colors duration-150"
-        href="/blog/tags/{{$e}}" id="{{$e}}">
-        #{{ $e }}
-      </a>
-      {{end}}
-    </p>
-
-
-    <p class="text-start text-sm text-gray-600 font-medium mb-12 border-t pt-4">
-      Accessed {{ .post.Seen }} times.
-    </p>
-    <div id="comment" data-id="{{.post.ID}}" data-slug="{{.post.Slug}}" data-comments="{{.comments}}"
-      data-like="{{.post.Likes}}" class="mt-12 pt-6 border-t border-gray-200" data-current-user="{{.username}}">
-      <p class="text-center text-gray-500">Loading interactive comments...</p>
-    </div>
-    {{else}}
-    <p class="text-center text-xl text-gray-600 font-medium">No blog post with this slug.</p>
-    {{end}}
   </div>
 </div>
+{{end}}
+
+<div class="container mx-auto px-4 pb-8 pt-4 {{if .post.ThumbnailURL}}-mt-40{{end}} relative z-10">
+  <div class="flex gap-8">
+    <!-- Table of Contents Sidebar (Desktop only) -->
+    {{if .toc}}
+    <aside class="hidden lg:block w-64 flex-shrink-0">
+      <div class="sticky top-4 bg-white rounded-lg shadow-md p-4">
+        <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+          </svg>
+          Contents
+        </h2>
+        <nav class="space-y-1">
+          {{range .toc}}
+          <a href="#{{.ID}}"
+            class="block px-2 py-1.5 rounded-md text-sm {{if eq .Level 2}}font-medium text-gray-900{{else}}font-normal text-gray-600 pl-4{{end}} hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150">
+            {{.Text}}
+          </a>
+          {{end}}
+        </nav>
+      </div>
+    </aside>
+    {{end}}
+
+    <!-- Main Content -->
+    <div class="flex-1 max-w-4xl mx-auto bg-white rounded-lg shadow-xl p-8 lg:p-12">
+      {{if .post}}
+      <h1 class="text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight mb-4">{{.title}}</h1>
+
+      <div class="prose prose-lg max-w-none text-gray-800 mb-8 break-words overflow-hidden">
+        {{ .content }}
+      </div>
+
+      <p class="text-start text-lg text-gray-600 font-medium mb-12 border-t pt-4">
+        Author: {{ .post.AuthorName }}
+      </p>
+
+      <p class="text-start text-sm text-gray-600 font-medium mb-12 border-t pt-4">
+        Tags:
+        {{range $i, $e := .post.Tags}}
+        <a class="text-xs font-semibold px-3 py-1 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition-colors duration-150"
+          href="/blog/tags/{{$e}}" id="{{$e}}">
+          #{{ $e }}
+        </a>
+        {{end}}
+      </p>
+
+
+      <p class="text-start text-sm text-gray-600 font-medium mb-12 border-t pt-4">
+        Accessed {{ .post.Seen }} times.
+      </p>
+      <div id="comment" data-id="{{.post.ID}}" data-slug="{{.post.Slug}}" data-comments="{{.comments}}"
+        data-like="{{.post.Likes}}" class="mt-12 pt-6 border-t border-gray-200" data-current-user="{{.username}}">
+        <p class="text-center text-gray-500">Loading interactive comments...</p>
+      </div>
+      {{else}}
+      <p class="text-center text-xl text-gray-600 font-medium">No blog post with this slug.</p>
+      {{end}}
+    </div>
+  </div>
+</div>
+
+{{if .toc}}
+<script>
+  // Mobile Table of Contents Modal functions
+  function openTocModal() {
+    const modal = document.getElementById('toc-modal');
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeTocModal() {
+    const modal = document.getElementById('toc-modal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+
+  // Close modal on Escape key
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      closeTocModal();
+    }
+  });
+
+  // Smooth scroll for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+      const href = this.getAttribute('href');
+      if (href && href !== '#') {
+        const target = document.querySelector(href);
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      }
+    });
+  });
+</script>
+{{end}}
 {{ end }}

@@ -13,6 +13,7 @@ import (
 	"github.com/gomarkdown/markdown/html"
 	"github.com/gomarkdown/markdown/parser"
 	"github.com/lib/pq"
+	"salada/internal/blog/model"
 )
 
 // createSlug generates a URL-friendly slug from a given title.
@@ -41,6 +42,36 @@ func GetTailwindRenderer() *TailwindRenderer {
 	}
 }
 
+// extractTextFromNode extracts plain text from an AST node by traversing its children.
+func extractTextFromNode(node ast.Node) string {
+	var text strings.Builder
+
+	ast.WalkFunc(node, func(n ast.Node, entering bool) ast.WalkStatus {
+		if !entering {
+			return ast.GoToNext
+		}
+		if t, ok := n.(*ast.Text); ok {
+			text.Write(t.Literal)
+		}
+		return ast.GoToNext
+	})
+
+	return strings.TrimSpace(text.String())
+}
+
+// generateHeadingID creates a URL-friendly ID from heading text.
+// This mirrors the behavior of the AutoHeadingIDs extension.
+func generateHeadingID(text string) string {
+	// Convert to lowercase
+	id := strings.ToLower(text)
+	// Replace non-alphanumeric characters with hyphens
+	reg := regexp.MustCompile("[^a-z0-9]+")
+	id = reg.ReplaceAllString(id, "-")
+	// Trim leading/trailing hyphens
+	id = strings.Trim(id, "-")
+	return id
+}
+
 // RenderMarkdownToHTML converts a markdown string to an HTML string.
 func RenderMarkdownToHTML(md string) string {
 	extensions := parser.CommonExtensions | parser.AutoHeadingIDs | parser.HardLineBreak
@@ -62,6 +93,52 @@ func RenderMarkdownToHTML(md string) string {
 	htmlBytes := markdown.Render(doc, renderer)
 
 	return string(htmlBytes)
+}
+
+// RenderMarkdownToHTMLWithIDs converts markdown to HTML and also returns the extracted ToC.
+// This is more efficient than calling ExtractTableOfContents and RenderMarkdownToHTML separately
+// since it only parses the markdown once.
+func RenderMarkdownToHTMLWithIDs(md string) (string, []model.TocItem) {
+	extensions := parser.CommonExtensions | parser.AutoHeadingIDs | parser.HardLineBreak
+	p := parser.NewWithExtensions(extensions)
+
+	renderer := GetTailwindRenderer()
+
+	// Pre-process markdown to handle empty newlines
+	for strings.Contains(md, "\n\n") {
+		md = strings.ReplaceAll(md, "\n\n", "\n\u200B\n")
+	}
+
+	// Parse the markdown using the configured parser
+	doc := p.Parse([]byte(md))
+
+	// Extract ToC while we have the parsed document
+	var tocItems []model.TocItem
+	ast.WalkFunc(doc, func(node ast.Node, entering bool) ast.WalkStatus {
+		if !entering {
+			return ast.GoToNext
+		}
+
+		if heading, ok := node.(*ast.Heading); ok {
+			if heading.Level >= 2 && heading.Level <= 3 {
+				text := extractTextFromNode(heading)
+				if text != "" {
+					id := generateHeadingID(text)
+					tocItems = append(tocItems, model.TocItem{
+						Level: heading.Level,
+						Text:  text,
+						ID:    id,
+					})
+				}
+			}
+		}
+		return ast.GoToNext
+	})
+
+	// Now render the HTML
+	htmlBytes := markdown.Render(doc, renderer)
+
+	return string(htmlBytes), tocItems
 }
 
 type TailwindRenderer struct {
@@ -89,28 +166,35 @@ func SplitWithoutEmpty(s, sep string) pq.StringArray { // 2. Change the return t
 func (r *TailwindRenderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.WalkStatus {
 	switch node := node.(type) {
 	case *ast.Heading:
+		// Get heading ID if available (from AutoHeadingIDs extension)
+		headingID := string(node.HeadingID)
+		idAttr := ""
+		if headingID != "" {
+			idAttr = fmt.Sprintf(` id="%s"`, headingID)
+		}
+
 		switch node.Level {
 		case 1:
 			if entering {
-				w.Write([]byte(`<h1 class="text-4xl font-extrabold text-blue-800">`))
+				w.Write([]byte(fmt.Sprintf(`<h1 class="text-4xl font-extrabold text-blue-800"%s>`, idAttr)))
 			} else {
 				w.Write([]byte(`</h1>`))
 			}
 		case 2:
 			if entering {
-				w.Write([]byte(`<h2 class="text-3xl font-bold text-blue-800 mt-8 mb-4">`))
+				w.Write([]byte(fmt.Sprintf(`<h2 class="text-3xl font-bold text-blue-800 mt-8 mb-4"%s>`, idAttr)))
 			} else {
 				w.Write([]byte(`</h2>`))
 			}
 		case 3:
 			if entering {
-				w.Write([]byte(`<h3 class="text-2xl font-semibold text-blue-800 mt-6 mb-3">`))
+				w.Write([]byte(fmt.Sprintf(`<h3 class="text-2xl font-semibold text-blue-800 mt-6 mb-3"%s>`, idAttr)))
 			} else {
 				w.Write([]byte(`</h3>`))
 			}
 		default:
 			if entering {
-				w.Write([]byte(fmt.Sprintf(`<h%d class="text-xl font-semibold text-blue-800 mt-4 mb-2">`, node.Level)))
+				w.Write([]byte(fmt.Sprintf(`<h%d class="text-xl font-semibold text-blue-800 mt-4 mb-2"%s>`, node.Level, idAttr)))
 			} else {
 				w.Write([]byte(fmt.Sprintf(`</h%d>`, node.Level)))
 			}

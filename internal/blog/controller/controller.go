@@ -331,11 +331,15 @@ func (pc *BlogController) GetPostAndCommentsBySlug(c *gin.Context) {
 	}
 
 	// 3. Include the username in the HTML response data
+	// Render markdown and extract table of contents
+	renderedHTML, tocItems := blog.RenderMarkdownToHTMLWithIDs(post.Content)
+
 	c.HTML(http.StatusOK, "blog/blog_post.html", gin.H{
 		"title":        post.Title,
 		"post":         post,
 		"comments":     string(commentsJSONBytes),
-		"content":      template.HTML(blog.RenderMarkdownToHTML(post.Content)),
+		"content":      template.HTML(renderedHTML),
+		"toc":          tocItems,
 		"username":     username,
 		"is_logged_in": c.GetBool("is_logged_in"),
 	})

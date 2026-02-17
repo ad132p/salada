@@ -92,3 +92,10 @@ type TagCount struct {
 	Tag   string
 	Count int
 }
+
+// TocItem represents a single entry in the table of contents.
+type TocItem struct {
+	Level int
+	Text  string
+	ID    string
+}
