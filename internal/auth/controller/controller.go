@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"log"
 	"net/http"
 	"net/url"
 	"salada/internal/admin/model"
@@ -100,8 +101,11 @@ func (pc *AuthController) Register(c *gin.Context) {
 
 	_, err := pc.Repo.CreateUser(newUser)
 	if err != nil {
+		// Security: Log the actual error server-side for debugging
+		// but return a generic message to prevent information leakage
+		log.Printf("[SECURITY] User registration failed: %v", err)
 		c.HTML(http.StatusInternalServerError, "auth/register.html", gin.H{
-			"error":        err,
+			"error":        "Registration failed. Please try a different username or email.",
 			"is_logged_in": c.GetBool("is_logged_in"),
 		})
 		return
@@ -177,5 +181,7 @@ func (pc *AuthController) Logout(c *gin.Context) {
 	// Clear cookies with Secure flag
 	c.SetCookie("token", "", -1, "/", pc.Config.CookieDomain, pc.Config.CookieSecure, true)
 	c.SetCookie("username", "", -1, "/", pc.Config.CookieDomain, pc.Config.CookieSecure, true)
-	c.HTML(http.StatusOK, "auth/logout.html", nil)
+	// Redirect to login page instead of rendering logout page
+	// This prevents users from bookmarking or refreshing a stale logout page
+	c.Redirect(http.StatusFound, "/login/")
 }
