@@ -2,6 +2,7 @@ package salada
 
 import (
 	"net/http"
+	"os"
 	admin_controller "salada/internal/admin/controller"
 	admin_repositories "salada/internal/admin/repositories"
 	admin_routes "salada/internal/admin/routes"
@@ -102,12 +103,19 @@ func setupDependenciesAndGroups(router *gin.Engine) {
 	postRepo := blog_repositories.NewPostRepository(db.DB)
 	adminRepo := admin_repositories.NewAdminRepository(db.DB)
 
-	// 2. Initialize Controllers
+	// 2. Load Auth Configuration
+	authConfig := auth_controller.AuthConfig{
+		CookieDomain:   os.Getenv("SALADA_HOST"),
+		CookieSecure:   os.Getenv("ENV") == "production",
+		CookieSameSite: http.SameSiteLaxMode,
+	}
+
+	// 3. Initialize Controllers
 	blogController := blog_controller.NewBlogController(postRepo)
-	authController := auth_controller.NewAuthController(adminRepo)
+	authController := auth_controller.NewAuthController(adminRepo, authConfig)
 	adminController := admin_controller.NewAdminController(adminRepo)
 
-	// 3. Register Modular Routes
+	// 4. Register Modular Routes
 	blog_routes.BlogRoutes(router, blogController)
 	auth_routes.AuthRoutes(router, authController)
 	admin_routes.AdminRoutes(router, adminController, blogController)

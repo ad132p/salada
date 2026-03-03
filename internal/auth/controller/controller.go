@@ -3,7 +3,6 @@ package controller
 import (
 	"net/http"
 	"net/url"
-	"os"
 	"salada/internal/admin/model"
 	"salada/internal/admin/repositories"
 	"salada/internal/auth"
@@ -14,14 +13,42 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// AuthController handles auth related requests.
-type AuthController struct {
-	Repo *repositories.AdminRepository
+// AuthConfig holds configuration for the auth controller
+type AuthConfig struct {
+	CookieDomain   string
+	CookieSecure   bool
+	CookieSameSite http.SameSite
 }
 
-// NewPostController creates a new PostController instance.
-func NewAuthController(repo *repositories.AdminRepository) *AuthController {
-	return &AuthController{Repo: repo}
+// AuthController handles auth related requests.
+type AuthController struct {
+	Repo   *repositories.AdminRepository
+	Config AuthConfig
+}
+
+// dummyHash is a valid bcrypt hash used for timing-safe comparison
+// when a user is not found. This prevents user enumeration attacks.
+//nolint:gochecknoglobals
+var dummyHash string
+
+func init() {
+	// Generate a real bcrypt hash once at startup for timing-safe comparisons.
+	// Using a valid hash ensures CompareHashAndPassword takes consistent time
+	// regardless of whether the user exists.
+	hash, err := bcrypt.GenerateFromPassword([]byte("dummy-password-for-timing-mitigation"), bcrypt.DefaultCost)
+	if err != nil {
+		// This should never happen, but if it does, we need to know immediately
+		panic("failed to generate dummy bcrypt hash: " + err.Error())
+	}
+	dummyHash = string(hash)
+}
+
+// NewAuthController creates a new AuthController instance.
+func NewAuthController(repo *repositories.AdminRepository, config AuthConfig) *AuthController {
+	return &AuthController{
+		Repo:   repo,
+		Config: config,
+	}
 }
 
 // validateRedirectURL prevents open redirect attacks by validating the redirect URL
@@ -63,11 +90,15 @@ func (pc *AuthController) validateRedirectURL(intendedRoute string) string {
 
 func (pc *AuthController) Register(c *gin.Context) {
 	var newUser model.User
-	newUser.Username = c.PostForm("username")
-	newUser.Password = c.PostForm("password")
-	newUser.Email = c.PostForm("email")
-	_, err := pc.Repo.CreateUser(newUser)
+	if err := c.ShouldBind(&newUser); err != nil {
+		c.HTML(http.StatusBadRequest, "auth/register.html", gin.H{
+			"error":        "Invalid input",
+			"is_logged_in": c.GetBool("is_logged_in"),
+		})
+		return
+	}
 
+	_, err := pc.Repo.CreateUser(newUser)
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "auth/register.html", gin.H{
 			"error":        err,
@@ -75,29 +106,37 @@ func (pc *AuthController) Register(c *gin.Context) {
 		})
 		return
 	}
+
 	c.Redirect(http.StatusFound, "/login/")
 }
 
 func (pc *AuthController) Login(c *gin.Context) {
 	var loginInput model.LoginInput
-	loginInput.Username = c.PostForm("username")
-	loginInput.Password = c.PostForm("password")
+	if err := c.ShouldBind(&loginInput); err != nil {
+		c.HTML(http.StatusBadRequest, "auth/login.html", gin.H{
+			"error":        "Invalid input",
+			"is_logged_in": c.GetBool("is_logged_in"),
+		})
+		return
+	}
+
+	// Get the intended redirect route (not part of LoginInput model)
 	intendedRoute := c.PostForm("goto")
 
 	// Security: Validate the intended route to prevent open redirect attacks
 	redirectURL := pc.validateRedirectURL(intendedRoute)
 
-	// Best Practice: The username/email should come from the JSON body,
+	// Best Practice: The username/email should come from the form body,
 	// not a URL parameter. This is what the user provides in the form.
 	realUsername, password, err := pc.Repo.GetUserPassword(loginInput.Username)
 
 	// Security: Always perform bcrypt comparison to prevent timing-based user enumeration
-	// Use a dummy hash if user not found so timing is consistent
+	// Use the pre-generated dummy hash if user not found so timing is consistent
 	hashToCompare := password
 	if err != nil {
-		// Use a dummy bcrypt hash for timing-safe comparison
+		// Use the valid bcrypt dummy hash for timing-safe comparison
 		// This ensures the same computation time whether user exists or not
-		hashToCompare = "$2a$10$abcdefghijklmnopqrstuvwxycdefghijklmnopqrstuv"
+		hashToCompare = dummyHash
 	}
 
 	// Always perform bcrypt comparison to prevent timing attacks
@@ -123,18 +162,20 @@ func (pc *AuthController) Login(c *gin.Context) {
 		return
 	}
 
-	// Security: Use Secure flag in production (cookie only sent over HTTPS)
-	secureFlag := os.Getenv("ENV") == "production"
-	c.SetCookie("token", tokenString, 3600*12, "/", os.Getenv("SALADA_HOST"), secureFlag, true)
-	c.SetCookie("username", realUsername, 3600*12, "/", os.Getenv("SALADA_HOST"), secureFlag, true)
+	// Security: Set SameSite attribute to prevent CSRF attacks
+	c.SetSameSite(pc.Config.CookieSameSite)
+	// Set cookies with Secure flag (HTTPS only in production)
+	c.SetCookie("token", tokenString, 3600*12, "/", pc.Config.CookieDomain, pc.Config.CookieSecure, true)
+	c.SetCookie("username", realUsername, 3600*12, "/", pc.Config.CookieDomain, pc.Config.CookieSecure, true)
 
 	c.Redirect(http.StatusFound, redirectURL)
 }
 
 func (pc *AuthController) Logout(c *gin.Context) {
-	// Security: Use Secure flag in production
-	secureFlag := os.Getenv("ENV") == "production"
-	c.SetCookie("token", "", -1, "/", os.Getenv("SALADA_HOST"), secureFlag, true)
-	c.SetCookie("username", "", -1, "/", os.Getenv("SALADA_HOST"), secureFlag, true)
+	// Security: Set SameSite attribute to prevent CSRF attacks
+	c.SetSameSite(pc.Config.CookieSameSite)
+	// Clear cookies with Secure flag
+	c.SetCookie("token", "", -1, "/", pc.Config.CookieDomain, pc.Config.CookieSecure, true)
+	c.SetCookie("username", "", -1, "/", pc.Config.CookieDomain, pc.Config.CookieSecure, true)
 	c.HTML(http.StatusOK, "auth/logout.html", nil)
 }
