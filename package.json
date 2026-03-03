@@ -1,7 +1,7 @@
 {
   "name": "salada",
   "version": "1.0.0",
-  "description": "",
+  "description": "A golang React half-baked, half-vibe-coded blog about databases",
   "main": "index.js",
   "scripts": {
     "build": "pnpm run build:css && webpack --mode production",
