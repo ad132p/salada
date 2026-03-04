@@ -79,6 +79,7 @@ if (container) {
 }
 
 import HeroImageCropper from './components/HeroImageCropper';
+import VideoStreamer from './components/VideoStreamer';
 
 const heroCropperContainer = document.getElementById('hero-cropper');
 if (heroCropperContainer) {
@@ -102,6 +103,19 @@ if (heroCropperContainer) {
                 initialPosition={initialPosition}
                 onCropChange={handleCropChange}
             />
+        </React.StrictMode>
+    );
+}
+
+// Mount VideoStreamer component on the stream page
+const videoStreamerContainer = document.getElementById('video-streamer');
+if (videoStreamerContainer) {
+    const root = createRoot(videoStreamerContainer);
+    const wsUrl = videoStreamerContainer.getAttribute('data-ws-url') || '/stream/ws';
+
+    root.render(
+        <React.StrictMode>
+            <VideoStreamer wsUrl={wsUrl} />
         </React.StrictMode>
     );
 }

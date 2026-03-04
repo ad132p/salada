@@ -1,0 +1,16 @@
+{{ define "pages/stream.html" }}
+{{ template "base" . }}
+<div class="container mx-auto max-w-6xl py-8 min-h-screen px-4">
+  <div class="mb-8">
+    <h1 class="text-4xl font-bold text-gray-900 mb-4">Video Stream</h1>
+    <p class="text-gray-600">Select a video input device and control your stream.</p>
+  </div>
+
+  <!-- React Video Streamer Component Mount Point -->
+  <div id="video-streamer" data-ws-url="/stream/ws" class="bg-white rounded-lg shadow-lg p-6">
+    <!-- React component will be mounted here -->
+    <p class="text-center text-gray-500">Loading video streamer...</p>
+  </div>
+</div>
+{{ template "footer" . }}
+{{ end }}
