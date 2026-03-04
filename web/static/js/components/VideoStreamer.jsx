@@ -136,13 +136,6 @@ function VideoStreamer({ wsUrl }) {
 
         try {
             switch (message.type) {
-                case 'offer':
-                    await pc.setRemoteDescription(new RTCSessionDescription(message));
-                    const answer = await pc.createAnswer();
-                    await pc.setLocalDescription(answer);
-                    sendSignalingMessage({ type: 'answer', sdp: answer.sdp });
-                    break;
-
                 case 'answer':
                     await pc.setRemoteDescription(new RTCSessionDescription(message));
                     break;

@@ -80,6 +80,8 @@ if (container) {
 
 import HeroImageCropper from './components/HeroImageCropper';
 import VideoStreamer from './components/VideoStreamer';
+import RoomsList from './components/RoomsList';
+import VideoViewer from './components/VideoViewer';
 
 const heroCropperContainer = document.getElementById('hero-cropper');
 if (heroCropperContainer) {
@@ -116,6 +118,68 @@ if (videoStreamerContainer) {
     root.render(
         <React.StrictMode>
             <VideoStreamer wsUrl={wsUrl} />
+        </React.StrictMode>
+    );
+}
+
+// Mount RoomsList component on the rooms page
+const roomsListContainer = document.getElementById('rooms-list');
+if (roomsListContainer) {
+    const root = createRoot(roomsListContainer);
+    const isLoggedIn = roomsListContainer.getAttribute('data-is-logged-in') === 'true';
+
+    root.render(
+        <React.StrictMode>
+            <RoomsList isLoggedIn={isLoggedIn} />
+        </React.StrictMode>
+    );
+}
+
+// Mount VideoViewer component on the watch page
+const videoViewerContainer = document.getElementById('video-viewer');
+if (videoViewerContainer) {
+    const root = createRoot(videoViewerContainer);
+    const wsUrl = videoViewerContainer.getAttribute('data-ws-url');
+    const streamer = videoViewerContainer.getAttribute('data-streamer');
+    const viewerCount = parseInt(videoViewerContainer.getAttribute('data-viewer-count') || '0', 10);
+
+    root.render(
+        <React.StrictMode>
+            <VideoViewer wsUrl={wsUrl} streamer={streamer} initialViewerCount={viewerCount} />
+        </React.StrictMode>
+    );
+}
+
+// Mount RoomsList component on the rooms page
+import RoomsList from './components/RoomsList';
+const roomsListContainer = document.getElementById('rooms-list');
+if (roomsListContainer) {
+    const root = createRoot(roomsListContainer);
+    const isLoggedIn = roomsListContainer.getAttribute('data-is-logged-in') === 'true';
+
+    root.render(
+        <React.StrictMode>
+            <RoomsList isLoggedIn={isLoggedIn} />
+        </React.StrictMode>
+    );
+}
+
+// Mount VideoViewer component on the watch page
+import VideoViewer from './components/VideoViewer';
+const videoViewerContainer = document.getElementById('video-viewer');
+if (videoViewerContainer) {
+    const root = createRoot(videoViewerContainer);
+    const wsUrl = videoViewerContainer.getAttribute('data-ws-url');
+    const streamer = videoViewerContainer.getAttribute('data-streamer');
+    const viewerCount = parseInt(videoViewerContainer.getAttribute('data-viewer-count') || '0', 10);
+
+    root.render(
+        <React.StrictMode>
+            <VideoViewer
+                wsUrl={wsUrl}
+                streamer={streamer}
+                initialViewerCount={viewerCount}
+            />
         </React.StrictMode>
     );
 }

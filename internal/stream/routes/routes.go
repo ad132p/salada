@@ -12,13 +12,22 @@ func StreamRoutes(router *gin.Engine, streamController *controller.StreamControl
 	streamRoutes := router.Group("/stream")
 	streamRoutes.Use(middleware.DBLoggerMiddleware())
 	{
-		// Page route - serves the React UI
-		streamRoutes.GET("", streamController.GetStreamPage)
+		// Page route - serves the React UI (protected - requires login)
+		streamRoutes.GET("", middleware.AuthenticateMiddleware, streamController.GetStreamPage)
 
-		// WebSocket endpoint for video streaming
-		streamRoutes.GET("/ws", streamController.HandleWebSocket)
+		// WebSocket endpoint for video streaming (protected - requires login)
+		streamRoutes.GET("/ws", middleware.AuthenticateMiddleware, streamController.HandleWebSocket)
 
 		// API endpoint to get connected client count
 		streamRoutes.GET("/clients", streamController.GetConnectedClients)
+
+		// API endpoint to get active rooms
+		streamRoutes.GET("/rooms", streamController.GetActiveRooms)
 	}
+
+	// Public rooms page - shows all active streams
+	router.GET("/rooms", middleware.DBLoggerMiddleware(), streamController.GetRoomsPage)
+
+	// Public room watch page - watch a specific stream by username
+	router.GET("/rooms/:username", middleware.DBLoggerMiddleware(), streamController.GetWatchRoomPage)
 }
