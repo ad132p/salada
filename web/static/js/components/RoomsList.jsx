@@ -6,6 +6,7 @@ import React, { useState, useEffect } from 'react';
 function RoomsList({ isLoggedIn }) {
     const [rooms, setRooms] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         fetchRooms();
@@ -13,13 +14,39 @@ function RoomsList({ isLoggedIn }) {
         return () => clearInterval(interval);
     }, []);
 
+    const fetchWithTimeout = (url, options = {}, timeout = 10000) => {
+        return Promise.race([
+            fetch(url, options),
+            new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Request timeout')), timeout)
+            )
+        ]);
+    };
+
     const fetchRooms = async () => {
+        // Only show loading on initial fetch, not on refresh
+        if (rooms.length === 0 && !error) {
+            setLoading(true);
+        }
+        setError(null);
+
         try {
-            const response = await fetch('/stream/rooms');
+            const response = await fetchWithTimeout('/stream/rooms', {}, 10000);
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Invalid response format');
+            }
+
             const data = await response.json();
             setRooms(data.rooms || []);
         } catch (err) {
             console.error('Failed to fetch rooms:', err);
+            setError(err.message || 'Failed to load rooms');
         } finally {
             setLoading(false);
         }

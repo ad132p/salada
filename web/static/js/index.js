@@ -46,6 +46,11 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import CommentSection from './components/CommentSection';
 import LikeButton from './components/LikeButton';
+import HeroImageCropper from './components/HeroImageCropper';
+import VideoStreamer from './components/VideoStreamer';
+import RoomsList from './components/RoomsList';
+import VideoViewer from './components/VideoViewer';
+
 // 1. Find the DOM element where React will be mounted
 const container = document.getElementById('comment');
 
@@ -77,11 +82,6 @@ if (container) {
         </React.StrictMode>
     );
 }
-
-import HeroImageCropper from './components/HeroImageCropper';
-import VideoStreamer from './components/VideoStreamer';
-import RoomsList from './components/RoomsList';
-import VideoViewer from './components/VideoViewer';
 
 const heroCropperContainer = document.getElementById('hero-cropper');
 if (heroCropperContainer) {
