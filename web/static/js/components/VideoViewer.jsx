@@ -166,6 +166,8 @@ function VideoViewer({ wsUrl, streamer, initialViewerCount }) {
                     ref={videoRef}
                     autoPlay
                     playsInline
+                    muted
+                    controls
                     className="w-full h-full object-contain"
                 />
 
