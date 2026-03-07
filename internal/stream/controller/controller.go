@@ -102,7 +102,7 @@ func (sc *StreamController) GetStreamPage(c *gin.Context) {
 // GetRoomsPage renders the rooms list page (public)
 func (sc *StreamController) GetRoomsPage(c *gin.Context) {
 	c.HTML(http.StatusOK, "pages/rooms.html", gin.H{
-		"title":        "Live Rooms",
+		"title":        "Rooms",
 		"is_logged_in": c.GetBool("is_logged_in"),
 	})
 }

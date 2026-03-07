@@ -68,6 +68,11 @@ func (m *MockPostRepository) GetCategoryCount() ([]model.CategoryCount, error) {
 	return args.Get(0).([]model.CategoryCount), args.Error(1)
 }
 
+func (m *MockPostRepository) GetTagCount() ([]model.TagCount, error) {
+	args := m.Called()
+	return args.Get(0).([]model.TagCount), args.Error(1)
+}
+
 func (m *MockPostRepository) GetPostAndCommentsBySlug(slug string) (*model.Post, error) {
 	args := m.Called(slug)
 	if args.Get(0) == nil {

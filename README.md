@@ -2,10 +2,7 @@
 
 salada is a blog I wrote for learning a very simple webapp stack with golang and Postgres. This is a new me trying to KISS.
 
-salada blog app should run in a single VM, ideally, but you can always decouple a database pod if you really have to.
-I'm using podman quadlets and kubectl secrets that pods have access to
-and under Rocky Linux you should be able to run commands such as:
-
+salada blog app should run in a single VM, ideally.
 
 # Pre requisites
 
@@ -56,5 +53,20 @@ podman run -d -p 80:80 -p 443:443 --network host --name salada --replace salada
 pnpm i
 pnpm run build
 
-```
 
+# Automated build
+```
+Usage
+
+# Build locally (creates dist/salada)
+make build
+
+# Build and deploy
+make deploy SERVER=user@yourserver.com
+
+# Deploy without rebuilding (if you already ran make build)
+make quick-deploy SERVER=user@yourserver.com
+
+# Or use scripts directly:
+./scripts/deploy.sh user@yourserver.com
+```
