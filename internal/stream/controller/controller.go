@@ -3,27 +3,25 @@ package controller
 import (
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
 
-// Room represents a streaming room with a streamer and viewers
 type Room struct {
 	Streamer     string
-	StreamerConn *websocket.Conn // the streamer's active WS connection
-	Clients      map[*websocket.Conn]bool
+	StreamerConn *websocket.Conn
+	Viewers      map[*websocket.Conn]bool
 	mu           sync.RWMutex
 }
 
-// StreamController handles video streaming requests
 type StreamController struct {
 	upgrader websocket.Upgrader
-	rooms    map[string]*Room // map[username]*Room
+	rooms    map[string]*Room
 	mu       sync.RWMutex
 }
 
-// NewStreamController creates a new StreamController instance
 func NewStreamController() *StreamController {
 	return &StreamController{
 		upgrader: websocket.Upgrader{
@@ -35,33 +33,31 @@ func NewStreamController() *StreamController {
 	}
 }
 
-// GetOrCreateRoom gets an existing room or creates a new one
 func (sc *StreamController) GetOrCreateRoom(username string) *Room {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
 
-	if room, exists := sc.rooms[username]; exists {
+	if room := sc.rooms[username]; room != nil {
 		return room
 	}
 
 	room := &Room{
 		Streamer: username,
-		Clients:  make(map[*websocket.Conn]bool),
+		Viewers:  make(map[*websocket.Conn]bool),
 	}
+
 	sc.rooms[username] = room
 	return room
 }
 
-// GetRoom gets an existing room by username
 func (sc *StreamController) GetRoom(username string) (*Room, bool) {
 	sc.mu.RLock()
 	defer sc.mu.RUnlock()
 
-	room, exists := sc.rooms[username]
-	return room, exists
+	room, ok := sc.rooms[username]
+	return room, ok
 }
 
-// DeleteRoom removes a room
 func (sc *StreamController) DeleteRoom(username string) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
@@ -69,79 +65,63 @@ func (sc *StreamController) DeleteRoom(username string) {
 	delete(sc.rooms, username)
 }
 
-// GetActiveRoomsData returns room data for the API
-func (sc *StreamController) GetActiveRoomsData() []gin.H {
-	sc.mu.RLock()
-	defer sc.mu.RUnlock()
+func (sc *StreamController) closeRoom(room *Room) {
+	room.mu.Lock()
+	defer room.mu.Unlock()
 
-	rooms := make([]gin.H, 0, len(sc.rooms))
-	for username, room := range sc.rooms {
-		room.mu.RLock()
-		viewerCount := len(room.Clients)
-		room.mu.RUnlock()
-
-		rooms = append(rooms, gin.H{
-			"username":     username,
-			"streamer":     username,
-			"viewer_count": viewerCount,
-			"url":          "/rooms/" + username,
-		})
+	for viewer := range room.Viewers {
+		viewer.WriteJSON(gin.H{"type": "stream-ended"})
+		viewer.Close()
 	}
-	return rooms
+
+	room.Viewers = map[*websocket.Conn]bool{}
 }
 
-// GetStreamPage renders the stream page for streamers (protected)
-func (sc *StreamController) GetStreamPage(c *gin.Context) {
-	username, _ := c.Get("username")
-	c.HTML(http.StatusOK, "pages/stream.html", gin.H{
-		"title":        "Video Stream",
-		"is_logged_in": c.GetBool("is_logged_in"),
-		"username":     username,
-	})
-}
+func (sc *StreamController) broadcastToViewers(room *Room, sender *websocket.Conn, msg map[string]interface{}) {
 
-// GetRoomsPage renders the rooms list page (public)
-func (sc *StreamController) GetRoomsPage(c *gin.Context) {
-	c.HTML(http.StatusOK, "pages/rooms.html", gin.H{
-		"title":        "Rooms",
-		"is_logged_in": c.GetBool("is_logged_in"),
-	})
-}
+	room.mu.RLock()
 
-// GetWatchRoomPage renders the watch page for a specific room (public)
-func (sc *StreamController) GetWatchRoomPage(c *gin.Context) {
-	streamer := c.Param("username")
-	room, exists := sc.GetRoom(streamer)
-	if !exists {
-		c.HTML(http.StatusNotFound, "pages/404.html", gin.H{
-			"title":        "Room Not Found",
-			"is_logged_in": c.GetBool("is_logged_in"),
-		})
+	viewers := make([]*websocket.Conn, 0, len(room.Viewers))
+	for v := range room.Viewers {
+		if v != sender {
+			viewers = append(viewers, v)
+		}
+	}
+
+	room.mu.RUnlock()
+
+	var failed []*websocket.Conn
+
+	for _, v := range viewers {
+		v.SetWriteDeadline(time.Now().Add(5 * time.Second))
+
+		if err := v.WriteJSON(msg); err != nil {
+			failed = append(failed, v)
+		}
+	}
+
+	if len(failed) == 0 {
 		return
 	}
 
-	room.mu.RLock()
-	viewerCount := len(room.Clients)
-	room.mu.RUnlock()
+	room.mu.Lock()
+	defer room.mu.Unlock()
 
-	c.HTML(http.StatusOK, "pages/watch.html", gin.H{
-		"title":        "Watching " + streamer,
-		"is_logged_in": c.GetBool("is_logged_in"),
-		"streamer":     streamer,
-		"viewer_count": viewerCount,
-	})
+	for _, f := range failed {
+		f.Close()
+		delete(room.Viewers, f)
+	}
 }
 
-// HandleWebSocket handles WebSocket connections for streaming
 func (sc *StreamController) HandleWebSocket(c *gin.Context) {
-	// Get the room parameter (which room to join)
+
 	roomParam := c.Query("room")
 
-	// Get username from context if authenticated
-	username, isAuthenticated := c.Get("username")
-	var userNameStr string
-	if isAuthenticated {
-		userNameStr = username.(string)
+	var username string
+	if u, ok := c.Get("username"); ok {
+		if s, ok := u.(string); ok {
+			username = s
+		}
 	}
 
 	conn, err := sc.upgrader.Upgrade(c.Writer, c.Request, nil)
@@ -154,121 +134,121 @@ func (sc *StreamController) HandleWebSocket(c *gin.Context) {
 	isStreamer := false
 
 	if roomParam != "" {
-		// Viewer joining an existing room
+
 		var exists bool
 		room, exists = sc.GetRoom(roomParam)
 		if !exists {
 			conn.WriteJSON(gin.H{"type": "error", "message": "Room not found"})
 			return
 		}
-		// Notify the streamer that a viewer has joined so it can send a fresh offer
-		room.mu.RLock()
+
+		room.mu.Lock()
+		room.Viewers[conn] = true
 		streamerConn := room.StreamerConn
-		room.mu.RUnlock()
+		room.mu.Unlock()
+
 		if streamerConn != nil {
 			streamerConn.WriteJSON(gin.H{"type": "viewer-joined"})
 		}
-	} else if isAuthenticated {
-		// Streamer creating their own room
-		room = sc.GetOrCreateRoom(userNameStr)
+
+	} else if username != "" {
+
+		room = sc.GetOrCreateRoom(username)
 		isStreamer = true
-		// Register this connection as the streamer's WS conn
+
 		room.mu.Lock()
 		room.StreamerConn = conn
 		room.mu.Unlock()
+
 	} else {
-		// Not authenticated and no room specified
+
 		conn.WriteJSON(gin.H{"type": "error", "message": "Authentication required"})
 		return
 	}
 
-	// Register client in the room
-	room.mu.Lock()
-	room.Clients[conn] = true
-	room.mu.Unlock()
-
 	defer func() {
+
+		if isStreamer {
+
+			sc.closeRoom(room)
+			sc.DeleteRoom(username)
+			return
+
+		}
+
 		room.mu.Lock()
-		delete(room.Clients, conn)
-		clientCount := len(room.Clients)
+		delete(room.Viewers, conn)
 		room.mu.Unlock()
 
-		// If streamer disconnects and no more clients, delete the room
-		if isStreamer && clientCount == 0 {
-			sc.DeleteRoom(userNameStr)
-		}
 	}()
 
-	// Message handling loop
 	for {
+
 		var msg map[string]interface{}
+
 		if err := conn.ReadJSON(&msg); err != nil {
 			break
 		}
 
-		// Add sender info
-		if userNameStr != "" {
-			msg["sender"] = userNameStr
+		if username != "" {
+			msg["sender"] = username
 		}
 
-		// Broadcast to all other clients in the room
-		sc.broadcastToRoom(room, conn, msg)
+		if isStreamer {
+			sc.broadcastToViewers(room, conn, msg)
+		}
 	}
 }
 
-// broadcastToRoom sends a message to all clients in a room except the sender
-func (sc *StreamController) broadcastToRoom(room *Room, sender *websocket.Conn, msg map[string]interface{}) {
-	room.mu.RLock()
+func (sc *StreamController) GetActiveRoomsData() []gin.H {
 
-	var failed []*websocket.Conn
-
-	for client := range room.Clients {
-		if client == sender {
-			continue
-		}
-
-		if err := client.WriteJSON(msg); err != nil {
-			failed = append(failed, client)
-		}
-	}
-
-	room.mu.RUnlock()
-
-	if len(failed) == 0 {
-		return
-	}
-
-	room.mu.Lock()
-	defer room.mu.Unlock()
-
-	for _, client := range failed {
-		client.Close()
-		delete(room.Clients, client)
-	}
-}
-
-// GetConnectedClients returns client counts
-func (sc *StreamController) GetConnectedClients(c *gin.Context) {
 	sc.mu.RLock()
-	totalClients := 0
-	for _, room := range sc.rooms {
-		room.mu.RLock()
-		totalClients += len(room.Clients)
-		room.mu.RUnlock()
-	}
-	roomCount := len(sc.rooms)
-	sc.mu.RUnlock()
+	defer sc.mu.RUnlock()
 
+	rooms := make([]gin.H, 0, len(sc.rooms))
+
+	for username, room := range sc.rooms {
+
+		room.mu.RLock()
+		viewerCount := len(room.Viewers)
+		room.mu.RUnlock()
+
+		rooms = append(rooms, gin.H{
+			"username":     username,
+			"streamer":     username,
+			"viewer_count": viewerCount,
+			"url":          "/rooms/" + username,
+		})
+	}
+
+	return rooms
+}
+
+func (sc *StreamController) GetActiveRooms(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
-		"connected_clients": totalClients,
-		"active_rooms":      roomCount,
+		"rooms": sc.GetActiveRoomsData(),
 	})
 }
 
-// GetActiveRooms returns active rooms as JSON
-func (sc *StreamController) GetActiveRooms(c *gin.Context) {
-	rooms := sc.GetActiveRoomsData()
+func (sc *StreamController) GetConnectedClients(c *gin.Context) {
+
+	sc.mu.RLock()
+
+	total := 0
+	for _, room := range sc.rooms {
+
+		room.mu.RLock()
+		total += len(room.Viewers)
+		room.mu.RUnlock()
+
+	}
+
+	roomCount := len(sc.rooms)
+
+	sc.mu.RUnlock()
+
 	c.JSON(http.StatusOK, gin.H{
-		"rooms": rooms,
+		"connected_clients": total,
+		"active_rooms":      roomCount,
 	})
 }
