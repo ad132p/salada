@@ -252,3 +252,45 @@ func (sc *StreamController) GetConnectedClients(c *gin.Context) {
 		"active_rooms":      roomCount,
 	})
 }
+
+// GetStreamPage renders the stream page for streamers (protected)
+func (sc *StreamController) GetStreamPage(c *gin.Context) {
+	username, _ := c.Get("username")
+	c.HTML(http.StatusOK, "pages/stream.html", gin.H{
+		"title":        "Video Stream",
+		"is_logged_in": c.GetBool("is_logged_in"),
+		"username":     username,
+	})
+}
+
+func (sc *StreamController) GetRoomsPage(c *gin.Context) {
+	c.HTML(http.StatusOK, "pages/rooms.html",
+		gin.H{
+			"title":        "Rooms",
+			"is_logged_in": c.GetBool("is_logged_in"),
+		})
+}
+
+func (sc *StreamController) GetWatchRoomPage(c *gin.Context) {
+	streamer := c.Param("username")
+
+	room, exists := sc.GetRoom(streamer)
+	if !exists {
+		c.HTML(http.StatusNotFound, "pages/404.html", gin.H{
+			"title":        "Stream Not Found",
+			"is_logged_in": c.GetBool("is_logged_in"),
+		})
+		return
+	}
+
+	room.mu.RLock()
+	viewerCount := len(room.Viewers)
+	room.mu.RUnlock()
+
+	c.HTML(http.StatusOK, "pages/watch.html", gin.H{
+		"title":        "Watching " + streamer,
+		"is_logged_in": c.GetBool("is_logged_in"),
+		"streamer":     streamer,
+		"viewer_count": viewerCount,
+	})
+}
