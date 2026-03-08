@@ -10,9 +10,10 @@ import (
 
 // Room represents a streaming room with a streamer and viewers
 type Room struct {
-	Streamer string
-	Clients  map[*websocket.Conn]bool
-	mu       sync.RWMutex
+	Streamer     string
+	StreamerConn *websocket.Conn // the streamer's active WS connection
+	Clients      map[*websocket.Conn]bool
+	mu           sync.RWMutex
 }
 
 // StreamController handles video streaming requests
@@ -160,10 +161,21 @@ func (sc *StreamController) HandleWebSocket(c *gin.Context) {
 			conn.WriteJSON(gin.H{"type": "error", "message": "Room not found"})
 			return
 		}
+		// Notify the streamer that a viewer has joined so it can send a fresh offer
+		room.mu.RLock()
+		streamerConn := room.StreamerConn
+		room.mu.RUnlock()
+		if streamerConn != nil {
+			streamerConn.WriteJSON(gin.H{"type": "viewer-joined"})
+		}
 	} else if isAuthenticated {
 		// Streamer creating their own room
 		room = sc.GetOrCreateRoom(userNameStr)
 		isStreamer = true
+		// Register this connection as the streamer's WS conn
+		room.mu.Lock()
+		room.StreamerConn = conn
+		room.mu.Unlock()
 	} else {
 		// Not authenticated and no room specified
 		conn.WriteJSON(gin.H{"type": "error", "message": "Authentication required"})
@@ -207,12 +219,31 @@ func (sc *StreamController) HandleWebSocket(c *gin.Context) {
 // broadcastToRoom sends a message to all clients in a room except the sender
 func (sc *StreamController) broadcastToRoom(room *Room, sender *websocket.Conn, msg map[string]interface{}) {
 	room.mu.RLock()
-	defer room.mu.RUnlock()
+
+	var failed []*websocket.Conn
 
 	for client := range room.Clients {
-		if client != sender {
-			client.WriteJSON(msg)
+		if client == sender {
+			continue
 		}
+
+		if err := client.WriteJSON(msg); err != nil {
+			failed = append(failed, client)
+		}
+	}
+
+	room.mu.RUnlock()
+
+	if len(failed) == 0 {
+		return
+	}
+
+	room.mu.Lock()
+	defer room.mu.Unlock()
+
+	for _, client := range failed {
+		client.Close()
+		delete(room.Clients, client)
 	}
 }
 

@@ -111,7 +111,7 @@ func (pc *AuthController) Register(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(http.StatusFound, "/login/")
+	c.Redirect(http.StatusFound, "/login")
 }
 
 func (pc *AuthController) Login(c *gin.Context) {
@@ -183,5 +183,5 @@ func (pc *AuthController) Logout(c *gin.Context) {
 	c.SetCookie("username", "", -1, "/", pc.Config.CookieDomain, pc.Config.CookieSecure, true)
 	// Redirect to login page instead of rendering logout page
 	// This prevents users from bookmarking or refreshing a stale logout page
-	c.Redirect(http.StatusFound, "/login/")
+	c.Redirect(http.StatusFound, "/login")
 }

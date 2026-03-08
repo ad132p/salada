@@ -52,6 +52,12 @@ func setupPublicPages(router *gin.Engine) {
 	})
 
 	router.GET("/login", func(c *gin.Context) {
+		// Already authenticated — no need to show the login page
+		if c.GetBool("is_logged_in") {
+			c.Redirect(http.StatusSeeOther, "/")
+			return
+		}
+
 		intendedRoute := c.Query("goto")
 
 		if intendedRoute == "" {
@@ -62,7 +68,7 @@ func setupPublicPages(router *gin.Engine) {
 			"title": "Login",
 			// Pass the variable so the template can access it as {{.IntendedRoute}}
 			"IntendedRoute": intendedRoute,
-			"is_logged_in":  c.GetBool("is_logged_in"),
+			"is_logged_in":  false,
 		})
 	})
 

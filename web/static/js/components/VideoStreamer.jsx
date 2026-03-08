@@ -129,6 +129,29 @@ function VideoStreamer({ wsUrl }) {
         return ws;
     }, [wsUrl]);
 
+    // Send signaling message via WebSocket
+    const sendSignalingMessage = (message) => {
+        if (wsRef.current?.readyState === WebSocket.OPEN) {
+            wsRef.current.send(JSON.stringify(message));
+        }
+    };
+
+    // Create and send a fresh WebRTC offer to all current viewers
+    const sendOffer = useCallback(async () => {
+        const pc = peerConnectionRef.current;
+        if (!pc) return;
+        try {
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+            sendSignalingMessage({
+                type: 'offer',
+                sdp: pc.localDescription.sdp
+            });
+        } catch (err) {
+            console.error('Error creating offer:', err);
+        }
+    }, []);
+
     // Handle incoming signaling messages
     const handleSignalingMessage = async (message) => {
         const pc = peerConnectionRef.current;
@@ -144,18 +167,17 @@ function VideoStreamer({ wsUrl }) {
                     await pc.addIceCandidate(new RTCIceCandidate(message.candidate));
                     break;
 
+                case 'viewer-joined':
+                    // A new viewer joined — re-send offer so they can connect
+                    console.log('Viewer joined, sending fresh offer');
+                    await sendOffer();
+                    break;
+
                 default:
                     break;
             }
         } catch (err) {
             console.error('Error handling signaling message:', err);
-        }
-    };
-
-    // Send signaling message via WebSocket
-    const sendSignalingMessage = (message) => {
-        if (wsRef.current?.readyState === WebSocket.OPEN) {
-            wsRef.current.send(JSON.stringify(message));
         }
     };
 
@@ -220,17 +242,8 @@ function VideoStreamer({ wsUrl }) {
             // Initialize WebSocket for signaling
             initializeWebSocket();
 
-            // Create and send offer
-            const offer = await pc.createOffer();
-            await pc.setLocalDescription(offer);
-
-            // Wait a moment for ICE gathering, then send the offer
-            setTimeout(() => {
-                sendSignalingMessage({
-                    type: 'offer',
-                    sdp: pc.localDescription.sdp
-                });
-            }, 1000);
+            // Create and send offer — will also be re-triggered on viewer-joined
+            setTimeout(() => sendOffer(), 1000);
 
             setIsStreaming(true);
         } catch (err) {

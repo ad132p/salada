@@ -44,21 +44,30 @@ func AuthenticateMiddleware(c *gin.Context) {
 
 	intendedRoute := c.Request.URL.Path
 	redirectURL := "/login?goto=" + url.QueryEscape(intendedRoute)
+	isWebsocket := c.GetHeader("Upgrade") == "websocket"
 
 	tokenString, err := c.Cookie("token")
 	if err != nil {
 		fmt.Println("Token missing in cookie")
-		c.Abort()
-		c.Redirect(http.StatusSeeOther, redirectURL)
+		if isWebsocket {
+			c.AbortWithStatusJSON(401, gin.H{"error": "unauthorized"})
+		} else {
+			c.Abort()
+			c.Redirect(http.StatusSeeOther, redirectURL)
+		}
 		return
 	}
 
 	// Verify the token
 	token, err := auth.VerifyToken(tokenString)
 	if err != nil {
-		fmt.Printf("Token verification failed: %v\\n", err)
-		c.Abort()
-		c.Redirect(http.StatusSeeOther, redirectURL)
+		fmt.Printf("Token verification failed: %v\n", err)
+		if isWebsocket {
+			c.AbortWithStatusJSON(401, gin.H{"error": "unauthorized"})
+		} else {
+			c.Abort()
+			c.Redirect(http.StatusSeeOther, redirectURL)
+		}
 		return
 	}
 
@@ -66,8 +75,12 @@ func AuthenticateMiddleware(c *gin.Context) {
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		fmt.Println("Could not get claims from token")
-		c.AbortWithStatus(http.StatusUnauthorized)
-		c.Redirect(http.StatusSeeOther, redirectURL)
+		if isWebsocket {
+			c.AbortWithStatusJSON(401, gin.H{"error": "unauthorized"})
+		} else {
+			c.AbortWithStatus(http.StatusUnauthorized)
+			c.Redirect(http.StatusSeeOther, redirectURL)
+		}
 		return
 	}
 
