@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 /**
  * VideoViewer component for watching a stream.
  */
-function VideoViewer({ wsUrl, streamer, initialViewerCount }) {
+function VideoViewer({ wsUrl, streamer, initialViewerCount, iceServers }) {
     const [isConnected, setIsConnected] = useState(false);
     const [isConnecting, setIsConnecting] = useState(false);
     const [error, setError] = useState(null);
@@ -68,10 +68,7 @@ function VideoViewer({ wsUrl, streamer, initialViewerCount }) {
 
     const createPeerConnection = async () => {
         const pc = new RTCPeerConnection({
-            iceServers: [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' }
-            ]
+            iceServers: iceServers
         });
         pcRef.current = pc;
 

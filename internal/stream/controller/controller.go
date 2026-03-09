@@ -1,7 +1,9 @@
 package controller
 
 import (
+	"encoding/json"
 	"net/http"
+	"os"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -29,18 +31,36 @@ type Room struct {
 }
 
 type StreamController struct {
-	upgrader websocket.Upgrader
-	rooms    map[string]*Room
-	mu       sync.RWMutex
+	upgrader   websocket.Upgrader
+	rooms      map[string]*Room
+	mu         sync.RWMutex
+	iceServers []webrtc.ICEServer
 }
 
 func NewStreamController() *StreamController {
-	return &StreamController{
+
+	sc := &StreamController{
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool { return true },
 		},
 		rooms: make(map[string]*Room),
 	}
+
+	sc.iceServers = []webrtc.ICEServer{
+		{URLs: []string{"stun:stun.l.google.com:19302"}},
+		{URLs: []string{"stun:stun1.l.google.com:19302"}},
+	}
+
+	if iceJSON := os.Getenv("ICE_SERVERS_JSON"); iceJSON != "" {
+
+		var servers []webrtc.ICEServer
+
+		if err := json.Unmarshal([]byte(iceJSON), &servers); err == nil {
+			sc.iceServers = servers
+		}
+	}
+
+	return sc
 }
 
 func (sc *StreamController) GetOrCreateRoom(username string) *Room {
@@ -58,6 +78,7 @@ func (sc *StreamController) GetOrCreateRoom(username string) *Room {
 	}
 
 	sc.rooms[username] = room
+
 	return room
 }
 
@@ -67,6 +88,7 @@ func (sc *StreamController) GetRoom(username string) (*Room, bool) {
 	defer sc.mu.RUnlock()
 
 	room, ok := sc.rooms[username]
+
 	return room, ok
 }
 
@@ -78,12 +100,39 @@ func (sc *StreamController) DeleteRoom(username string) {
 	delete(sc.rooms, username)
 }
 
-func (sc *StreamController) createPeer(room *Room, username string) (*webrtc.PeerConnection, error) {
+func (sc *StreamController) createPeer(room *Room, username string, conn *websocket.Conn) (*webrtc.PeerConnection, error) {
 
-	pc, err := webrtc.NewPeerConnection(webrtc.Configuration{})
+	pc, err := webrtc.NewPeerConnection(webrtc.Configuration{
+		ICEServers: sc.iceServers,
+	})
+
 	if err != nil {
 		return nil, err
 	}
+
+	pc.OnICECandidate(func(c *webrtc.ICECandidate) {
+
+		if c == nil {
+			return
+		}
+
+		conn.WriteJSON(gin.H{
+			"type":      "ice",
+			"candidate": c.ToJSON().Candidate,
+		})
+	})
+
+	pc.OnConnectionStateChange(func(s webrtc.PeerConnectionState) {
+
+		if s == webrtc.PeerConnectionStateClosed ||
+			s == webrtc.PeerConnectionStateFailed ||
+			s == webrtc.PeerConnectionStateDisconnected {
+
+			room.SFU.mu.Lock()
+			delete(room.SFU.peers, username)
+			room.SFU.mu.Unlock()
+		}
+	})
 
 	room.SFU.mu.Lock()
 	room.SFU.peers[username] = pc
@@ -93,17 +142,30 @@ func (sc *StreamController) createPeer(room *Room, username string) (*webrtc.Pee
 
 	for _, track := range room.SFU.tracks {
 
-		_, err := pc.AddTrack(track)
-		if err != nil {
-			room.SFU.mu.RUnlock()
-			return nil, err
-		}
+		pc.AddTrack(track)
 
 	}
 
 	room.SFU.mu.RUnlock()
 
 	return pc, nil
+}
+
+func (sc *StreamController) renegotiatePeers(room *Room) {
+
+	room.SFU.mu.RLock()
+	defer room.SFU.mu.RUnlock()
+
+	for _, peer := range room.SFU.peers {
+
+		offer, err := peer.CreateOffer(nil)
+
+		if err != nil {
+			continue
+		}
+
+		peer.SetLocalDescription(offer)
+	}
 }
 
 func (sc *StreamController) handlePublisher(room *Room, pc *webrtc.PeerConnection) {
@@ -121,14 +183,23 @@ func (sc *StreamController) handlePublisher(room *Room, pc *webrtc.PeerConnectio
 		}
 
 		room.SFU.mu.Lock()
+
 		room.SFU.tracks[remote.ID()] = localTrack
+
+		for _, peer := range room.SFU.peers {
+			peer.AddTrack(localTrack)
+		}
+
 		room.SFU.mu.Unlock()
+
+		sc.renegotiatePeers(room)
 
 		buf := make([]byte, 1500)
 
 		for {
 
 			n, _, err := remote.Read(buf)
+
 			if err != nil {
 				break
 			}
@@ -143,6 +214,7 @@ func (sc *StreamController) HandleWebSocket(c *gin.Context) {
 	roomParam := c.Query("room")
 
 	username := ""
+
 	if u, ok := c.Get("username"); ok {
 		if s, ok := u.(string); ok {
 			username = s
@@ -150,9 +222,11 @@ func (sc *StreamController) HandleWebSocket(c *gin.Context) {
 	}
 
 	conn, err := sc.upgrader.Upgrade(c.Writer, c.Request, nil)
+
 	if err != nil {
 		return
 	}
+
 	defer conn.Close()
 
 	var room *Room
@@ -161,25 +235,38 @@ func (sc *StreamController) HandleWebSocket(c *gin.Context) {
 	if roomParam != "" {
 
 		var exists bool
+
 		room, exists = sc.GetRoom(roomParam)
 
 		if !exists {
-			conn.WriteJSON(gin.H{"type": "error", "message": "Room not found"})
+
+			conn.WriteJSON(gin.H{
+				"type":    "error",
+				"message": "Room not found",
+			})
+
 			return
 		}
 
 	} else {
 
 		if username == "" {
-			conn.WriteJSON(gin.H{"type": "error", "message": "Authentication required"})
+
+			conn.WriteJSON(gin.H{
+				"type":    "error",
+				"message": "Authentication required",
+			})
+
 			return
 		}
 
 		room = sc.GetOrCreateRoom(username)
+
 		isStreamer = true
 	}
 
-	pc, err := sc.createPeer(room, username)
+	pc, err := sc.createPeer(room, username, conn)
+
 	if err != nil {
 		return
 	}
@@ -196,11 +283,21 @@ func (sc *StreamController) HandleWebSocket(c *gin.Context) {
 			break
 		}
 
-		switch msg["type"] {
+		msgType, ok := msg["type"].(string)
+
+		if !ok {
+			continue
+		}
+
+		switch msgType {
 
 		case "offer":
 
-			sdp := msg["sdp"].(string)
+			sdp, ok := msg["sdp"].(string)
+
+			if !ok {
+				continue
+			}
 
 			offer := webrtc.SessionDescription{
 				Type: webrtc.SDPTypeOffer,
@@ -210,6 +307,7 @@ func (sc *StreamController) HandleWebSocket(c *gin.Context) {
 			pc.SetRemoteDescription(offer)
 
 			answer, err := pc.CreateAnswer(nil)
+
 			if err != nil {
 				continue
 			}
@@ -221,15 +319,42 @@ func (sc *StreamController) HandleWebSocket(c *gin.Context) {
 				"sdp":  answer.SDP,
 			})
 
+		case "answer":
+
+			sdp, ok := msg["sdp"].(string)
+
+			if !ok {
+				continue
+			}
+
+			answer := webrtc.SessionDescription{
+				Type: webrtc.SDPTypeAnswer,
+				SDP:  sdp,
+			}
+
+			pc.SetRemoteDescription(answer)
+
 		case "ice":
 
+			candidateStr, ok := msg["candidate"].(string)
+
+			if !ok {
+				continue
+			}
+
 			candidate := webrtc.ICECandidateInit{
-				Candidate: msg["candidate"].(string),
+				Candidate: candidateStr,
 			}
 
 			pc.AddICECandidate(candidate)
 		}
 	}
+
+	pc.Close()
+
+	room.SFU.mu.Lock()
+	delete(room.SFU.peers, username)
+	room.SFU.mu.Unlock()
 
 	if isStreamer {
 		sc.DeleteRoom(username)
@@ -265,11 +390,21 @@ func (sc *StreamController) GetActiveRooms(c *gin.Context) {
 func (sc *StreamController) GetConnectedClients(c *gin.Context) {
 
 	sc.mu.RLock()
-	roomCount := len(sc.rooms)
-	sc.mu.RUnlock()
+	defer sc.mu.RUnlock()
+
+	total := 0
+
+	for _, room := range sc.rooms {
+
+		room.SFU.mu.RLock()
+		total += len(room.SFU.peers)
+		room.SFU.mu.RUnlock()
+
+	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"active_rooms": roomCount,
+		"connected_clients": total,
+		"active_rooms":      len(sc.rooms),
 	})
 }
 
@@ -277,10 +412,13 @@ func (sc *StreamController) GetStreamPage(c *gin.Context) {
 
 	username, _ := c.Get("username")
 
+	iceServersJSON, _ := json.Marshal(sc.iceServers)
+
 	c.HTML(http.StatusOK, "pages/stream.html", gin.H{
 		"title":        "Video Stream",
 		"is_logged_in": c.GetBool("is_logged_in"),
 		"username":     username,
+		"ice_servers":  string(iceServersJSON),
 	})
 }
 
@@ -308,10 +446,17 @@ func (sc *StreamController) GetWatchRoomPage(c *gin.Context) {
 		return
 	}
 
+	room.SFU.mu.RLock()
+	viewerCount := len(room.SFU.peers)
+	room.SFU.mu.RUnlock()
+
+	iceServersJSON, _ := json.Marshal(sc.iceServers)
+
 	c.HTML(http.StatusOK, "pages/watch.html", gin.H{
 		"title":        "Watching " + streamer,
 		"is_logged_in": c.GetBool("is_logged_in"),
 		"streamer":     streamer,
-		"viewer_count": len(room.SFU.peers),
+		"viewer_count": viewerCount,
+		"ice_servers":  string(iceServersJSON),
 	})
 }

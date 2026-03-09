@@ -8,7 +8,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
  * @param {object} props
  * @param {string} props.wsUrl - WebSocket URL for signaling
  */
-function VideoStreamer({ wsUrl }) {
+function VideoStreamer({ wsUrl, iceServers }) {
     const [devices, setDevices] = useState([]);
     const [selectedDeviceId, setSelectedDeviceId] = useState('');
     const [isStreaming, setIsStreaming] = useState(false);
@@ -217,10 +217,7 @@ function VideoStreamer({ wsUrl }) {
 
             // Create peer connection
             const pc = new RTCPeerConnection({
-                iceServers: [
-                    { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'stun:stun1.l.google.com:19302' }
-                ]
+                iceServers: iceServers
             });
             peerConnectionRef.current = pc;
 

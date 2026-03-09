@@ -114,10 +114,11 @@ const videoStreamerContainer = document.getElementById('video-streamer');
 if (videoStreamerContainer) {
     const root = createRoot(videoStreamerContainer);
     const wsUrl = videoStreamerContainer.getAttribute('data-ws-url') || '/stream/ws';
+    const iceServers = JSON.parse(videoStreamerContainer.getAttribute('data-ice-servers') || '[]');
 
     root.render(
         <React.StrictMode>
-            <VideoStreamer wsUrl={wsUrl} />
+            <VideoStreamer wsUrl={wsUrl} iceServers={iceServers} />
         </React.StrictMode>
     );
 }
@@ -142,6 +143,7 @@ if (videoViewerContainer) {
     const wsUrl = videoViewerContainer.getAttribute('data-ws-url');
     const streamer = videoViewerContainer.getAttribute('data-streamer');
     const viewerCount = parseInt(videoViewerContainer.getAttribute('data-viewer-count') || '0', 10);
+    const iceServers = JSON.parse(videoViewerContainer.getAttribute('data-ice-servers') || '[]');
 
     root.render(
         <React.StrictMode>
@@ -149,6 +151,7 @@ if (videoViewerContainer) {
                 wsUrl={wsUrl}
                 streamer={streamer}
                 initialViewerCount={viewerCount}
+                iceServers={iceServers}
             />
         </React.StrictMode>
     );
