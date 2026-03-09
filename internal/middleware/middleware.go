@@ -134,7 +134,7 @@ func DBLoggerMiddleware() gin.HandlerFunc {
 }
 
 // CheckAuthMiddleware checks if the user is logged in but does not enforce it.
-// It sets "is_logged_in" to true in the context if the token is valid.
+// It sets "is_logged_in" to true and "username" if the token is valid.
 func CheckAuthMiddleware(c *gin.Context) {
 	tokenString, err := c.Cookie("token")
 	if err != nil {
@@ -152,7 +152,7 @@ func CheckAuthMiddleware(c *gin.Context) {
 	}
 
 	// Get the claims from the token
-	_, ok := token.Claims.(jwt.MapClaims)
+	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		// Invalid claims, just continue
 		c.Next()
@@ -161,5 +161,11 @@ func CheckAuthMiddleware(c *gin.Context) {
 
 	// Token is valid
 	c.Set("is_logged_in", true)
+
+	// Access the claims and set username if present
+	if username, ok := claims["sub"].(string); ok {
+		c.Set("username", username)
+	}
+
 	c.Next()
 }
