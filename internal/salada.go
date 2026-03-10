@@ -12,8 +12,6 @@ import (
 	blog_repositories "salada/internal/blog/repositories"
 	blog_routes "salada/internal/blog/routes"
 	"salada/internal/db"
-	stream_controller "salada/internal/stream/controller"
-	stream_routes "salada/internal/stream/routes"
 
 	// NEW: Import the routes package
 	"github.com/gin-gonic/gin"
@@ -122,11 +120,11 @@ func setupDependenciesAndGroups(router *gin.Engine) {
 	blogController := blog_controller.NewBlogController(postRepo)
 	authController := auth_controller.NewAuthController(adminRepo, authConfig)
 	adminController := admin_controller.NewAdminController(adminRepo)
-	streamController := stream_controller.NewStreamController()
+	//streamController := stream_controller.NewStreamController()
 
 	// 4. Register Modular Routes
 	blog_routes.BlogRoutes(router, blogController)
 	auth_routes.AuthRoutes(router, authController)
 	admin_routes.AdminRoutes(router, adminController, blogController)
-	stream_routes.StreamRoutes(router, streamController)
+	//stream_routes.StreamRoutes(router, streamController)
 }
