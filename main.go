@@ -1,13 +1,13 @@
 package main
 
 import (
+	_ "github.com/joho/godotenv/autoload"
 	salada "salada/internal"
 	"salada/internal/db"
 	"salada/internal/middleware"
 	"salada/internal/server"
 
 	"github.com/gin-gonic/gin"
-	_ "github.com/joho/godotenv/autoload"
 )
 
 func main() {

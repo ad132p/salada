@@ -11,15 +11,27 @@ import (
 	"github.com/pion/webrtc/v4"
 )
 
+type Peer struct {
+	pc   *webrtc.PeerConnection
+	conn *websocket.Conn
+	mu   sync.Mutex
+}
+
+func (p *Peer) WriteJSON(v interface{}) error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return p.conn.WriteJSON(v)
+}
+
 type SFURoom struct {
-	peers  map[string]*webrtc.PeerConnection
+	peers  map[string]*Peer
 	tracks map[string]*webrtc.TrackLocalStaticRTP
 	mu     sync.RWMutex
 }
 
 func NewSFURoom() *SFURoom {
 	return &SFURoom{
-		peers:  make(map[string]*webrtc.PeerConnection),
+		peers:  make(map[string]*Peer),
 		tracks: make(map[string]*webrtc.TrackLocalStaticRTP),
 	}
 }
@@ -100,7 +112,7 @@ func (sc *StreamController) DeleteRoom(username string) {
 	delete(sc.rooms, username)
 }
 
-func (sc *StreamController) createPeer(room *Room, username string, conn *websocket.Conn) (*webrtc.PeerConnection, error) {
+func (sc *StreamController) createPeer(room *Room, username string, conn *websocket.Conn) (*Peer, error) {
 
 	pc, err := webrtc.NewPeerConnection(webrtc.Configuration{
 		ICEServers: sc.iceServers,
@@ -110,15 +122,20 @@ func (sc *StreamController) createPeer(room *Room, username string, conn *websoc
 		return nil, err
 	}
 
+	peer := &Peer{
+		pc:   pc,
+		conn: conn,
+	}
+
 	pc.OnICECandidate(func(c *webrtc.ICECandidate) {
 
 		if c == nil {
 			return
 		}
 
-		conn.WriteJSON(gin.H{
-			"type":      "ice",
-			"candidate": c.ToJSON().Candidate,
+		peer.WriteJSON(gin.H{
+			"type":      "ice-candidate",
+			"candidate": c.ToJSON(),
 		})
 	})
 
@@ -135,7 +152,7 @@ func (sc *StreamController) createPeer(room *Room, username string, conn *websoc
 	})
 
 	room.SFU.mu.Lock()
-	room.SFU.peers[username] = pc
+	room.SFU.peers[username] = peer
 	room.SFU.mu.Unlock()
 
 	room.SFU.mu.RLock()
@@ -148,7 +165,25 @@ func (sc *StreamController) createPeer(room *Room, username string, conn *websoc
 
 	room.SFU.mu.RUnlock()
 
-	return pc, nil
+	return peer, nil
+}
+
+func (sc *StreamController) renegotiatePeer(peer *Peer) {
+	offer, err := peer.pc.CreateOffer(nil)
+
+	if err != nil {
+		return
+	}
+
+	err = peer.pc.SetLocalDescription(offer)
+	if err != nil {
+		return
+	}
+
+	peer.WriteJSON(gin.H{
+		"type": "offer",
+		"sdp":  offer.SDP,
+	})
 }
 
 func (sc *StreamController) renegotiatePeers(room *Room) {
@@ -157,14 +192,7 @@ func (sc *StreamController) renegotiatePeers(room *Room) {
 	defer room.SFU.mu.RUnlock()
 
 	for _, peer := range room.SFU.peers {
-
-		offer, err := peer.CreateOffer(nil)
-
-		if err != nil {
-			continue
-		}
-
-		peer.SetLocalDescription(offer)
+		sc.renegotiatePeer(peer)
 	}
 }
 
@@ -187,7 +215,7 @@ func (sc *StreamController) handlePublisher(room *Room, pc *webrtc.PeerConnectio
 		room.SFU.tracks[remote.ID()] = localTrack
 
 		for _, peer := range room.SFU.peers {
-			peer.AddTrack(localTrack)
+			peer.pc.AddTrack(localTrack)
 		}
 
 		room.SFU.mu.Unlock()
@@ -265,14 +293,23 @@ func (sc *StreamController) HandleWebSocket(c *gin.Context) {
 		isStreamer = true
 	}
 
-	pc, err := sc.createPeer(room, username, conn)
+	peer, err := sc.createPeer(room, username, conn)
 
 	if err != nil {
 		return
 	}
 
 	if isStreamer {
-		sc.handlePublisher(room, pc)
+		sc.handlePublisher(room, peer.pc)
+	} else {
+		// If viewer joins and tracks already exist, trigger renegotiation for this peer
+		room.SFU.mu.RLock()
+		hasTracks := len(room.SFU.tracks) > 0
+		room.SFU.mu.RUnlock()
+
+		if hasTracks {
+			sc.renegotiatePeer(peer)
+		}
 	}
 
 	for {
@@ -304,17 +341,17 @@ func (sc *StreamController) HandleWebSocket(c *gin.Context) {
 				SDP:  sdp,
 			}
 
-			pc.SetRemoteDescription(offer)
+			peer.pc.SetRemoteDescription(offer)
 
-			answer, err := pc.CreateAnswer(nil)
+			answer, err := peer.pc.CreateAnswer(nil)
 
 			if err != nil {
 				continue
 			}
 
-			pc.SetLocalDescription(answer)
+			peer.pc.SetLocalDescription(answer)
 
-			conn.WriteJSON(gin.H{
+			peer.WriteJSON(gin.H{
 				"type": "answer",
 				"sdp":  answer.SDP,
 			})
@@ -332,25 +369,31 @@ func (sc *StreamController) HandleWebSocket(c *gin.Context) {
 				SDP:  sdp,
 			}
 
-			pc.SetRemoteDescription(answer)
+			peer.pc.SetRemoteDescription(answer)
 
-		case "ice":
+		case "ice-candidate":
 
-			candidateStr, ok := msg["candidate"].(string)
+			candidateMsg, ok := msg["candidate"]
 
 			if !ok {
 				continue
 			}
 
-			candidate := webrtc.ICECandidateInit{
-				Candidate: candidateStr,
+			candidateBytes, err := json.Marshal(candidateMsg)
+			if err != nil {
+				continue
 			}
 
-			pc.AddICECandidate(candidate)
+			var candidate webrtc.ICECandidateInit
+			if err := json.Unmarshal(candidateBytes, &candidate); err != nil {
+				continue
+			}
+
+			peer.pc.AddICECandidate(candidate)
 		}
 	}
 
-	pc.Close()
+	peer.pc.Close()
 
 	room.SFU.mu.Lock()
 	delete(room.SFU.peers, username)
