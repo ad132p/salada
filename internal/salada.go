@@ -12,6 +12,8 @@ import (
 	blog_repositories "salada/internal/blog/repositories"
 	blog_routes "salada/internal/blog/routes"
 	"salada/internal/db"
+	stream_controller "salada/internal/stream/controller"
+	stream_routes "salada/internal/stream/routes"
 
 	// NEW: Import the routes package
 	"github.com/gin-gonic/gin"
@@ -52,7 +54,11 @@ func setupPublicPages(router *gin.Engine) {
 	router.GET("/login", func(c *gin.Context) {
 		// Already authenticated — no need to show the login page
 		if c.GetBool("is_logged_in") {
-			c.Redirect(http.StatusSeeOther, "/")
+			intendedRoute := c.Query("goto")
+			if intendedRoute == "" {
+				intendedRoute = "/"
+			}
+			c.Redirect(http.StatusSeeOther, intendedRoute)
 			return
 		}
 
@@ -120,11 +126,11 @@ func setupDependenciesAndGroups(router *gin.Engine) {
 	blogController := blog_controller.NewBlogController(postRepo)
 	authController := auth_controller.NewAuthController(adminRepo, authConfig)
 	adminController := admin_controller.NewAdminController(adminRepo)
-	//streamController := stream_controller.NewStreamController()
+	streamController := stream_controller.NewStreamController()
 
 	// 4. Register Modular Routes
 	blog_routes.BlogRoutes(router, blogController)
 	auth_routes.AuthRoutes(router, authController)
 	admin_routes.AdminRoutes(router, adminController, blogController)
-	//stream_routes.StreamRoutes(router, streamController)
+	stream_routes.StreamRoutes(router, streamController)
 }

@@ -16,7 +16,7 @@ func Run(router *gin.Engine) {
 	if os.Getenv("MODE") == "dev" {
 		bindIp := fmt.Sprintf("%s:8080", os.Getenv("BIND_IP"))
 		gin.SetMode(gin.DebugMode) 
-		router.Run(bindIp)
+		router.RunTLS(bindIp, "cert.pem", "key.pem")
 	} else {
 		m := autocert.Manager{
 			Prompt:     autocert.AcceptTOS,
