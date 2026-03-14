@@ -1,0 +1,155 @@
+# Maddy Mail Server Configuration Example
+# This is an example configuration for running maddy as an SMTP server
+# for the Salada application.
+#
+# For full documentation, see: https://maddy.email
+
+# Global configuration
+debug: false
+
+# -----------------------------------------------------------------------------
+# SMTP Endpoint (Submission + SMTPS)
+# -----------------------------------------------------------------------------
+
+# Submission port (587) - STARTTLS
+smtp tcp://0.0.0.0:587 {
+    debug: false
+
+    # Hostname for this server
+    hostname mail.localhost
+
+    # TLS configuration
+    tls {
+        # Use Let's Encrypt or provide your own certificates
+        cert_path /etc/maddy/certs/fullchain.pem
+        key_path /etc/maddy/certs/privkey.pem
+    }
+
+    # Authentication
+    auth {
+        # Use local flat file for authentication
+        # Run: maddyctl creds create username@localhost
+        flat_file /etc/maddy/accounts.db
+    }
+
+    # Delivery target - where emails go
+    deliver &local_routing
+}
+
+# SMTPS port (465) - Implicit TLS
+# smtps tcp://0.0.0.0:465 {
+#     debug: false
+#     hostname mail.localhost
+#     tls {
+#         cert_path /etc/maddy/certs/fullchain.pem
+#         key_path /etc/maddy/certs/privkey.pem
+#     }
+#     auth {
+#         flat_file /etc/maddy/accounts.db
+#     }
+#     deliver &local_routing
+# }
+
+# -----------------------------------------------------------------------------
+# Local Routing and Delivery
+# -----------------------------------------------------------------------------
+
+target.local local_routing {
+    # Check if the recipient exists
+    check {
+        # Accept emails for these domains
+        match_domain {
+            localhost
+            mail.localhost
+            # Add your domain here
+        }
+    }
+
+    # Deliver to local mailboxes
+    deliver &local_mailboxes
+}
+
+# -----------------------------------------------------------------------------
+# Mailbox Storage
+# -----------------------------------------------------------------------------
+
+storage.imapsql local_mailboxes {
+    # Use SQLite for small deployments
+    driver sqlite3
+    dsn /etc/maddy/mailboxes.db
+
+    # Or use PostgreSQL for larger deployments
+    # driver postgres
+    # dsn "postgres://maddy:maddy_password@localhost/maddy?sslmode=disable"
+
+    # Mailbox options
+    create_missing true
+}
+
+# -----------------------------------------------------------------------------
+# IMAP Endpoint (Optional - for receiving emails)
+# -----------------------------------------------------------------------------
+
+# imap tcp://0.0.0.0:143 {
+#     debug: false
+#     tls {
+#         cert_path /etc/maddy/certs/fullchain.pem
+#         key_path /etc/maddy/certs/privkey.pem
+#     }
+#     auth {
+#         flat_file /etc/maddy/accounts.db
+#     }
+#     storage &local_mailboxes
+# }
+
+# imaps tcp://0.0.0.0:993 {
+#     debug: false
+#     tls {
+#         cert_path /etc/maddy/certs/fullchain.pem
+#         key_path /etc/maddy/certs/privkey.pem
+#     }
+#     auth {
+#         flat_file /etc/maddy/accounts.db
+#     }
+#     storage &local_mailboxes
+# }
+
+# -----------------------------------------------------------------------------
+# Queue Configuration
+# -----------------------------------------------------------------------------
+
+queue.outbound {
+    # Retry failed deliveries
+    retry 5  # Retry 5 times
+
+    # Target for outbound emails
+    target.remote
+}
+
+target.remote {
+    # Use standard DNS MX records
+    mx_auth {
+        # DANE support (optional but recommended)
+        dane
+
+        # MTA-STS support (optional)
+        mta_sts {
+            cache fs /etc/maddy/mta-sts-cache
+        }
+    }
+
+    # Limit concurrent connections
+    limit 10
+}
+
+# -----------------------------------------------------------------------------
+# Logging
+# -----------------------------------------------------------------------------
+
+log {
+    # Write to stdout/stderr
+    stdout
+
+    # Or to a file
+    # file /var/log/maddy/maddy.log
+}

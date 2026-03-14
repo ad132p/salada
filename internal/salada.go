@@ -12,6 +12,8 @@ import (
 	blog_repositories "salada/internal/blog/repositories"
 	blog_routes "salada/internal/blog/routes"
 	"salada/internal/db"
+	email_controller "salada/internal/email/controller"
+	email_routes "salada/internal/email/routes"
 	stream_controller "salada/internal/stream/controller"
 	stream_routes "salada/internal/stream/routes"
 
@@ -127,10 +129,12 @@ func setupDependenciesAndGroups(router *gin.Engine) {
 	authController := auth_controller.NewAuthController(adminRepo, authConfig)
 	adminController := admin_controller.NewAdminController(adminRepo)
 	streamController := stream_controller.NewStreamController()
+	emailController := email_controller.NewEmailController()
 
 	// 4. Register Modular Routes
 	blog_routes.BlogRoutes(router, blogController)
 	auth_routes.AuthRoutes(router, authController)
 	admin_routes.AdminRoutes(router, adminController, blogController)
 	stream_routes.StreamRoutes(router, streamController)
+	email_routes.EmailRoutes(router, emailController)
 }
