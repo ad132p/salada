@@ -1,6 +1,6 @@
-SALADA_HOST=localhost
-DB_HOST=localhost
-POSTGRES_PASSWORD=
-SESSION_SECRET=
+POSTGRES_USER=salada
+POSTGRES_DB=salada
+POSTGRES_PASSWORD=dev_secret_password
+DB_HOST=salada-db
 MODE=dev
-SUPERUSER=
+BIND_IP=0.0.0.0

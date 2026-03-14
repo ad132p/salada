@@ -247,21 +247,37 @@ func WSTrackingMiddleware(c *gin.Context) {
 		bytesRead := wrappedWriter.hijackedConn.bytesRead
 		bytesWritten := wrappedWriter.hijackedConn.bytesWritten
 
+		// Calculate watcher
+		watcher := "anon"
+		if u, ok := c.Get("username"); ok {
+			if s, ok := u.(string); ok && s != "" {
+				watcher = s
+			}
+		}
+
+		// Calculate streamer
+		streamer := watcher // Default to self if creating stream
+		if roomParam := c.Query("room"); roomParam != "" {
+			streamer = roomParam
+		}
+
 		// 5. Log to PostgreSQL
 		_, err := db.DB.Exec(`
-			INSERT INTO ws_metrics (client_ip, path, bytes_read, bytes_written, duration_ms)
-			VALUES ($1, $2, $3, $4, $5)`,
+			INSERT INTO ws_metrics (client_ip, path, bytes_read, bytes_written, duration_ms, streamer, watcher)
+			VALUES ($1, $2, $3, $4, $5, $6, $7)`,
 			clientIP,
 			path,
 			bytesRead,
 			bytesWritten,
 			duration,
+			streamer,
+			watcher,
 		)
 		if err != nil {
 			log.Printf("❌ ERROR: Failed to insert WS metric log into DB: %v", err)
 		} else {
-			log.Printf("WS Connection closed (IP: %s, Path: %s): %d bytes read, %d bytes written, duration: %d ms",
-				clientIP, path, bytesRead, bytesWritten, duration)
+			log.Printf("WS Connection closed (IP: %s, Path: %s, Streamer: %s, Watcher: %s): %d bytes read, %d bytes written, duration: %d ms",
+				clientIP, path, streamer, watcher, bytesRead, bytesWritten, duration)
 		}
 	}
 }
