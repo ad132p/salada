@@ -11,6 +11,8 @@ func StreamRoutes(router *gin.Engine, streamController *controller.StreamControl
 
 	streamRoutes := router.Group("/stream")
 	streamRoutes.Use(middleware.DBLoggerMiddleware())
+	streamRoutes.Use(middleware.WSTrackingMiddleware)
+
 	{
 
 		// Streamer dashboard page (must be logged in)
@@ -31,6 +33,7 @@ func StreamRoutes(router *gin.Engine, streamController *controller.StreamControl
 	router.GET(
 		"/rooms",
 		middleware.DBLoggerMiddleware(),
+		middleware.WSTrackingMiddleware,
 		streamController.GetRoomsPage,
 	)
 
@@ -38,6 +41,7 @@ func StreamRoutes(router *gin.Engine, streamController *controller.StreamControl
 	router.GET(
 		"/rooms/:username",
 		middleware.DBLoggerMiddleware(),
+		middleware.WSTrackingMiddleware,
 		streamController.GetWatchRoomPage,
 	)
 }
