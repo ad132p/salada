@@ -2,6 +2,7 @@ package routes
 
 import (
 	"salada/internal/auth/controller"
+	"salada/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -10,5 +11,5 @@ import (
 func AuthRoutes(router *gin.Engine, authController *controller.AuthController) {
 	router.POST("/register", authController.Register)
 	router.POST("/login", authController.Login)
-	router.GET("/logout", authController.Logout)
+	router.POST("/logout", middleware.AuthenticateMiddleware, authController.Logout)
 }
