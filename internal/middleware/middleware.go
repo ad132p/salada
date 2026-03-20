@@ -7,8 +7,10 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"salada/internal/auth"
 	"salada/internal/db"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -20,9 +22,14 @@ func SetupMiddleware(router *gin.Engine) {
 	// Logger middleware
 	router.Use(gin.Logger())
 
+	allowOrigins := os.Getenv("ALLOWED_ORIGINS")
+	if allowOrigins == "" {
+		allowOrigins = "http://localhost:8080" // Default for development
+	}
+
 	// CORS middleware
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"}, // Replace with your actual frontend origin(s)
+		AllowOrigins:     strings.Split(allowOrigins, ","),
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Requested-With", "Cookie"},
 		ExposeHeaders:    []string{"Content-Length"},
