@@ -181,8 +181,16 @@ func (pc *BlogController) UploadImage(c *gin.Context) {
 		return
 	}
 
-	// Generate a unique filename to prevent conflicts
-	filename := filepath.Base(file.Filename)
+	// Extract the extension and validate it
+	ext := filepath.Ext(file.Filename)
+	allowedExts := map[string]bool{".jpg": true, ".jpeg": true, ".png": true, ".gif": true, ".webp": true}
+	if !allowedExts[strings.ToLower(ext)] {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file type"})
+		return
+	}
+
+	// Generate a secure UUID filename to prevent traversal and conflicts
+	filename := uuid.New().String() + ext
 
 	// Save the file to the specified path
 	dst := filepath.Join("uploads", filename)
