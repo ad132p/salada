@@ -41,10 +41,12 @@ We use native Podman `systemd` integration (Quadlets) to run both the Golang app
    cp containers/systemd/*.container containers/systemd/*.volume containers/systemd/*.network ~/.config/containers/systemd/
    ```
 
-4. **Provide Database Credentials**:
-   Copy `containers/env` to your systemd config directory:
+4. **Provide Database Credentials and Certificates**:
+   First, ensure the SSL certificates have been generated via `./scripts/gen-cert.sh`.
+   Then copy `containers/env` and the `containers/certs` directory to your systemd config path:
    ```bash
    cp containers/env ~/.config/containers/
+   cp -r containers/certs ~/.config/containers/
    ```
    *Note: Edit `~/.config/containers/env` to set strong, production passwords if deploying publicly!*
 

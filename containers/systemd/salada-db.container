@@ -10,3 +10,5 @@ Volume=salada-db.volume:/var/lib/postgresql
 # Explicitly use absolute path to repo schema if possible, or bind mount appropriately
 # But for now we just use the EnvironmentFile instead of Secret
 EnvironmentFile=../env
+Volume=../certs:/certs:Z
+Exec=-c ssl=on -c ssl_cert_file=/certs/server.crt -c ssl_key_file=/certs/server.key
