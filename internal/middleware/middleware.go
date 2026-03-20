@@ -11,11 +11,13 @@ import (
 	"salada/internal/auth"
 	"salada/internal/db"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/time/rate"
 )
 
 func SetupMiddleware(router *gin.Engine) {
@@ -177,6 +179,82 @@ func CheckAuthMiddleware(c *gin.Context) {
 	}
 
 	c.Next()
+}
+
+// ==============================================================================
+// Auth Rate Limiting Middleware
+// ==============================================================================
+
+type visitor struct {
+	limiter  *rate.Limiter
+	lastSeen time.Time
+}
+
+var (
+	visitors = make(map[string]*visitor)
+	mu       sync.Mutex
+)
+
+func init() {
+	go cleanupVisitors()
+}
+
+func getVisitor(ip string) *rate.Limiter {
+	mu.Lock()
+	defer mu.Unlock()
+
+	v, exists := visitors[ip]
+	if !exists {
+		// 1 request per second, burst of 5
+		limiter := rate.NewLimiter(rate.Limit(1), 5)
+		visitors[ip] = &visitor{limiter, time.Now()}
+		return limiter
+	}
+
+	v.lastSeen = time.Now()
+	return v.limiter
+}
+
+func cleanupVisitors() {
+	for {
+		time.Sleep(time.Minute)
+		mu.Lock()
+		for ip, v := range visitors {
+			if time.Since(v.lastSeen) > 3*time.Minute {
+				delete(visitors, ip)
+			}
+		}
+		mu.Unlock()
+	}
+}
+
+// AuthRateLimitMiddleware rate limits authentication attempts to prevent brute force
+func AuthRateLimitMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ip := c.ClientIP()
+		limiter := getVisitor(ip)
+		if !limiter.Allow() {
+			// Log the rate limit hit into access_logs
+			_, err := db.DB.Exec(`
+				INSERT INTO access_logs (client_ip, method, path, status_code, latency_ms)
+				VALUES ($1, $2, $3, $4, $5)`,
+				ip,
+				c.Request.Method,
+				c.Request.URL.Path,
+				http.StatusTooManyRequests,
+				0,
+			)
+			if err != nil {
+				log.Printf("❌ ERROR: Failed to insert rate-limit access log into DB: %v", err)
+			}
+
+			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
+				"error": "Rate limit exceeded",
+			})
+			return
+		}
+		c.Next()
+	}
 }
 
 // ==============================================================================
