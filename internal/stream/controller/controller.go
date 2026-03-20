@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -53,7 +54,19 @@ func NewStreamController() *StreamController {
 
 	sc := &StreamController{
 		upgrader: websocket.Upgrader{
-			CheckOrigin: func(r *http.Request) bool { return true },
+			CheckOrigin: func(r *http.Request) bool {
+				origin := r.Header.Get("Origin")
+				allowedOrigins := os.Getenv("ALLOWED_ORIGINS")
+				if allowedOrigins == "" {
+					return true // Development only
+				}
+				for _, allowed := range strings.Split(allowedOrigins, ",") {
+					if origin == strings.TrimSpace(allowed) {
+						return true
+					}
+				}
+				return false
+			},
 		},
 		rooms: make(map[string]*Room),
 	}
