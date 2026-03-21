@@ -70,6 +70,12 @@ We use native Podman `systemd` integration (Quadlets) to run both the Golang app
    systemctl --user start salada.service
    ```
 
+7. **Accessing the Database interactively**:
+   If you ever need to inspect your tables or manually run queries, you can drop straight into a `psql` session inside the database container:
+   ```bash
+   podman exec -it salada-db psql -U salada -d salada
+   ```
+
 ## Environment Modes: `MODE=dev` vs `MODE=prod`
 
 The application behaves differently depending on the `MODE` environment variable defined in your `containers/env` file:
