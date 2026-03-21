@@ -12,3 +12,4 @@ Volume=salada-db.volume:/var/lib/postgresql
 EnvironmentFile=../env
 Volume=../certs:/certs:Z
 Exec=-c ssl=on -c ssl_cert_file=/certs/server.crt -c ssl_key_file=/certs/server.key
+UserNS=keep-id:uid=999,gid=999
