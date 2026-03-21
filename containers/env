@@ -4,3 +4,4 @@ POSTGRES_PASSWORD=dev_secret_password
 DB_HOST=salada-db
 MODE=dev
 BIND_IP=0.0.0.0
+SESSION_SECRET=super_secret_dev_session_key_that_is_32_chars_long

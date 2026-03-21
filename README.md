@@ -70,6 +70,21 @@ We use native Podman `systemd` integration (Quadlets) to run both the Golang app
    systemctl --user start salada.service
    ```
 
+## Environment Modes: `MODE=dev` vs `MODE=prod`
+
+The application behaves differently depending on the `MODE` environment variable defined in your `containers/env` file:
+
+- **`MODE=dev`**: 
+  - Starts the server on port `8080` binding to the IP address specified in `BIND_IP`.
+  - Expects locally generated self-signed certificates (`cert.pem` and `key.pem`) for TLS.
+  - Enables Gin `DebugMode` for verbose logging.
+
+- **`MODE=prod`** (or any value other than `dev`):
+  - Starts the server on standard web ports `80` and `443`.
+  - Automatically provisions and manages real TLS certificates via Let's Encrypt for `salada.dev` and `www.salada.dev` using `autocert`.
+  - Caches TLS certificates in `/var/www/.cache`.
+  - Disables Gin's verbose debug logging (runs in release mode).
+
 ## Development & Makefile Usage
 
 For quick development iteration, a Makefile is provided:
