@@ -13,5 +13,5 @@ Network=salada.network
 PublishPort=80:8080
 PublishPort=443:443
 EnvironmentFile=../env
-Volume=salada-uploads.volume:/app/uploads
+Volume=salada-uploads.volume:/app/uploads:Z
 Volume=salada-cache.volume:/var/www/.cache
