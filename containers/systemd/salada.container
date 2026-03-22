@@ -3,6 +3,10 @@
 Requires=salada-db.service
 After=salada-db.service
 
+[Service]
+KillMode=mixed
+TimeoutStopSec=30
+
 [Install]
 WantedBy=default.target
 
