@@ -7,4 +7,4 @@ COPY . .
 EXPOSE 8080
 EXPOSE 443
 
-CMD [ "./salada" ]
+CMD [ "./dist/salada" ]

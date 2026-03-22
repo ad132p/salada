@@ -1,7 +1,6 @@
-# Salada deployment Makefile
-# Simple commands for building and deploying
+# Salada Makefile
 
-.PHONY: build deploy clean
+.PHONY: build clean build-arm64
 
 # Default target architecture (change if your server is different)
 TARGET_OS ?= linux
@@ -17,23 +16,6 @@ build:
 	@echo "Build complete: dist/salada"
 	@ls -lh dist/salada
 
-# Usage: make deploy SERVER=user@example.com
-deploy: build
-	@if [ -z "$(SERVER)" ]; then \
-		echo "Error: SERVER not set. Usage: make deploy SERVER=user@example.com"; \
-		exit 1; \
-	fi
-	@echo "Deploying to $(SERVER)..."
-	./scripts/deploy.sh $(SERVER)
-
-# Quick deploy without rebuild (use after make build)
-# Usage: make quick-deploy SERVER=user@example.com
-quick-deploy:
-	@if [ -z "$(SERVER)" ]; then \
-		echo "Error: SERVER not set. Usage: make quick-deploy SERVER=user@example.com"; \
-		exit 1; \
-	fi
-	./scripts/quick-deploy.sh $(SERVER)
 
 # Clean build artifacts
 clean:

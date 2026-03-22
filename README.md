@@ -29,9 +29,36 @@ We use native Podman `systemd` integration (Quadlets) to run both the Golang app
    echo "net.ipv4.ip_unprivileged_port_start=80" | sudo tee /etc/sysctl.d/99-unprivileged-ports.conf
    ```
 
-2. **Build the `salada` image locally**:
+2. **Build the frontend and binary, then build the container image**:
+   The container image is built from the local source tree, so the frontend assets and the compiled binary must exist before running `podman build`. Run `make build` first — it compiles the JS bundle with webpack, the CSS with Tailwind, and the Go binary into `dist/salada`:
    ```bash
+   # Compile frontend assets (web/assets/js/, web/assets/css/) and Go binary (dist/salada)
+   make build
+
+   # Now build the container image — COPY . . will include the built assets
    podman build -t localhost/salada .
+   ```
+
+   **Alternative — build the image directly on the remote server via SSH**:
+   Instead of building locally and shipping the image, you can point your local Podman client at the remote server. Podman sends the build context (including the pre-built assets from `make build`) over SSH, and the image is built on the server — no separate push/pull needed.
+
+   On the server, enable the Podman socket:
+   ```bash
+   systemctl --user enable --now podman.socket
+   ```
+
+   On your laptop, register the server as a Podman connection (once):
+   ```bash
+   podman system connection add salada ssh://user@YOUR_IP/run/user/1000/podman/podman.sock
+   ```
+
+   Then build and tag the image on the remote server:
+   ```bash
+   # Run make build locally first so web/assets/ and dist/salada are present
+   make build
+
+   # Build the image on the remote server using the local source tree as context
+   podman build --connection salada -t localhost/salada .
    ```
 
 3. **Set up the Quadlet files**:
@@ -102,12 +129,10 @@ pnpm i
 # Build frontend and compile go binary (creates dist/salada)
 make build
 
-# Build and deploy
-make deploy SERVER=user@yourserver.com
+# Build for ARM64 (e.g. targeting an ARM server)
+make build-arm64
 
-# Deploy without rebuilding (if you already ran make build)
-make quick-deploy SERVER=user@yourserver.com
-
-# Or use scripts directly:
-./scripts/deploy.sh user@yourserver.com
+# Clean build artifacts
+make clean
 ```
+
