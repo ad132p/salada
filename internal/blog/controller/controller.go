@@ -66,7 +66,8 @@ func (pc *BlogController) CreatePost(c *gin.Context) {
 	postID, err := pc.Repo.CreatePost(postRequest)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create post", "details": err.Error()})
+		log.Printf("Failed to create post: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create post"})
 		return
 	}
 
@@ -75,7 +76,8 @@ func (pc *BlogController) CreatePost(c *gin.Context) {
 	err = pc.Repo.UpdateImagesWithPostID(&updateRequest)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update images of post", "details": err.Error()})
+		log.Printf("Failed to update images of post: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update images of post"})
 		return
 	}
 
@@ -93,7 +95,8 @@ func (pc *BlogController) CreateComment(c *gin.Context) {
 	commentID, err := pc.Repo.CreateComment(commentRequest)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create post", "details": err.Error()})
+		log.Printf("Failed to create comment: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create comment"})
 		return
 	}
 
@@ -127,7 +130,8 @@ func (pc *BlogController) UpdatePost(c *gin.Context) {
 	updatePost.ID = id
 
 	if err := pc.Repo.UpdatePost(&updatePost); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update post", "details": err.Error()})
+		log.Printf("Failed to update post: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update post"})
 		return
 	}
 
@@ -136,7 +140,8 @@ func (pc *BlogController) UpdatePost(c *gin.Context) {
 	err = pc.Repo.UpdateImagesWithPostID(&updateRequest)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update images of post", "details": err.Error()})
+		log.Printf("Failed to update images of post: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update images of post"})
 		return
 	}
 
@@ -165,7 +170,8 @@ func (pc *BlogController) PublishPost(c *gin.Context) {
 		return
 	}
 	if err := pc.Repo.PublishPost(post); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update post", "details": err.Error()})
+		log.Printf("Failed to publish post: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update post"})
 		return
 	}
 
@@ -499,7 +505,8 @@ func (pc *BlogController) DeletePost(c *gin.Context) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete post", "details": err.Error()})
+		log.Printf("Failed to delete post: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete post"})
 		return
 	}
 	fmt.Println(images)
