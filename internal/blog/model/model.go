@@ -39,9 +39,9 @@ type Post struct {
 }
 
 type CreateCommentRequest struct {
-	PostID     uuid.UUID `json:"postID"` // The UUID of the blog post this comment belongs to
-	Content    string    `json:"comment"`
-	AuthorName string    `json:"author_name"`
+	PostID     uuid.UUID `json:"post_id" binding:"required"` // The UUID of the blog post this comment belongs to
+	Content    string    `json:"content" binding:"required,min=1,max=5000"`
+	AuthorName string    `json:"author_name" binding:"max=100"`
 }
 
 type LikeRequest struct {

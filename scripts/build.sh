@@ -15,6 +15,7 @@ echo "Target: $TARGET_OS/$TARGET_ARCH"
 
 # Build frontend first (needs to happen before Go embed)
 echo "Building frontend..."
+./scripts/gen-cert.sh
 pnpm install --frozen-lockfile
 pnpm run build
 

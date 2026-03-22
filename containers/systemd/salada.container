@@ -1,21 +1,21 @@
 # ~/.config/containers/systemd/salada.container
+[Unit]
+Requires=salada-db.service
+After=salada-db.service
+
+[Service]
+KillMode=mixed
+TimeoutStopSec=30
+
+[Install]
+WantedBy=default.target
+
 [Container]
-ContainerName=salada-app
-IP=192.168.30.10
-Image=localhost:5000/salada:latest
-Pod=salada # Link to the same pod as the database
+ContainerName=salada
+Image=localhost/salada:latest
 Network=salada.network
-Requires=salada-db.container
-After=salada-db.container
-Environment=POSTGRES_HOST=salada-db
-
-# Define a basic health check for the Go app (assuming it has a /health endpoint)
-HealthcheckIntervalSec=5
-HealthcheckTimeoutSec=3
-HealthcheckRetries=3
-HealthcheckCmd=curl --fail https://salada.dev/
-
-# Optional: Resource limits (adjust as needed)
-# MemoryLimit=128M
-# CPULimit=0.2 # 20% of one CPU core
-Secret=postgres-password-kube,type=env,target=POSTGRES_PASSWORD
+PublishPort=80:8080
+PublishPort=443:443
+EnvironmentFile=../env
+Volume=salada-uploads.volume:/app/uploads:Z
+Volume=salada-cache.volume:/var/www/.cache

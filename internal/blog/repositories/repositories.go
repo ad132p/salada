@@ -399,31 +399,26 @@ func (r *PostRepository) LikePostByID(req model.LikeRequest) error {
 	// Normalize action to lowercase for reliable comparison
 	normalizedAction := strings.ToLower(req.Action)
 
-	var updateOperator string
-
 	switch normalizedAction {
-	case "like":
-		// Increment the likes count
-		updateOperator = "+ 1"
-	case "unlike":
-		// Decrement the likes count (and ensure it never goes below zero)
-		updateOperator = "- 1"
+	case "like", "unlike":
+		// Valid actions
 	default:
 		return fmt.Errorf("invalid action specified: %s. Must be 'like' or 'unlike'", req.Action)
 	}
 
-	// SQL command to update the 'likes' count
-	// Using a CASE statement or WHERE clause (e.g., likes > 0) is safer for decrementing,
-	// but the simple update is used here for direct control via the application:
-	query := fmt.Sprintf(`
+	query := `
 		UPDATE posts 
-		SET likes = likes %s, 
+		SET likes = CASE
+			WHEN $2 = 'like' THEN likes + 1
+			WHEN $2 = 'unlike' AND likes > 0 THEN likes - 1
+			ELSE likes
+		END,
 		    updated_at = NOW() 
 		WHERE id = $1
-	`, updateOperator)
+	`
 
 	// Execute the update query.
-	result, err := r.db.Exec(query, req.PostID)
+	result, err := r.db.Exec(query, req.PostID, normalizedAction)
 	if err != nil {
 		return fmt.Errorf("error executing like update for PostID %s: %w", req.PostID, err)
 	}

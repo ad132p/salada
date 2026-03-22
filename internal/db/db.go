@@ -18,7 +18,11 @@ func ConnectDatabase() {
 	// Build connection string from environment variables
 	pass := os.Getenv("POSTGRES_PASSWORD")
 	host := os.Getenv("DB_HOST")
-	connStr := fmt.Sprintf("postgresql://salada:%s@%s:5432/salada?sslmode=disable", pass, host)
+	sslMode := os.Getenv("DB_SSL_MODE")
+	if sslMode == "" {
+		sslMode = "require" // Default to secure in production
+	}
+	connStr := fmt.Sprintf("postgresql://salada:%s@%s:5432/salada?sslmode=%s", pass, host, sslMode)
 
 	var err error
 	DB, err = sql.Open("postgres", connStr)

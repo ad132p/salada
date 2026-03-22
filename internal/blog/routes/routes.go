@@ -22,7 +22,7 @@ func BlogRoutes(router *gin.Engine, blogController *controller.BlogController) {
 		postRoutes.DELETE("/:id", middleware.AuthenticateMiddleware, blogController.DeletePost)
 		postRoutes.PUT("/:id", middleware.AuthenticateMiddleware, blogController.UpdatePost)
 		postRoutes.GET("/new", middleware.AuthenticateMiddleware, blogController.GetNewPostForm)
-		postRoutes.PATCH("/publish/:id", blogController.PublishPost)
+		postRoutes.PATCH("/publish/:id", middleware.AuthenticateMiddleware, blogController.PublishPost)
 		postRoutes.GET("/category/:name", blogController.GetCategory)
 		postRoutes.GET("/tags/:name", blogController.GetTag)
 		postRoutes.GET("/search", blogController.GetTagOrContent)

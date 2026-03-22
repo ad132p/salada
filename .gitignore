@@ -6,7 +6,11 @@ web/assets/
 *scratch*
 .swp
 dont/
+dist/
 migration.sql
 node_modules/
 uploads/
 
+cert.pem
+key.pem
+containers/certs/

@@ -10,6 +10,7 @@ TARGET_ARCH ?= amd64
 build:
 	@echo "Building for $(TARGET_OS)/$(TARGET_ARCH)..."
 	@mkdir -p dist
+	./scripts/gen-cert.sh
 	pnpm install --frozen-lockfile
 	pnpm run build
 	CGO_ENABLED=0 GOOS=$(TARGET_OS) GOARCH=$(TARGET_ARCH) go build -ldflags="-s -w" -o dist/salada .

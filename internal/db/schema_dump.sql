@@ -228,3 +228,21 @@ ALTER TABLE ONLY public.images
 
 \unrestrict FU1normnuAkibep5Ea1rETD6g4i0qOuWfsbzhiumRQ6x8xNrieydfCimIhZaWPt
 
+
+--
+-- Name: ws_metrics; Type: TABLE; Schema: public; Owner: salada
+--
+
+CREATE TABLE public.ws_metrics (
+    id SERIAL PRIMARY KEY,
+    "timestamp" timestamp with time zone DEFAULT now(),
+    client_ip character varying(45) NOT NULL,
+    path character varying(255) NOT NULL,
+    bytes_read bigint NOT NULL DEFAULT 0,
+    bytes_written bigint NOT NULL DEFAULT 0,
+    duration_ms bigint NOT NULL DEFAULT 0,
+    streamer character varying(255) DEFAULT 'unknown'::character varying NOT NULL,
+    watcher character varying(255) DEFAULT 'anon'::character varying NOT NULL
+);
+
+ALTER TABLE public.ws_metrics OWNER TO salada;
