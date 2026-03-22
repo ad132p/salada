@@ -13,6 +13,7 @@ import (
 	"github.com/gomarkdown/markdown/html"
 	"github.com/gomarkdown/markdown/parser"
 	"github.com/lib/pq"
+	"github.com/microcosm-cc/bluemonday"
 	"salada/internal/blog/model"
 )
 
@@ -92,7 +93,11 @@ func RenderMarkdownToHTML(md string) string {
 	// Create the HTML renderer
 	htmlBytes := markdown.Render(doc, renderer)
 
-	return string(htmlBytes)
+	// Sanitize HTML to prevent XSS
+	policy := bluemonday.UGCPolicy()
+	sanitized := policy.SanitizeBytes(htmlBytes)
+
+	return string(sanitized)
 }
 
 // RenderMarkdownToHTMLWithIDs converts markdown to HTML and also returns the extracted ToC.
@@ -138,7 +143,11 @@ func RenderMarkdownToHTMLWithIDs(md string) (string, []model.TocItem) {
 	// Now render the HTML
 	htmlBytes := markdown.Render(doc, renderer)
 
-	return string(htmlBytes), tocItems
+	// Sanitize HTML to prevent XSS
+	p := bluemonday.UGCPolicy()
+	sanitized := p.SanitizeBytes(htmlBytes)
+
+	return string(sanitized), tocItems
 }
 
 type TailwindRenderer struct {
