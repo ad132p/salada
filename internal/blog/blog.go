@@ -144,8 +144,8 @@ func RenderMarkdownToHTMLWithIDs(md string) (string, []model.TocItem) {
 	htmlBytes := markdown.Render(doc, renderer)
 
 	// Sanitize HTML to prevent XSS
-	p := bluemonday.UGCPolicy()
-	sanitized := p.SanitizeBytes(htmlBytes)
+	policy := bluemonday.UGCPolicy()
+	sanitized := policy.SanitizeBytes(htmlBytes)
 
 	return string(sanitized), tocItems
 }
