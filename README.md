@@ -77,7 +77,12 @@ We use native Podman `systemd` integration (Quadlets) to run both the Golang app
    ```
    *Note: Edit `~/.config/containers/env` to set strong, production passwords if deploying publicly!*
 
-5. **Initialize the Database Schema**:
+5. **Enable Linger for your User** (allows user services to run at boot and persist after logout):
+   ```bash
+   sudo loginctl enable-linger $USER
+   ```
+
+6. **Initialize the Database Schema**:
    The webapp depends on the database having the correct tables.
    You must either edit `salada-db.container` to bind mount `schema_dump.sql` to `/docker-entrypoint-initdb.d/`, or manually execute it against the fresh database:
    ```bash
@@ -91,16 +96,21 @@ We use native Podman `systemd` integration (Quadlets) to run both the Golang app
    podman exec -i salada-db psql -U salada -d salada < internal/db/schema_dump.sql
    ```
 
-6. **Start the application via Systemd**:
+7. **Start the Application via Systemd**:
    App will start automatically on boot.
    ```bash
    systemctl --user start salada.service
    ```
 
-7. **Accessing the Database interactively**:
+8. **Accessing the Database interactively**:
    If you ever need to inspect your tables or manually run queries, you can drop straight into a `psql` session inside the database container:
    ```bash
    podman exec -it salada-db psql -U salada -d salada
+   ```
+
+   You may access by configuring a psql alias:
+   ```bash
+   alias psql='podman run --rm -it --network host -v "$PWD":/psql -w /psql postgres:alpine psql'
    ```
 
 ## Environment Modes: `MODE=dev` vs `MODE=prod`
