@@ -116,7 +116,7 @@ func setupDependenciesAndGroups(router *gin.Engine) {
 	// 2. Load Auth Configuration
 	authConfig := auth_controller.AuthConfig{
 		CookieDomain:   os.Getenv("SALADA_HOST"),
-		CookieSecure:   os.Getenv("ENV") == "production",
+		CookieSecure:   os.Getenv("MODE") == "prod",
 		CookieSameSite: http.SameSiteLaxMode,
 	}
 
