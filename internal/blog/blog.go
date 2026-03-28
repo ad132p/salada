@@ -128,7 +128,7 @@ func RenderMarkdownToHTMLWithIDs(md string) (string, []model.TocItem) {
 		}
 
 		if heading, ok := node.(*ast.Heading); ok {
-			if heading.Level >= 2 && heading.Level <= 3 {
+			if heading.Level >= 1 && heading.Level <= 3 {
 				text := extractTextFromNode(heading)
 				if text != "" {
 					id := generateHeadingID(text)
