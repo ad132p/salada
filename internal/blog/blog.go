@@ -96,6 +96,8 @@ func RenderMarkdownToHTML(md string) string {
 	// Sanitize HTML to prevent XSS
 	policy := bluemonday.UGCPolicy()
 	policy.AllowAttrs("class", "id").Globally()
+	policy.AllowRelativeURLs(true)
+	policy.AllowDataURIImages()
 	sanitized := policy.SanitizeBytes(htmlBytes)
 
 	return string(sanitized)
@@ -147,6 +149,8 @@ func RenderMarkdownToHTMLWithIDs(md string) (string, []model.TocItem) {
 	// Sanitize HTML to prevent XSS
 	policy := bluemonday.UGCPolicy()
 	policy.AllowAttrs("class", "id").Globally()
+	policy.AllowRelativeURLs(true)
+	policy.AllowDataURIImages()
 	sanitized := policy.SanitizeBytes(htmlBytes)
 
 	return string(sanitized), tocItems
