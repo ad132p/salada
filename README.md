@@ -10,7 +10,7 @@ git
 podman
 golang
 postgres 18
-pnpm
+npm
 
 
 ```bash
@@ -72,6 +72,7 @@ We use native Podman `systemd` integration (Quadlets) to run both the Golang app
    First, ensure the SSL certificates have been generated via `./scripts/gen-cert.sh`.
    Then copy `containers/env` and the `containers/certs` directory to your systemd config path:
    ```bash
+   mkdir -p ~/.config/containers/
    cp containers/env ~/.config/containers/
    cp -r containers/certs ~/.config/containers/
    ```
@@ -134,7 +135,7 @@ For quick development iteration, a Makefile is provided:
 
 ```bash
 # Install frontend deps
-pnpm i
+npm i
 
 # Build frontend and compile go binary (creates dist/salada)
 make build

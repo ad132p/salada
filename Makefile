@@ -10,8 +10,8 @@ build:
 	@echo "Building for $(TARGET_OS)/$(TARGET_ARCH)..."
 	@mkdir -p dist
 	./scripts/gen-cert.sh
-	pnpm install --frozen-lockfile
-	pnpm run build
+	npm install --frozen-lockfile
+	npm run build
 	CGO_ENABLED=0 GOOS=$(TARGET_OS) GOARCH=$(TARGET_ARCH) go build -ldflags="-s -w" -o dist/salada .
 	@echo "Build complete: dist/salada"
 	@ls -lh dist/salada
