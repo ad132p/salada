@@ -28,10 +28,9 @@ function VideoStreamer({ wsUrl, iceServers }) {
         if (!window.isSecureContext) {
             setIsSecureContext(false);
             setError(
-                'Camera access requires a secure context (HTTPS or localhost). ' +
-                'Please access this page via https:// or http://localhost:8080'
-            );
-            return;
+               'Camera access requires a secure context (HTTPS or localhost). ' +
+               'Please access this page via https:// or https://localhost'
+            );            return;
         }
 
         // Check for mediaDevices support
@@ -302,10 +301,9 @@ function VideoStreamer({ wsUrl, iceServers }) {
                                 Camera access requires a secure context. This page must be accessed via:
                             </p>
                             <ul className="list-disc list-inside text-yellow-700 space-y-1 mb-4">
-                                <li><code className="bg-yellow-100 px-2 py-0.5 rounded">https://</code> (recommended for production)</li>
-                                <li><code className="bg-yellow-100 px-2 py-0.5 rounded">http://localhost:8080</code> (for local development)</li>
-                            </ul>
-                            <p className="text-sm text-yellow-600">
+                               <li><code className="bg-yellow-100 px-2 py-0.5 rounded">https://</code> (recommended for production)</li>
+                               <li><code className="bg-yellow-100 px-2 py-0.5 rounded">https://localhost</code> (for local development)</li>
+                            </ul>                            <p className="text-sm text-yellow-600">
                                 Please update your URL and refresh the page.
                             </p>
                         </div>

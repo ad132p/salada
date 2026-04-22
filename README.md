@@ -119,7 +119,7 @@ We use native Podman `systemd` integration (Quadlets) to run both the Golang app
 The application behaves differently depending on the `MODE` environment variable defined in your `containers/env` file. **Note:** `MODE` must be set to exactly `"dev"` or `"prod"`; any other value will cause the server to exit with an error.
 
 - **`MODE=dev`**: 
-  - Starts the server on port `8080` binding to the IP address specified in `BIND_IP`.
+  - Starts the server on port `443` binding to the IP address specified in `BIND_IP`.
   - Expects locally generated self-signed certificates (`cert.pem` and `key.pem`) for TLS.
   - Enables Gin `DebugMode` for verbose logging.
 

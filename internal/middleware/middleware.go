@@ -26,7 +26,7 @@ func SetupMiddleware(router *gin.Engine) {
 
 	allowOrigins := os.Getenv("ALLOWED_ORIGINS")
 	if allowOrigins == "" {
-		allowOrigins = "http://localhost:8080" // Default for development
+		allowOrigins = "https://localhost" // Default for development
 	}
 
 	// CORS middleware

@@ -16,9 +16,9 @@ func Run(router *gin.Engine) {
 		log.Fatalf("invalid MODE %q: must be \"dev\" or \"prod\"", mode)
 	}
 
-	// 'dev' mode run on :8080, and prod deploys salada.dev
+	// 'dev' mode run on :443, and prod deploys salada.dev
 	if mode == "dev" {
-		bindIp := fmt.Sprintf("%s:8080", os.Getenv("BIND_IP"))
+		bindIp := fmt.Sprintf("%s:443", os.Getenv("BIND_IP"))
 		gin.SetMode(gin.DebugMode) 
 		router.RunTLS(bindIp, "cert.pem", "key.pem")
 	} else {
