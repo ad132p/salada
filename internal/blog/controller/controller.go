@@ -308,10 +308,14 @@ func (pc *BlogController) GetNewPostForm(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Username not found in context"})
 		return
 	}
+
+	categoriesJSON, _ := json.Marshal(blog.Categories)
+
 	c.HTML(http.StatusOK, "blog/blog_new.html", gin.H{
-		"title":        "New Blog Entry",
-		"username":     username,
-		"is_logged_in": c.GetBool("is_logged_in"),
+		"title":          "New Blog Entry",
+		"username":       username,
+		"categoriesJSON": string(categoriesJSON),
+		"is_logged_in":   c.GetBool("is_logged_in"),
 	})
 }
 
@@ -527,11 +531,17 @@ func (pc *BlogController) EditPostForm(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
 		return
 	}
+
+	username, _ := c.Get("username")
+	postJSON, _ := json.Marshal(post)
+	categoriesJSON, _ := json.Marshal(blog.Categories)
+
 	c.HTML(http.StatusOK, "blog/edit_post_form.html", gin.H{
-		"title":        post.Title,
-		"post":         post,
-		"categories":   blog.Categories,
-		"is_logged_in": c.GetBool("is_logged_in"),
+		"title":          post.Title,
+		"postJSON":       string(postJSON),
+		"categoriesJSON": string(categoriesJSON),
+		"username":       username,
+		"is_logged_in":   c.GetBool("is_logged_in"),
 	})
 }
 

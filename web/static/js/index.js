@@ -51,6 +51,8 @@ import VideoStreamer from './components/VideoStreamer';
 import RoomsList from './components/RoomsList';
 import VideoViewer from './components/VideoViewer';
 
+import BlogForm from './components/BlogForm';
+
 // 1. Find the DOM element where React will be mounted
 const container = document.getElementById('comment');
 
@@ -152,6 +154,27 @@ if (videoViewerContainer) {
                 streamer={streamer}
                 initialViewerCount={viewerCount}
                 iceServers={iceServers}
+            />
+        </React.StrictMode>
+    );
+}
+
+// Mount BlogForm component
+const blogFormContainer = document.getElementById('blog-form-container');
+if (blogFormContainer) {
+    const root = createRoot(blogFormContainer);
+    const isEditing = blogFormContainer.getAttribute('data-is-editing') === 'true';
+    const categories = JSON.parse(blogFormContainer.getAttribute('data-categories') || '[]');
+    const initialPost = JSON.parse(blogFormContainer.getAttribute('data-post') || 'null');
+    const username = blogFormContainer.getAttribute('data-username');
+
+    root.render(
+        <React.StrictMode>
+            <BlogForm
+                isEditing={isEditing}
+                categories={categories}
+                initialPost={initialPost}
+                username={username}
             />
         </React.StrictMode>
     );

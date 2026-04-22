@@ -114,10 +114,18 @@ func setupDependenciesAndGroups(router *gin.Engine) {
 	adminRepo := admin_repositories.NewAdminRepository(db.DB)
 
 	// 2. Load Auth Configuration
+	mode := os.Getenv("MODE")
 	authConfig := auth_controller.AuthConfig{
 		CookieDomain:   os.Getenv("SALADA_HOST"),
-		CookieSecure:   os.Getenv("MODE") == "prod",
+		CookieSecure:   mode == "prod", // Default
 		CookieSameSite: http.SameSiteLaxMode,
+	}
+
+	// In dev mode, if we are running on port 443 (TLS), we should allow secure cookies.
+	// Also, if we are on localhost, we might want to unset CookieDomain.
+	if mode == "dev" {
+		authConfig.CookieSecure = true // We are using RunTLS in dev now
+		authConfig.CookieDomain = ""   // Allow localhost/IP
 	}
 
 	// 3. Initialize Controllers
