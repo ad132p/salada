@@ -14,7 +14,6 @@ WantedBy=default.target
 ContainerName=salada
 Image=localhost/salada:latest
 Network=salada.network
-PublishPort=80:80
 PublishPort=443:443
 EnvironmentFile=../env
 Volume=salada-uploads.volume:/app/uploads:Z

@@ -4,6 +4,8 @@ salada is a blog I wrote for learning a very simple webapp stack with golang and
 
 salada blog app should run in a single VM, ideally using Podman Quadlets to manage the containers via Systemd.
 
+**Note: salada is TLS-only by default.** All traffic is served over HTTPS on port 443. Port 80 is not used or redirected.
+
 # Pre requisites
 
 git
@@ -22,11 +24,11 @@ sudo dnf install podman -y
 
 We use native Podman `systemd` integration (Quadlets) to run both the Golang app and the PostgreSQL database in rootless containers.
 
-1. **Configure Unprivileged Ports** (for rootless container binding to 80/443):
+1. **Configure Unprivileged Ports** (for rootless container binding to 443):
    ```bash
-   sudo sysctl net.ipv4.ip_unprivileged_port_start=80
+   sudo sysctl net.ipv4.ip_unprivileged_port_start=443
    # To make permanent:
-   echo "net.ipv4.ip_unprivileged_port_start=80" | sudo tee /etc/sysctl.d/99-unprivileged-ports.conf
+   echo "net.ipv4.ip_unprivileged_port_start=443" | sudo tee /etc/sysctl.d/99-unprivileged-ports.conf
    ```
 
 2. **Build the frontend and binary, then build the container image**:
@@ -123,12 +125,11 @@ The application behaves differently depending on the `MODE` environment variable
   - Expects locally generated self-signed certificates (`cert.pem` and `key.pem`) for TLS.
   - Enables Gin `DebugMode` for verbose logging.
 
-- **`MODE=prod`**:
-  - Starts the server on standard web ports `80` and `443`.
+- **`MODE=prod`**: 
+  - Starts the server on standard HTTPS port `443`.
   - Automatically provisions and manages real TLS certificates via Let's Encrypt for `salada.dev` and `www.salada.dev` using `autocert`.
   - Caches TLS certificates in `/var/www/.cache`.
   - Disables Gin's verbose debug logging (runs in release mode).
-
 ## Development & Makefile Usage
 
 For quick development iteration, a Makefile is provided:
