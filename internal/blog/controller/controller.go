@@ -538,8 +538,8 @@ func (pc *BlogController) EditPostForm(c *gin.Context) {
 
 	c.HTML(http.StatusOK, "blog/edit_post_form.html", gin.H{
 		"title":          post.Title,
-		"postJSON":       string(postJSON),
-		"categoriesJSON": string(categoriesJSON),
+		"postJSON":       template.JS(postJSON),
+		"categoriesJSON": template.JS(categoriesJSON),
 		"username":       username,
 		"is_logged_in":   c.GetBool("is_logged_in"),
 	})

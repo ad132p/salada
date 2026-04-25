@@ -2,12 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import HeroImageCropper from './HeroImageCropper';
 
 const BlogForm = ({ initialPost, categories, isEditing, username }) => {
-    const [title, setTitle] = useState(initialPost?.Title || '');
-    const [category, setCategory] = useState(initialPost?.Category || '');
+    const [title, setTitle] = useState(initialPost?.title || '');
+    const [category, setCategory] = useState(initialPost?.category || '');
     // Handle tags as a string for the input
-    const initialTags = Array.isArray(initialPost?.Tags) ? initialPost.Tags.join(',') : (initialPost?.Tags || '');
+    const initialTags = Array.isArray(initialPost?.tags) ? initialPost.tags.join(',') : (initialPost?.tags || '');
     const [tags, setTags] = useState(initialTags);
-    const [thumbnailPosition, setThumbnailPosition] = useState(initialPost?.ThumbnailPosition || 'center 50%');
+    const [thumbnailPosition, setThumbnailPosition] = useState(initialPost?.thumbnail_position || 'center 50%');
     const [uploadedImageUUIDs, setUploadedImageUUIDs] = useState([]);
     const [message, setMessage] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -70,7 +70,7 @@ const BlogForm = ({ initialPost, categories, isEditing, username }) => {
             imagePathAbsolute: true,
             placeholder: "Start writing your blog post in Markdown...",
             spellChecker: true,
-            initialValue: initialPost?.Content || '',
+            initialValue: initialPost?.content || '',
             toolbar: [
                 "bold", "italic", "heading", "|",
                 "unordered-list", "ordered-list", "code", "quote", "|",
@@ -112,7 +112,7 @@ const BlogForm = ({ initialPost, categories, isEditing, username }) => {
         const content = easyMDERef.current ? easyMDERef.current.value() : '';
         
         const submissionData = {
-            ID: initialPost?.ID,
+            id: initialPost?.id,
             title: title,
             content: content,
             tags: tags,
@@ -122,7 +122,7 @@ const BlogForm = ({ initialPost, categories, isEditing, username }) => {
             author: username // Only used for new posts in server side usually, but kept for parity
         };
 
-        const url = isEditing ? `/blog/${initialPost.ID}` : '/blog/';
+        const url = isEditing ? `/blog/${initialPost.id}` : '/blog/';
         const method = isEditing ? 'PUT' : 'POST';
 
         try {
@@ -137,7 +137,7 @@ const BlogForm = ({ initialPost, categories, isEditing, username }) => {
             if (response.ok) {
                 setMessage(isEditing ? 'Post updated successfully!' : 'Post published successfully!');
                 setTimeout(() => {
-                    window.location.replace(isEditing ? `/blog/${initialPost.Slug || initialPost.ID}` : "/thankyou");
+                    window.location.replace(isEditing ? `/blog/${initialPost.slug || initialPost.id}` : "/thankyou");
                 }, 1500);
             } else {
                 const errorText = await response.text();
@@ -153,7 +153,7 @@ const BlogForm = ({ initialPost, categories, isEditing, username }) => {
     return (
         <div className="bg-white rounded-lg shadow-xl p-8 lg:p-12">
             <h1 className="text-3xl lg:text-4xl font-extrabold text-gray-900 leading-tight mb-6">
-                {isEditing ? `Editing: ${initialPost?.Title}` : 'Create New Post'}
+                {isEditing ? `Editing: ${initialPost?.title}` : 'Create New Post'}
             </h1>
             <form className="space-y-8" onSubmit={handleSubmit}>
                 <fieldset className="border border-gray-200 rounded-lg p-6 space-y-4">
@@ -204,7 +204,7 @@ const BlogForm = ({ initialPost, categories, isEditing, username }) => {
                     <legend className="text-lg font-semibold text-gray-800 px-2">Post Content</legend>
 
                     <HeroImageCropper
-                        initialImage={initialPost?.ThumbnailURL}
+                        initialImage={initialPost?.thumbnail}
                         initialPosition={thumbnailPosition}
                         onCropChange={(pos) => setThumbnailPosition(`center ${pos}%`)}
                     />

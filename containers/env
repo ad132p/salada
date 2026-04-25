@@ -6,3 +6,4 @@ MODE=dev
 BIND_IP=0.0.0.0
 SESSION_SECRET=super_secret_dev_session_key_that_is_32_chars_long
 SALADA_HOST=salada.dev
+SUPERUSER=epaminondas

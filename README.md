@@ -60,7 +60,7 @@ We use native Podman `systemd` integration (Quadlets) to run both the Golang app
    make build
 
    # Build the image on the remote server using the local source tree as context
-   podman build --connection salada -t localhost/salada .
+   podman -c salada build -t localhost/salada .
    ```
 
 3. **Set up the Quadlet files**:

@@ -28,7 +28,7 @@ type Post struct {
 	PublishedAt       *time.Time `json:"published_at,omitempty"` // Nullable in DB
 	CreatedAt         time.Time  `json:"created_at"`
 	UpdatedAt         time.Time  `json:"updated_at"`
-	Tags              pq.StringArray
+	Tags              pq.StringArray `json:"tags"`
 	ThumbnailURL      string    `json:"thumbnail"`
 	ThumbnailPosition string    `json:"thumbnail_position"`
 	Category          string    `json:"category"`
@@ -51,7 +51,7 @@ type LikeRequest struct {
 
 type UpdatePost struct {
 	ID                uuid.UUID `json:"id"`
-	AuthorName        string
+	AuthorName        string         `json:"author"`
 	Title             string         `json:"title"`
 	Content           string         `json:"content"`
 	Tags              string         `json:"tags"`
@@ -67,7 +67,7 @@ type CreatePost struct {
 	Category          string         `json:"category"`
 	ThumbnailPosition string         `json:"thumbnail_position"`
 	ImageIDs          pq.StringArray `json:"image_ids"`
-	AuthorName        string
+	AuthorName        string         `json:"author"`
 }
 
 type UpdateImages struct {
