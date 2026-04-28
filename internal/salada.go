@@ -11,6 +11,7 @@ import (
 	blog_controller "salada/internal/blog/controller"
 	blog_repositories "salada/internal/blog/repositories"
 	blog_routes "salada/internal/blog/routes"
+	"salada/internal/buildinfo"
 	"salada/internal/db"
 
 	// NEW: Import the routes package
@@ -39,6 +40,9 @@ func setupPublicPages(router *gin.Engine) {
 		c.HTML(http.StatusOK, "pages/index.html", gin.H{
 			"title":        "Home",
 			"is_logged_in": c.GetBool("is_logged_in"),
+			"Username":     buildinfo.GitUsername,
+			"Repo":         buildinfo.GitRepo,
+			"CommitHash":   buildinfo.GitCommit,
 		})
 	})
 

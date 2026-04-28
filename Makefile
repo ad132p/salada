@@ -12,7 +12,11 @@ build:
 	./scripts/gen-cert.sh
 	npm install --frozen-lockfile
 	npm run build
-	CGO_ENABLED=0 GOOS=$(TARGET_OS) GOARCH=$(TARGET_ARCH) go build -ldflags="-s -w" -o dist/salada .
+	$(eval GIT_URL := $(shell git config --get remote.origin.url))
+	$(eval USERNAME := $(shell echo $(GIT_URL) | sed -E 's/.*[:/]([^/]+)\/[^/]+(\.git)?$$/\1/'))
+	$(eval REPO := $(shell echo $(GIT_URL) | sed -E 's/.*\/([^/]+)(\.git)?$$/\1/'))
+	$(eval COMMIT := $(shell git rev-parse HEAD))
+	CGO_ENABLED=0 GOOS=$(TARGET_OS) GOARCH=$(TARGET_ARCH) go build -ldflags="-s -w -X 'salada/internal/buildinfo.GitUsername=$(USERNAME)' -X 'salada/internal/buildinfo.GitRepo=$(REPO)' -X 'salada/internal/buildinfo.GitCommit=$(COMMIT)'" -o dist/salada .
 	@echo "Build complete: dist/salada"
 	@ls -lh dist/salada
 
