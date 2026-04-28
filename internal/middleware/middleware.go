@@ -21,6 +21,15 @@ import (
 )
 
 func SetupMiddleware(router *gin.Engine) {
+	// Trust proxies defined in environment, otherwise trust all (nil)
+	// to allow X-Forwarded-For to work in containerized/proxied environments.
+	tp := os.Getenv("TRUSTED_PROXIES")
+	if tp != "" {
+		router.SetTrustedProxies(strings.Split(tp, ","))
+	} else {
+		router.SetTrustedProxies(nil)
+	}
+
 	// Logger middleware
 	router.Use(gin.Logger())
 
@@ -105,11 +114,55 @@ func AuthenticateMiddleware(c *gin.Context) {
 	c.Next()
 }
 
+// GetClientIP returns the real client IP by checking common proxy headers first.
+func GetClientIP(c *gin.Context) string {
+	// 1. Check standard proxy headers manually first to bypass Gin's trust check if needed,
+	// but still prioritizing them in a standard order.
+	headers := []string{"X-Forwarded-For", "X-Real-IP", "Forwarded"}
+	for _, h := range headers {
+		if val := c.GetHeader(h); val != "" {
+			if h == "Forwarded" {
+				// Basic RFC 7239 parsing for 'for='
+				for _, part := range strings.Split(val, ",") {
+					for _, pair := range strings.Split(part, ";") {
+						pair = strings.TrimSpace(pair)
+						if strings.HasPrefix(strings.ToLower(pair), "for=") {
+							ip := strings.Trim(pair[4:], "\"")
+							if strings.HasPrefix(ip, "[") {
+								// IPv6 with brackets, possibly followed by port: [addr]:port
+								end := strings.Index(ip, "]")
+								if end != -1 {
+									return ip[1:end]
+								}
+							}
+							// IPv4 or IPv6 without brackets
+							if lastColon := strings.LastIndex(ip, ":"); lastColon != -1 {
+								// Only strip if it looks like a port (exactly one colon or IPv4:port)
+								if !strings.Contains(ip, "]") && (strings.Count(ip, ":") == 1 || strings.HasPrefix(ip, "::")) {
+									return ip[:lastColon]
+								}
+							}
+							return ip
+						}
+					}
+				}
+			} else {
+				// For X-Forwarded-For, take the first (original client) IP
+				parts := strings.Split(val, ",")
+				return strings.TrimSpace(parts[0])
+			}
+		}
+	}
+
+	// 2. Fallback to Gin's ClientIP, which uses RemoteAddr if no trusted headers are found.
+	return c.ClientIP()
+}
+
 // DBLogger is a Gin middleware that logs request data to the database
 func DBLogger(c *gin.Context) {
 	// 1. Capture data available BEFORE the request is handled and record start time
 	start := time.Now() // Record the start time
-	clientIP := c.ClientIP()
+	clientIP := GetClientIP(c)
 	method := c.Request.Method
 	path := c.Request.URL.Path
 
@@ -231,7 +284,7 @@ func cleanupVisitors() {
 // AuthRateLimitMiddleware rate limits authentication attempts to prevent brute force
 func AuthRateLimitMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ip := c.ClientIP()
+		ip := GetClientIP(c)
 		limiter := getVisitor(ip)
 		if !limiter.Allow() {
 			// Log the rate limit hit into access_logs
@@ -314,7 +367,7 @@ func (w *wsResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 func WSTrackingMiddleware(c *gin.Context) {
 	// 1. Capture start time and request details
 	start := time.Now()
-	clientIP := c.ClientIP()
+	clientIP := GetClientIP(c)
 	path := c.Request.URL.Path
 
 	// 2. Wrap the ResponseWriter to intercept Hijack()

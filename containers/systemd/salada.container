@@ -13,8 +13,7 @@ WantedBy=default.target
 [Container]
 ContainerName=salada
 Image=localhost/salada:latest
-Network=salada.network
-PublishPort=443:443
+Network=host
 EnvironmentFile=../env
 Volume=salada-uploads.volume:/app/uploads:Z
 Volume=salada-cache.volume:/var/www/.cache
