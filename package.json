@@ -15,6 +15,7 @@
   "packageManager": "npm@latest",
   "dependencies": {
     "@tailwindcss/cli": "^4.1.16",
+    "easymde": "^2.20.0",
     "flowbite": "^3.1.2",
     "highlight.js": "^11.11.1",
     "knip": "^5.83.1",

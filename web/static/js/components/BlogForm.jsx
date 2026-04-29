@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import EasyMDE from 'easymde';
 import HeroImageCropper from './HeroImageCropper';
 
 const BlogForm = ({ initialPost, categories, isEditing, username }) => {
@@ -58,7 +59,7 @@ const BlogForm = ({ initialPost, categories, isEditing, username }) => {
             }
         };
 
-        const easyMDE = new window.EasyMDE({
+        const easyMDE = new EasyMDE({
             element: textareaRef.current,
             autofocus: true,
             imageMaxSize: 1024 * 1024 * 8,
