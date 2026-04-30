@@ -96,6 +96,7 @@ func RenderMarkdownToHTML(md string) string {
 	// Sanitize HTML to prevent XSS
 	policy := bluemonday.UGCPolicy()
 	policy.AllowAttrs("class", "id").Globally()
+	policy.AllowElements("button")
 	policy.AllowRelativeURLs(true)
 	policy.AllowDataURIImages()
 	sanitized := policy.SanitizeBytes(htmlBytes)
@@ -149,6 +150,7 @@ func RenderMarkdownToHTMLWithIDs(md string) (string, []model.TocItem) {
 	// Sanitize HTML to prevent XSS
 	policy := bluemonday.UGCPolicy()
 	policy.AllowAttrs("class", "id").Globally()
+	policy.AllowElements("button")
 	policy.AllowRelativeURLs(true)
 	policy.AllowDataURIImages()
 	sanitized := policy.SanitizeBytes(htmlBytes)
@@ -263,11 +265,21 @@ func (r *TailwindRenderer) RenderNode(w io.Writer, node ast.Node, entering bool)
 		}
 		return ast.GoToNext
 	case *ast.CodeBlock:
-		// Render code blocks with Tailwind styling
-		w.Write([]byte(`<pre class="bg-gray-800 text-white p-4 rounded-lg overflow-x-auto my-4 text-sm font-mono shadow-inner"><code class="block">`))
+		// Render code blocks with Tailwind styling and a copy button
+		w.Write([]byte(`<div class="relative group">`))
+		w.Write([]byte(`<button class="copy-button absolute top-2 right-2 px-2 py-1 text-xs font-sans text-gray-300 bg-gray-700 hover:bg-gray-600 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 focus:outline-none focus:ring-1 focus:ring-gray-500">Copy</button>`))
+		
+		langClass := ""
+		if len(node.Info) > 0 {
+			// Extract the first word from Info as the language
+			lang := strings.Fields(string(node.Info))[0]
+			langClass = fmt.Sprintf(" language-%s", lang)
+		}
+		
+		w.Write([]byte(fmt.Sprintf(`<pre class="bg-gray-800 text-white p-4 rounded-lg overflow-x-auto my-4 text-sm font-mono shadow-inner"><code class="block%s">`, langClass)))
 		// Escape HTML characters in the code content
 		html.EscapeHTML(w, node.Literal)
-		w.Write([]byte(`</code></pre>`))
+		w.Write([]byte(`</code></pre></div>`))
 		return ast.SkipChildren
 	case *ast.Hardbreak:
 		w.Write([]byte(`<br>`))
