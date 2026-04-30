@@ -63,6 +63,9 @@ func (pc *BlogController) CreatePost(c *gin.Context) {
 		return
 	}
 
+	// Strip zero-width spaces from content
+	postRequest.Content = strings.ReplaceAll(postRequest.Content, "\u200B", "")
+
 	postID, err := pc.Repo.CreatePost(postRequest)
 
 	if err != nil {
@@ -117,6 +120,10 @@ func (pc *BlogController) UpdatePost(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	// Strip zero-width spaces from content
+	updatePost.Content = strings.ReplaceAll(updatePost.Content, "\u200B", "")
+
 	post, err := pc.Repo.GetPostByID(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find post"})

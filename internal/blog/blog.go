@@ -83,9 +83,14 @@ func RenderMarkdownToHTML(md string) string {
 	// Pre-process markdown to handle empty newlines
 	// We replace double newlines with a newline + zero-width space + newline
 	// This prevents markdown from creating new paragraphs while maintaining the visual line break
-	for strings.Contains(md, "\n\n") {
-		md = strings.ReplaceAll(md, "\n\n", "\n\u200B\n")
-	}
+	// We use a regex to avoid replacing inside code blocks
+	re := regexp.MustCompile("(?s)```.*?```|`.*?`|(\n\n)")
+	md = re.ReplaceAllStringFunc(md, func(match string) string {
+		if match == "\n\n" {
+			return "\n\u200B\n"
+		}
+		return match
+	})
 
 	// Parse the markdown using the configured parser
 	doc := p.Parse([]byte(md))
@@ -114,9 +119,13 @@ func RenderMarkdownToHTMLWithIDs(md string) (string, []model.TocItem) {
 	renderer := GetTailwindRenderer()
 
 	// Pre-process markdown to handle empty newlines
-	for strings.Contains(md, "\n\n") {
-		md = strings.ReplaceAll(md, "\n\n", "\n\u200B\n")
-	}
+	re := regexp.MustCompile("(?s)```.*?```|`.*?`|(\n\n)")
+	md = re.ReplaceAllStringFunc(md, func(match string) string {
+		if match == "\n\n" {
+			return "\n\u200B\n"
+		}
+		return match
+	})
 
 	// Parse the markdown using the configured parser
 	doc := p.Parse([]byte(md))
@@ -226,7 +235,19 @@ func (r *TailwindRenderer) RenderNode(w io.Writer, node ast.Node, entering bool)
 		return ast.GoToNext
 	case *ast.Text:
 		// For text nodes, just write the content.
-		html.EscapeHTML(w, node.Literal)
+		// We replace zero-width spaces with a non-selectable span to prevent them from being copied.
+		content := string(node.Literal)
+		if strings.Contains(content, "\u200B") {
+			parts := strings.Split(content, "\u200B")
+			for i, part := range parts {
+				html.EscapeHTML(w, []byte(part))
+				if i < len(parts)-1 {
+					w.Write([]byte(`<span style="user-select: none;">&#8203;</span>`))
+				}
+			}
+		} else {
+			html.EscapeHTML(w, node.Literal)
+		}
 		return ast.GoToNext
 	case *ast.Paragraph:
 		if entering {
@@ -277,10 +298,20 @@ func (r *TailwindRenderer) RenderNode(w io.Writer, node ast.Node, entering bool)
 		}
 		
 		w.Write([]byte(fmt.Sprintf(`<pre class="bg-gray-800 text-white p-4 rounded-lg overflow-x-auto my-4 text-sm font-mono shadow-inner"><code class="block%s">`, langClass)))
-		// Escape HTML characters in the code content
-		html.EscapeHTML(w, node.Literal)
+		// Escape HTML characters in the code content, and strip ZWSP
+		cleanLiteral := strings.ReplaceAll(string(node.Literal), "\u200B", "")
+		html.EscapeHTML(w, []byte(cleanLiteral))
 		w.Write([]byte(`</code></pre></div>`))
 		return ast.SkipChildren
+	case *ast.Code:
+		if entering {
+			w.Write([]byte(`<code class="bg-gray-100 text-red-600 px-1 rounded">`))
+			cleanLiteral := strings.ReplaceAll(string(node.Literal), "\u200B", "")
+			html.EscapeHTML(w, []byte(cleanLiteral))
+		} else {
+			w.Write([]byte(`</code>`))
+		}
+		return ast.GoToNext
 	case *ast.Hardbreak:
 		w.Write([]byte(`<br>`))
 		return ast.GoToNext

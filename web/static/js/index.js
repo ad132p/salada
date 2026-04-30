@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const code = container ? container.querySelector('code') : null;
 
             if (code) {
-                const text = code.innerText;
+                const text = code.innerText.replace(/\u200B/g, '');
                 navigator.clipboard.writeText(text).then(() => {
                     const originalText = button.textContent;
                     button.textContent = 'Copied!';

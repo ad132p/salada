@@ -72,6 +72,10 @@ const BlogForm = ({ initialPost, categories, isEditing, username }) => {
             placeholder: "Start writing your blog post in Markdown...",
             spellChecker: true,
             initialValue: initialPost?.content || '',
+            showIcons: ["code", "table"],
+            renderingConfig: {
+                singleLineBreaks: false,
+            },
             toolbar: [
                 "bold", "italic", "heading", "|",
                 "unordered-list", "ordered-list", "code", "quote", "|",
@@ -79,6 +83,17 @@ const BlogForm = ({ initialPost, categories, isEditing, username }) => {
                 "preview", "side-by-side", "fullscreen", "|",
                 "guide"
             ],
+        });
+
+        // Configure CodeMirror to show zero-width spaces
+        easyMDE.codemirror.setOption("specialChars", /[\u200b]/g);
+        easyMDE.codemirror.setOption("specialCharPlaceholder", (char) => {
+            const el = document.createElement("span");
+            el.style.color = "red";
+            el.textContent = "ZWSP";
+            el.title = "Zero Width Space";
+            el.className = "zwsp-placeholder";
+            return el;
         });
 
         easyMDE.codemirror.on("change", () => {
@@ -111,11 +126,12 @@ const BlogForm = ({ initialPost, categories, isEditing, username }) => {
         setMessage(isEditing ? 'Updating post...' : 'Publishing post...');
 
         const content = easyMDERef.current ? easyMDERef.current.value() : '';
+        const cleanContent = content.replace(/\u200B/g, '');
         
         const submissionData = {
             id: initialPost?.id,
             title: title,
-            content: content,
+            content: cleanContent,
             tags: tags,
             category: category,
             image_ids: uploadedImageUUIDs,
