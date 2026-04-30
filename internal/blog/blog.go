@@ -304,14 +304,11 @@ func (r *TailwindRenderer) RenderNode(w io.Writer, node ast.Node, entering bool)
 		w.Write([]byte(`</code></pre></div>`))
 		return ast.SkipChildren
 	case *ast.Code:
-		if entering {
-			w.Write([]byte(`<code class="bg-gray-100 text-red-600 px-1 rounded">`))
-			cleanLiteral := strings.ReplaceAll(string(node.Literal), "\u200B", "")
-			html.EscapeHTML(w, []byte(cleanLiteral))
-		} else {
-			w.Write([]byte(`</code>`))
-		}
-		return ast.GoToNext
+		w.Write([]byte(`<code class="bg-gray-100 text-red-600 px-1 rounded">`))
+		cleanLiteral := strings.ReplaceAll(string(node.Literal), "\u200B", "")
+		html.EscapeHTML(w, []byte(cleanLiteral))
+		w.Write([]byte(`</code>`))
+		return ast.SkipChildren
 	case *ast.Hardbreak:
 		w.Write([]byte(`<br>`))
 		return ast.GoToNext
