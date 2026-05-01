@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -9,7 +10,18 @@ import (
 )
 
 // Add a new global variable for the secret key
-var secretKey = []byte(os.Getenv("SESSION_SECRET"))
+var secretKey []byte
+
+func init() {
+	secret := os.Getenv("SESSION_SECRET")
+	if secret == "" {
+		log.Fatal("SESSION_SECRET environment variable is required")
+	}
+	if len(secret) < 32 {
+		log.Fatal("SESSION_SECRET must be at least 32 characters long")
+	}
+	secretKey = []byte(secret)
+}
 
 // Function to create JWT tokens with claims
 func CreateToken(username string) (string, error) {

@@ -1,7 +1,10 @@
 {{ define "footer" }}
 <footer class="bg-green-500 text-center py-4">
     <div class="container mx-auto">
-        <p>&copy; 2025 salada.dev Inc. No rights reserved.</p>
+      <p>&copy; 2025 salada.dev Inc. No rights reserved.</p>
+      <span class="commit-hash">
+        build: <a href="https://github.com/{{.Username}}/{{.Repo}}/commit/{{.CommitHash}}" target="_blank" rel="noopener noreferrer">{{.CommitHash}}</a>
+      </span>
     </div>
 </footer>
 {{end}}

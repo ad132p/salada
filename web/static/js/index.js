@@ -1,8 +1,4 @@
 import { Collapse } from 'flowbite';
-import hljs from 'highlight.js';
-
-// Initialize syntax highlighting
-hljs.highlightAll();
 
 // Wait for the DOM to be fully loaded before initializing components
 document.addEventListener('DOMContentLoaded', () => {
@@ -12,31 +8,52 @@ document.addEventListener('DOMContentLoaded', () => {
         const $targetEl = document.getElementById('navbar-hamburger');
 
         // 2. Get the trigger element (the hamburger button)
-        // We can use the data-collapse-toggle value to find the button, 
-        // or just use the ID if we assign one. Since you only have the target ID, 
-        // Flowbite's Collapse constructor will use the target ID as the trigger ID 
-        // if no explicit trigger element is provided, but since your button 
-        // explicitly uses data-collapse-toggle, let's look for that data attribute 
-        // or use an ID if available.
-
-        // Standard approach is to select the element with the data-collapse-toggle attribute 
-        // whose value is 'navbar-hamburger'.
         const $triggerEl = document.querySelector('[data-collapse-toggle="navbar-hamburger"]');
 
         // Check if both elements exist
-        if (!$targetEl || !$triggerEl) {
-            console.error('Flowbite Collapse initialization failed: Target or trigger element not found. Check if the element IDs and data attributes match "navbar-hamburger".');
-            return;
+        if ($targetEl && $triggerEl) {
+            const collapse = new Collapse($targetEl, $triggerEl);
+            // Optional: Expose the collapse object globally for debugging
+            window.mobileMenuCollapse = collapse;
         }
-
-        const collapse = new Collapse($targetEl, $triggerEl);
-
-        // Optional: Expose the collapse object globally for debugging
-        window.mobileMenuCollapse = collapse;
 
     } catch (e) {
         console.error('Error during Flowbite Collapse setup:', e);
     }
+
+    // Dynamic syntax highlighting
+    if (document.querySelector('pre code')) {
+        import('highlight.js').then((module) => {
+            module.default.highlightAll();
+        }).catch(err => console.error('Failed to load highlight.js:', err));
+    }
+
+    // Copy to clipboard functionality
+    document.addEventListener('click', (e) => {
+        if (e.target && e.target.classList.contains('copy-button')) {
+            const button = e.target;
+            const container = button.closest('.relative.group');
+            const code = container ? container.querySelector('code') : null;
+
+            if (code) {
+                const text = code.innerText.replace(/\u200B/g, '');
+                navigator.clipboard.writeText(text).then(() => {
+                    const originalText = button.textContent;
+                    button.textContent = 'Copied!';
+                    button.classList.add('bg-green-600', 'text-white');
+                    button.classList.remove('bg-gray-700', 'text-gray-300');
+
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.classList.remove('bg-green-600', 'text-white');
+                        button.classList.add('bg-gray-700', 'text-gray-300');
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Could not copy text: ', err);
+                });
+            }
+        }
+    });
 });
 
 
@@ -57,8 +74,6 @@ const container = document.getElementById('comment');
 // Check if the container element exists on the page
 if (container) {
     // 2. Get the necessary data (like the post slug) from the DOM element itself.
-    // This is how React communicates with your server-rendered template.
-    // We assume your HTML template renders a 'data-slug' attribute on the #comment element.
     const postID = container.getAttribute('data-id');
     const postSlug = container.getAttribute('data-slug');
     const currentUserName = container.getAttribute('data-current-user');
@@ -70,7 +85,6 @@ if (container) {
 
     // 4. Render the CommentSection component into the root
     root.render(
-        // Use React.StrictMode for development checks
         <React.StrictMode>
             <LikeButton initialPostID={postID} initialLikes={likes}></LikeButton>
             <CommentSection
@@ -155,4 +169,27 @@ if (videoViewerContainer) {
             />
         </React.StrictMode>
     );
+}
+
+// Mount BlogForm component with dynamic import
+const blogFormContainer = document.getElementById('blog-form-container');
+if (blogFormContainer) {
+    const isEditing = blogFormContainer.getAttribute('data-is-editing') === 'true';
+    const categories = JSON.parse(blogFormContainer.getAttribute('data-categories') || '[]');
+    const initialPost = JSON.parse(blogFormContainer.getAttribute('data-post') || 'null');
+    const username = blogFormContainer.getAttribute('data-username');
+
+    import('./components/BlogForm').then(({ default: BlogForm }) => {
+        const root = createRoot(blogFormContainer);
+        root.render(
+            <React.StrictMode>
+                <BlogForm
+                    isEditing={isEditing}
+                    categories={categories}
+                    initialPost={initialPost}
+                    username={username}
+                />
+            </React.StrictMode>
+        );
+    }).catch(err => console.error('Failed to load BlogForm:', err));
 }

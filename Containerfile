@@ -2,14 +2,9 @@ FROM golang:1.26-bookworm AS build
 
 WORKDIR /app
 
-COPY go.mod go.sum ./
-RUN go mod download
-
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o salada
-
-EXPOSE 8080
+EXPOSE 80
 EXPOSE 443
 
-CMD [ "./salada" ]
+CMD [ "./dist/salada" ]

@@ -1,6 +1,9 @@
 POSTGRES_USER=salada
 POSTGRES_DB=salada
 POSTGRES_PASSWORD=dev_secret_password
-DB_HOST=salada-db
+DB_HOST=localhost
 MODE=dev
 BIND_IP=0.0.0.0
+SESSION_SECRET=super_secret_dev_session_key_that_is_32_chars_long
+SALADA_HOST=salada.dev
+SUPERUSER=epaminondas

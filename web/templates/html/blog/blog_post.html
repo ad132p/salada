@@ -40,7 +40,7 @@
           <nav class="space-y-1">
             {{range .toc}}
             <a href="#{{.ID}}" onclick="closeTocModal()"
-              class="block px-3 py-2 rounded-md text-sm {{if eq .Level 2}}font-medium text-gray-900{{else}}font-normal text-gray-600 pl-6{{end}} hover:bg-gray-100 hover:text-blue-600 transition-colors">
+              class="block px-3 py-2 rounded-md text-sm {{if eq .Level 1}}font-bold text-gray-900 text-base{{else if eq .Level 2}}font-medium text-gray-800 pl-4{{else}}font-normal text-gray-600 pl-6{{end}} hover:bg-gray-100 hover:text-blue-600 transition-colors">
               {{.Text}}
             </a>
             {{end}}
@@ -68,7 +68,7 @@
         <nav class="space-y-1">
           {{range .toc}}
           <a href="#{{.ID}}"
-            class="block px-2 py-1.5 rounded-md text-sm {{if eq .Level 2}}font-medium text-gray-900{{else}}font-normal text-gray-600 pl-4{{end}} hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150">
+            class="block px-2 py-1.5 rounded-md text-sm {{if eq .Level 1}}font-bold text-gray-900{{else if eq .Level 2}}font-medium text-gray-700 pl-3{{else}}font-normal text-gray-600 pl-6{{end}} hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150">
             {{.Text}}
           </a>
           {{end}}

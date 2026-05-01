@@ -8,7 +8,6 @@ import (
 	"salada/internal/admin/repositories"
 	"salada/internal/auth"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -148,8 +147,6 @@ func (pc *AuthController) Login(c *gin.Context) {
 
 	// Check for authentication failure (either user not found or password mismatch)
 	if err != nil || compareErr != nil {
-		// Add small random delay to further mitigate timing attacks
-		time.Sleep(time.Duration(50+time.Now().UnixNano()%50) * time.Millisecond)
 
 		// Consolidate all login-related errors into a single generic message
 		// to prevent user enumeration attacks.

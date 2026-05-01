@@ -16,7 +16,7 @@ func main() {
 	db.ConnectDatabase()
 	// Ensure database connection is closed when main exits
 	defer db.CloseDatabase()
-	router := gin.Default()
+	router := gin.New()
 	gin.SetMode(gin.DebugMode)
 
 	//Setup middleware configuration

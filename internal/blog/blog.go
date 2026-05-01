@@ -13,6 +13,7 @@ import (
 	"github.com/gomarkdown/markdown/html"
 	"github.com/gomarkdown/markdown/parser"
 	"github.com/lib/pq"
+	"github.com/microcosm-cc/bluemonday"
 	"salada/internal/blog/model"
 )
 
@@ -82,9 +83,14 @@ func RenderMarkdownToHTML(md string) string {
 	// Pre-process markdown to handle empty newlines
 	// We replace double newlines with a newline + zero-width space + newline
 	// This prevents markdown from creating new paragraphs while maintaining the visual line break
-	for strings.Contains(md, "\n\n") {
-		md = strings.ReplaceAll(md, "\n\n", "\n\u200B\n")
-	}
+	// We use a regex to avoid replacing inside code blocks
+	re := regexp.MustCompile("(?s)```.*?```|`.*?`|(\n\n)")
+	md = re.ReplaceAllStringFunc(md, func(match string) string {
+		if match == "\n\n" {
+			return "\n\u200B\n"
+		}
+		return match
+	})
 
 	// Parse the markdown using the configured parser
 	doc := p.Parse([]byte(md))
@@ -92,7 +98,15 @@ func RenderMarkdownToHTML(md string) string {
 	// Create the HTML renderer
 	htmlBytes := markdown.Render(doc, renderer)
 
-	return string(htmlBytes)
+	// Sanitize HTML to prevent XSS
+	policy := bluemonday.UGCPolicy()
+	policy.AllowAttrs("class", "id").Globally()
+	policy.AllowElements("button")
+	policy.AllowRelativeURLs(true)
+	policy.AllowDataURIImages()
+	sanitized := policy.SanitizeBytes(htmlBytes)
+
+	return string(sanitized)
 }
 
 // RenderMarkdownToHTMLWithIDs converts markdown to HTML and also returns the extracted ToC.
@@ -105,9 +119,13 @@ func RenderMarkdownToHTMLWithIDs(md string) (string, []model.TocItem) {
 	renderer := GetTailwindRenderer()
 
 	// Pre-process markdown to handle empty newlines
-	for strings.Contains(md, "\n\n") {
-		md = strings.ReplaceAll(md, "\n\n", "\n\u200B\n")
-	}
+	re := regexp.MustCompile("(?s)```.*?```|`.*?`|(\n\n)")
+	md = re.ReplaceAllStringFunc(md, func(match string) string {
+		if match == "\n\n" {
+			return "\n\u200B\n"
+		}
+		return match
+	})
 
 	// Parse the markdown using the configured parser
 	doc := p.Parse([]byte(md))
@@ -120,7 +138,7 @@ func RenderMarkdownToHTMLWithIDs(md string) (string, []model.TocItem) {
 		}
 
 		if heading, ok := node.(*ast.Heading); ok {
-			if heading.Level >= 2 && heading.Level <= 3 {
+			if heading.Level >= 1 && heading.Level <= 3 {
 				text := extractTextFromNode(heading)
 				if text != "" {
 					id := generateHeadingID(text)
@@ -138,7 +156,15 @@ func RenderMarkdownToHTMLWithIDs(md string) (string, []model.TocItem) {
 	// Now render the HTML
 	htmlBytes := markdown.Render(doc, renderer)
 
-	return string(htmlBytes), tocItems
+	// Sanitize HTML to prevent XSS
+	policy := bluemonday.UGCPolicy()
+	policy.AllowAttrs("class", "id").Globally()
+	policy.AllowElements("button")
+	policy.AllowRelativeURLs(true)
+	policy.AllowDataURIImages()
+	sanitized := policy.SanitizeBytes(htmlBytes)
+
+	return string(sanitized), tocItems
 }
 
 type TailwindRenderer struct {
@@ -209,7 +235,19 @@ func (r *TailwindRenderer) RenderNode(w io.Writer, node ast.Node, entering bool)
 		return ast.GoToNext
 	case *ast.Text:
 		// For text nodes, just write the content.
-		html.EscapeHTML(w, node.Literal)
+		// We replace zero-width spaces with a non-selectable span to prevent them from being copied.
+		content := string(node.Literal)
+		if strings.Contains(content, "\u200B") {
+			parts := strings.Split(content, "\u200B")
+			for i, part := range parts {
+				html.EscapeHTML(w, []byte(part))
+				if i < len(parts)-1 {
+					w.Write([]byte(`<span style="user-select: none;">&#8203;</span>`))
+				}
+			}
+		} else {
+			html.EscapeHTML(w, node.Literal)
+		}
 		return ast.GoToNext
 	case *ast.Paragraph:
 		if entering {
@@ -248,11 +286,28 @@ func (r *TailwindRenderer) RenderNode(w io.Writer, node ast.Node, entering bool)
 		}
 		return ast.GoToNext
 	case *ast.CodeBlock:
-		// Render code blocks with Tailwind styling
-		w.Write([]byte(`<pre class="bg-gray-800 text-white p-4 rounded-lg overflow-x-auto my-4 text-sm font-mono shadow-inner"><code class="block">`))
-		// Escape HTML characters in the code content
-		html.EscapeHTML(w, node.Literal)
-		w.Write([]byte(`</code></pre>`))
+		// Render code blocks with Tailwind styling and a copy button
+		w.Write([]byte(`<div class="relative group">`))
+		w.Write([]byte(`<button class="copy-button absolute top-2 right-2 px-2 py-1 text-xs font-sans text-gray-300 bg-gray-700 hover:bg-gray-600 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 focus:outline-none focus:ring-1 focus:ring-gray-500">Copy</button>`))
+		
+		langClass := ""
+		if len(node.Info) > 0 {
+			// Extract the first word from Info as the language
+			lang := strings.Fields(string(node.Info))[0]
+			langClass = fmt.Sprintf(" language-%s", lang)
+		}
+		
+		w.Write([]byte(fmt.Sprintf(`<pre class="bg-gray-800 text-white p-4 rounded-lg overflow-x-auto my-4 text-sm font-mono shadow-inner"><code class="block%s">`, langClass)))
+		// Escape HTML characters in the code content, and strip ZWSP
+		cleanLiteral := strings.ReplaceAll(string(node.Literal), "\u200B", "")
+		html.EscapeHTML(w, []byte(cleanLiteral))
+		w.Write([]byte(`</code></pre></div>`))
+		return ast.SkipChildren
+	case *ast.Code:
+		w.Write([]byte(`<code class="bg-gray-100 text-red-600 px-1 rounded">`))
+		cleanLiteral := strings.ReplaceAll(string(node.Literal), "\u200B", "")
+		html.EscapeHTML(w, []byte(cleanLiteral))
+		w.Write([]byte(`</code>`))
 		return ast.SkipChildren
 	case *ast.Hardbreak:
 		w.Write([]byte(`<br>`))

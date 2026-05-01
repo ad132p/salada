@@ -63,10 +63,14 @@ func (pc *BlogController) CreatePost(c *gin.Context) {
 		return
 	}
 
+	// Strip zero-width spaces from content
+	postRequest.Content = strings.ReplaceAll(postRequest.Content, "\u200B", "")
+
 	postID, err := pc.Repo.CreatePost(postRequest)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create post", "details": err.Error()})
+		log.Printf("Failed to create post: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create post"})
 		return
 	}
 
@@ -75,7 +79,8 @@ func (pc *BlogController) CreatePost(c *gin.Context) {
 	err = pc.Repo.UpdateImagesWithPostID(&updateRequest)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update images of post", "details": err.Error()})
+		log.Printf("Failed to update images of post: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update images of post"})
 		return
 	}
 
@@ -93,7 +98,8 @@ func (pc *BlogController) CreateComment(c *gin.Context) {
 	commentID, err := pc.Repo.CreateComment(commentRequest)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create post", "details": err.Error()})
+		log.Printf("Failed to create comment: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create comment"})
 		return
 	}
 
@@ -114,6 +120,10 @@ func (pc *BlogController) UpdatePost(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	// Strip zero-width spaces from content
+	updatePost.Content = strings.ReplaceAll(updatePost.Content, "\u200B", "")
+
 	post, err := pc.Repo.GetPostByID(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find post"})
@@ -127,7 +137,8 @@ func (pc *BlogController) UpdatePost(c *gin.Context) {
 	updatePost.ID = id
 
 	if err := pc.Repo.UpdatePost(&updatePost); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update post", "details": err.Error()})
+		log.Printf("Failed to update post: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update post"})
 		return
 	}
 
@@ -136,7 +147,8 @@ func (pc *BlogController) UpdatePost(c *gin.Context) {
 	err = pc.Repo.UpdateImagesWithPostID(&updateRequest)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update images of post", "details": err.Error()})
+		log.Printf("Failed to update images of post: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update images of post"})
 		return
 	}
 
@@ -165,7 +177,8 @@ func (pc *BlogController) PublishPost(c *gin.Context) {
 		return
 	}
 	if err := pc.Repo.PublishPost(post); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update post", "details": err.Error()})
+		log.Printf("Failed to publish post: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update post"})
 		return
 	}
 
@@ -181,8 +194,16 @@ func (pc *BlogController) UploadImage(c *gin.Context) {
 		return
 	}
 
-	// Generate a unique filename to prevent conflicts
-	filename := filepath.Base(file.Filename)
+	// Extract the extension and validate it
+	ext := filepath.Ext(file.Filename)
+	allowedExts := map[string]bool{".jpg": true, ".jpeg": true, ".png": true, ".gif": true, ".webp": true}
+	if !allowedExts[strings.ToLower(ext)] {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file type"})
+		return
+	}
+
+	// Generate a secure UUID filename to prevent traversal and conflicts
+	filename := uuid.New().String() + ext
 
 	// Save the file to the specified path
 	dst := filepath.Join("uploads", filename)
@@ -294,10 +315,14 @@ func (pc *BlogController) GetNewPostForm(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Username not found in context"})
 		return
 	}
+
+	categoriesJSON, _ := json.Marshal(blog.Categories)
+
 	c.HTML(http.StatusOK, "blog/blog_new.html", gin.H{
-		"title":        "New Blog Entry",
-		"username":     username,
-		"is_logged_in": c.GetBool("is_logged_in"),
+		"title":          "New Blog Entry",
+		"username":       username,
+		"categoriesJSON": string(categoriesJSON),
+		"is_logged_in":   c.GetBool("is_logged_in"),
 	})
 }
 
@@ -491,7 +516,8 @@ func (pc *BlogController) DeletePost(c *gin.Context) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete post", "details": err.Error()})
+		log.Printf("Failed to delete post: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete post"})
 		return
 	}
 	fmt.Println(images)
@@ -512,11 +538,17 @@ func (pc *BlogController) EditPostForm(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
 		return
 	}
+
+	username, _ := c.Get("username")
+	postJSON, _ := json.Marshal(post)
+	categoriesJSON, _ := json.Marshal(blog.Categories)
+
 	c.HTML(http.StatusOK, "blog/edit_post_form.html", gin.H{
-		"title":        post.Title,
-		"post":         post,
-		"categories":   blog.Categories,
-		"is_logged_in": c.GetBool("is_logged_in"),
+		"title":          post.Title,
+		"postJSON":       template.JS(postJSON),
+		"categoriesJSON": template.JS(categoriesJSON),
+		"username":       username,
+		"is_logged_in":   c.GetBool("is_logged_in"),
 	})
 }
 
