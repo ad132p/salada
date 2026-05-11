@@ -84,7 +84,7 @@ func (pc *BlogController) CreatePost(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusFound, gin.H{"msg": "Success", "ID": postID})
+	c.JSON(http.StatusCreated, gin.H{"msg": "Success", "ID": postID})
 }
 
 func (pc *BlogController) CreateComment(c *gin.Context) {

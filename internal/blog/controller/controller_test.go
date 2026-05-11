@@ -185,3 +185,43 @@ func TestLikePost(t *testing.T) {
 
 	mockRepo.AssertExpectations(t)
 }
+
+func TestCreatePost(t *testing.T) {
+	// Setup
+	gin.SetMode(gin.TestMode)
+	mockRepo := new(MockPostRepository)
+	controller := NewBlogController(mockRepo)
+	router := gin.Default()
+
+	// Authenticated middleware mock - we'll just inject the username in the context
+	router.POST("/blog", func(c *gin.Context) {
+		c.Set("username", "testuser")
+		controller.CreatePost(c)
+	})
+
+	// Mock Data
+	postID := uuid.New()
+	postReq := model.CreatePost{
+		Title:      "New Post",
+		Content:    "Post Content",
+		AuthorName: "testuser",
+	}
+
+	// Expectations
+	mockRepo.On("CreatePost", postReq).Return(postID, nil)
+	mockRepo.On("UpdateImagesWithPostID", mock.AnythingOfType("*model.UpdateImages")).Return(nil)
+
+	// Request
+	jsonBody := `{"title": "New Post", "content": "Post Content"}`
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/blog", strings.NewReader(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+	router.ServeHTTP(w, req)
+
+	// Assertions
+	assert.Equal(t, http.StatusCreated, w.Code)
+	assert.Contains(t, w.Body.String(), "Success")
+	assert.Contains(t, w.Body.String(), postID.String())
+
+	mockRepo.AssertExpectations(t)
+}
