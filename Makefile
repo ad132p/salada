@@ -10,7 +10,7 @@ build:
 	@echo "Building for $(TARGET_OS)/$(TARGET_ARCH)..."
 	@mkdir -p dist
 	./scripts/gen-cert.sh
-	npm install --frozen-lockfile
+	npm ci
 	npm run build
 	$(eval GIT_URL := $(shell git config --get remote.origin.url))
 	$(eval USERNAME := $(shell echo $(GIT_URL) | sed -E 's/.*[:/]([^/]+)\/[^/]+(\.git)?$$/\1/'))

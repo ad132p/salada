@@ -19,7 +19,6 @@ func Run(router *gin.Engine) {
 	// 'dev' mode run on :443, and prod deploys salada.dev
 	if mode == "dev" {
 		bindIp := fmt.Sprintf("%s:443", os.Getenv("BIND_IP"))
-		gin.SetMode(gin.DebugMode) 
 		router.RunTLS(bindIp, "cert.pem", "key.pem")
 	} else {
 		m := autocert.Manager{

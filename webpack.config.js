@@ -38,5 +38,10 @@ module.exports = {
     resolve: {
         // Add '.jsx' to the list of extensions so you can import 'Component' instead of 'Component.jsx'
         extensions: ['.js', '.jsx']
+    },
+
+    performance: {
+        maxAssetSize: 1000000,
+        maxEntrypointSize: 1000000,
     }
 };

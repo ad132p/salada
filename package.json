@@ -2,7 +2,7 @@
   "name": "salada",
   "version": "1.0.0",
   "description": "A golang React half-baked, half-vibe-coded blog about databases",
-  "main": "index.js",
+  "main": "web/static/js/index.js",
   "scripts": {
     "build": "npm run build:css && webpack --mode production",
     "build:css": "tailwindcss -i ./web/static/css/input.css -o ./web/assets/css/output.css",
