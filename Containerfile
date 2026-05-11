@@ -9,6 +9,9 @@ RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/
 # We assume 'make build' was run on the host first
 COPY dist/salada /app/salada
 
+# Copy certificates for dev mode TLS
+COPY cert.pem key.pem /app/
+
 # Copy static assets and templates
 COPY web/assets /app/web/assets
 COPY web/images /app/web/images
