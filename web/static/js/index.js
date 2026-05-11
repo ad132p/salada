@@ -21,13 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Error during Flowbite Collapse setup:', e);
     }
 
-    // Dynamic syntax highlighting
-    if (document.querySelector('pre code')) {
-        import('highlight.js').then((module) => {
-            module.default.highlightAll();
-        }).catch(err => console.error('Failed to load highlight.js:', err));
-    }
-
     // Copy to clipboard functionality
     document.addEventListener('click', (e) => {
         if (e.target && e.target.classList.contains('copy-button')) {

@@ -1,5 +1,17 @@
 @import "tailwindcss";
-@import "highlight.js/styles/github-dark.css";
 @import "easymde/dist/easymde.min.css";
+
+pre {
+  background-color: #1a1a1a;
+  color: #e5e5e5;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+code {
+  font-family: inherit;
+}
 
 @source "../../templates/html/**/*.html";
