@@ -1,10 +1,12 @@
 {{ define "footer" }}
-<footer class="bg-green-500 text-center py-4">
-    <div class="container mx-auto">
-      <p>&copy; 2025 salada.dev Inc. No rights reserved.</p>
-      <span class="commit-hash">
-        build: <a href="https://github.com/{{.Username}}/{{.Repo}}/commit/{{.CommitHash}}" target="_blank" rel="noopener noreferrer">{{.CommitHash}}</a>
-      </span>
+<footer class="bg-green-500 text-white py-6 mt-auto">
+    <div class="container mx-auto px-4">
+      <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+        <p class="text-sm md:text-base">&copy; 2025 salada.dev Inc. No rights reserved.</p>
+        <span class="commit-hash text-xs md:text-sm bg-green-600 px-3 py-1 rounded-full">
+          build: <a href="https://github.com/{{.Username}}/{{.Repo}}/commit/{{.CommitHash}}" target="_blank" rel="noopener noreferrer" class="font-mono hover:underline">{{.CommitHash}}</a>
+        </span>
+      </div>
     </div>
 </footer>
 {{end}}
