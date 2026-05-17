@@ -1,6 +1,9 @@
-FROM debian:bookworm-slim
+FROM debian:stable-slim
 
 WORKDIR /app
+
+# Tell debconf to shut up during the build
+ARG DEBIAN_FRONTEND=noninteractive
 
 # Install CA certificates for TLS (required for Let's Encrypt / autotls)
 RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
