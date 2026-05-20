@@ -178,7 +178,6 @@ func (pc *AuthController) Logout(c *gin.Context) {
 	// Clear cookies with Secure flag
 	c.SetCookie("token", "", -1, "/", pc.Config.CookieDomain, pc.Config.CookieSecure, true)
 	c.SetCookie("username", "", -1, "/", pc.Config.CookieDomain, pc.Config.CookieSecure, true)
-	// Redirect to login page instead of rendering logout page
-	// This prevents users from bookmarking or refreshing a stale logout page
-	c.Redirect(http.StatusFound, "/login")
+	// Render the logout page with confirmation and countdown
+	c.HTML(http.StatusOK, "auth/logout.html", gin.H{})
 }
