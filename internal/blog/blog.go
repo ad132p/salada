@@ -256,8 +256,6 @@ func GetContentSummary(s string, maxChars int) string {
 	return s
 }
 
-var Categories = [7]string{"football", "cs", "politics", "plants", "cine", "lit", "random"}
-
 // GetFirstImage returns the URL of the first image found in the markdown content.
 func GetFirstImage(content string) string {
 	match := imageRegex.FindStringSubmatch(content)

@@ -180,6 +180,31 @@ func (r *PostRepository) GetCategoryCount() ([]model.CategoryCount, error) {
 	return categoryCountSet, nil
 }
 
+// GetCategories returns all available categories defined in the PostgreSQL database 'category' enum.
+func (r *PostRepository) GetCategories() ([]string, error) {
+	query := `SELECT enumlabel FROM pg_enum JOIN pg_type ON pg_enum.enumtypid = pg_type.oid WHERE pg_type.typname = 'category' ORDER BY enumsortorder;`
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var categories []string
+	for rows.Next() {
+		var category string
+		if err := rows.Scan(&category); err != nil {
+			return nil, err
+		}
+		categories = append(categories, category)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return categories, nil
+}
+
 func (r *PostRepository) GetTagCount() ([]model.TagCount, error) {
 	query := `SELECT unnest(tags) as tag, count(*) FROM posts WHERE published_at IS NOT NULL GROUP BY tag`
 	rows, err := r.db.Query(query)

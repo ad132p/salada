@@ -99,6 +99,14 @@ func (m *MockPostRepository) LikePostByID(req model.LikeRequest) error {
 	return args.Error(0)
 }
 
+func (m *MockPostRepository) GetCategories() ([]string, error) {
+	args := m.Called()
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]string), args.Error(1)
+}
+
 func TestGetRecentPosts(t *testing.T) {
 	// Setup
 	gin.SetMode(gin.TestMode)
@@ -225,3 +233,61 @@ func TestCreatePost(t *testing.T) {
 
 	mockRepo.AssertExpectations(t)
 }
+
+func TestGetNewPostForm(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	mockRepo := new(MockPostRepository)
+	controller := NewBlogController(mockRepo)
+	router := gin.Default()
+
+	router.LoadHTMLGlob("../../../web/templates/html/*/*")
+
+	router.GET("/blog/new", func(c *gin.Context) {
+		c.Set("username", "testuser")
+		c.Set("is_logged_in", true)
+		controller.GetNewPostForm(c)
+	})
+
+	mockCategories := []string{"cs", "politics", "plants"}
+	mockRepo.On("GetCategories").Return(mockCategories, nil)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/blog/new", nil)
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), `data-categories='[&#34;cs&#34;,&#34;politics&#34;,&#34;plants&#34;]'`)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestEditPostForm(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	mockRepo := new(MockPostRepository)
+	controller := NewBlogController(mockRepo)
+	router := gin.Default()
+
+	router.LoadHTMLGlob("../../../web/templates/html/*/*")
+
+	router.GET("/blog/edit/:slug", func(c *gin.Context) {
+		c.Set("username", "testuser")
+		c.Set("is_logged_in", true)
+		controller.EditPostForm(c)
+	})
+
+	post := &model.Post{
+		Title: "Test Title",
+		Slug:  "test-slug",
+	}
+	mockCategories := []string{"cs", "politics", "plants"}
+	mockRepo.On("GetPostBySlug", "test-slug").Return(post, nil)
+	mockRepo.On("GetCategories").Return(mockCategories, nil)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/blog/edit/test-slug", nil)
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), `data-categories="[&#34;cs&#34;,&#34;politics&#34;,&#34;plants&#34;]"`)
+	mockRepo.AssertExpectations(t)
+}
+

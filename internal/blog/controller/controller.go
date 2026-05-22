@@ -37,6 +37,7 @@ type PostRepository interface {
 	DeletePost(id uuid.UUID) ([]string, error)
 	GetPostBySlug(slug string) (*model.Post, error)
 	LikePostByID(req model.LikeRequest) error
+	GetCategories() ([]string, error)
 }
 
 // BlogController handles blog post-related requests.
@@ -316,7 +317,17 @@ func (pc *BlogController) GetNewPostForm(c *gin.Context) {
 		return
 	}
 
-	categoriesJSON, _ := json.Marshal(blog.Categories)
+	categories, err := pc.Repo.GetCategories()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve categories from database"})
+		return
+	}
+
+	categoriesJSON, err := json.Marshal(categories)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to marshal categories"})
+		return
+	}
 
 	c.HTML(http.StatusOK, "blog/blog_new.html", gin.H{
 		"title":          "New Blog Entry",
@@ -539,9 +550,19 @@ func (pc *BlogController) EditPostForm(c *gin.Context) {
 		return
 	}
 
+	categories, err := pc.Repo.GetCategories()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve categories from database"})
+		return
+	}
+
 	username, _ := c.Get("username")
 	postJSON, _ := json.Marshal(post)
-	categoriesJSON, _ := json.Marshal(blog.Categories)
+	categoriesJSON, err := json.Marshal(categories)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to marshal categories"})
+		return
+	}
 
 	c.HTML(http.StatusOK, "blog/edit_post_form.html", gin.H{
 		"title":          post.Title,
