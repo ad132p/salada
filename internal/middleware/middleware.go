@@ -1,10 +1,8 @@
 package middleware
 
 import (
-	"bufio"
 	"fmt"
 	"log"
-	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -64,17 +62,12 @@ func AuthenticateMiddleware(c *gin.Context) {
 
 	intendedRoute := c.Request.URL.Path
 	redirectURL := "/login?goto=" + url.QueryEscape(intendedRoute)
-	isWebsocket := c.GetHeader("Upgrade") == "websocket"
 
 	tokenString, err := c.Cookie("token")
 	if err != nil {
 		fmt.Println("Token missing in cookie")
-		if isWebsocket {
-			c.AbortWithStatusJSON(401, gin.H{"error": "unauthorized"})
-		} else {
-			c.Abort()
-			c.Redirect(http.StatusSeeOther, redirectURL)
-		}
+		c.Abort()
+		c.Redirect(http.StatusSeeOther, redirectURL)
 		return
 	}
 
@@ -82,25 +75,16 @@ func AuthenticateMiddleware(c *gin.Context) {
 	token, err := auth.VerifyToken(tokenString)
 	if err != nil {
 		fmt.Printf("Token verification failed: %v\n", err)
-		if isWebsocket {
-			c.AbortWithStatusJSON(401, gin.H{"error": "unauthorized"})
-		} else {
-			c.Abort()
-			c.Redirect(http.StatusSeeOther, redirectURL)
-		}
-		return
+		c.Abort()
+		c.Redirect(http.StatusSeeOther, redirectURL)
 	}
 
 	// Get the claims from the token
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		fmt.Println("Could not get claims from token")
-		if isWebsocket {
-			c.AbortWithStatusJSON(401, gin.H{"error": "unauthorized"})
-		} else {
-			c.AbortWithStatus(http.StatusUnauthorized)
-			c.Redirect(http.StatusSeeOther, redirectURL)
-		}
+		c.AbortWithStatus(http.StatusUnauthorized)
+		c.Redirect(http.StatusSeeOther, redirectURL)
 		return
 	}
 
@@ -310,112 +294,3 @@ func AuthRateLimitMiddleware() gin.HandlerFunc {
 	}
 }
 
-// ==============================================================================
-// WebSocket Tracking Middleware
-// ==============================================================================
-
-// trackingConn wraps a net.Conn to track bytes read and written
-type trackingConn struct {
-	net.Conn
-	bytesRead    int64
-	bytesWritten int64
-}
-
-func (tc *trackingConn) Read(b []byte) (n int, err error) {
-	n, err = tc.Conn.Read(b)
-	if n > 0 {
-		tc.bytesRead += int64(n)
-	}
-	return n, err
-}
-
-func (tc *trackingConn) Write(b []byte) (n int, err error) {
-	n, err = tc.Conn.Write(b)
-	if n > 0 {
-		tc.bytesWritten += int64(n)
-	}
-	return n, err
-}
-
-// wsResponseWriter wraps gin.ResponseWriter to intercept the Hijack call
-type wsResponseWriter struct {
-	gin.ResponseWriter
-	hijackedConn *trackingConn
-}
-
-// Hijack intercepts the hijacking to wrap the connection
-func (w *wsResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
-	hijacker, ok := w.ResponseWriter.(http.Hijacker)
-	if !ok {
-		return nil, nil, fmt.Errorf("underlying ResponseWriter does not support hijacking")
-	}
-
-	conn, _, err := hijacker.Hijack()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// Wrap the connection
-	wrappedConn := &trackingConn{Conn: conn}
-	w.hijackedConn = wrappedConn
-
-	// Return the wrapped connection and a new ReadWriter that uses it
-	return wrappedConn, bufio.NewReadWriter(bufio.NewReader(wrappedConn), bufio.NewWriter(wrappedConn)), nil
-}
-
-// WSTrackingMiddleware tracks metrics for WebSocket connections
-func WSTrackingMiddleware(c *gin.Context) {
-	// 1. Capture start time and request details
-	start := time.Now()
-	clientIP := GetClientIP(c)
-	path := c.Request.URL.Path
-
-	// 2. Wrap the ResponseWriter to intercept Hijack()
-	wrappedWriter := &wsResponseWriter{ResponseWriter: c.Writer}
-	c.Writer = wrappedWriter
-
-	// 3. Process the request
-	c.Next()
-
-	// 4. Check if the connection was hijacked (i.e. it became a WebSocket)
-	if wrappedWriter.hijackedConn != nil {
-		// Calculate duration
-		duration := time.Since(start).Milliseconds()
-
-		bytesRead := wrappedWriter.hijackedConn.bytesRead
-		bytesWritten := wrappedWriter.hijackedConn.bytesWritten
-
-		// Calculate watcher
-		watcher := "anon"
-		if u, ok := c.Get("username"); ok {
-			if s, ok := u.(string); ok && s != "" {
-				watcher = s
-			}
-		}
-
-		// Calculate streamer
-		streamer := watcher // Default to self if creating stream
-		if roomParam := c.Query("room"); roomParam != "" {
-			streamer = roomParam
-		}
-
-		// 5. Log to PostgreSQL
-		_, err := db.DB.Exec(`
-			INSERT INTO ws_metrics (client_ip, path, bytes_read, bytes_written, duration_ms, streamer, watcher)
-			VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-			clientIP,
-			path,
-			bytesRead,
-			bytesWritten,
-			duration,
-			streamer,
-			watcher,
-		)
-		if err != nil {
-			log.Printf("❌ ERROR: Failed to insert WS metric log into DB: %v", err)
-		} else {
-			log.Printf("WS Connection closed (IP: %s, Path: %s, Streamer: %s, Watcher: %s): %d bytes read, %d bytes written, duration: %d ms",
-				clientIP, path, streamer, watcher, bytesRead, bytesWritten, duration)
-		}
-	}
-}
