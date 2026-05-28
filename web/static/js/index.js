@@ -1,4 +1,9 @@
+import React from 'react';
 import { Collapse } from 'flowbite';
+import { createRoot } from 'react-dom/client';
+import CommentSection from './components/CommentSection';
+import LikeButton from './components/LikeButton';
+import HeroImageCropper from './components/HeroImageCropper';
 
 // Wait for the DOM to be fully loaded before initializing components
 document.addEventListener('DOMContentLoaded', () => {
@@ -51,15 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-// web/static/js/index.js (Your Webpack Entry Point)
-import React from 'react';
-import { createRoot } from 'react-dom/client';
-import CommentSection from './components/CommentSection';
-import LikeButton from './components/LikeButton';
-import HeroImageCropper from './components/HeroImageCropper';
-import VideoStreamer from './components/VideoStreamer';
-import RoomsList from './components/RoomsList';
-import VideoViewer from './components/VideoViewer';
 
 // 1. Find the DOM element where React will be mounted
 const container = document.getElementById('comment');
@@ -116,53 +112,6 @@ if (heroCropperContainer) {
     );
 }
 
-// Mount VideoStreamer component on the stream page
-const videoStreamerContainer = document.getElementById('video-streamer');
-if (videoStreamerContainer) {
-    const root = createRoot(videoStreamerContainer);
-    const wsUrl = videoStreamerContainer.getAttribute('data-ws-url') || '/stream/ws';
-    const iceServers = JSON.parse(videoStreamerContainer.getAttribute('data-ice-servers') || '[]');
-
-    root.render(
-        <React.StrictMode>
-            <VideoStreamer wsUrl={wsUrl} iceServers={iceServers} />
-        </React.StrictMode>
-    );
-}
-
-// Mount RoomsList component on the rooms page
-const roomsListContainer = document.getElementById('rooms-list');
-if (roomsListContainer) {
-    const root = createRoot(roomsListContainer);
-    const isLoggedIn = roomsListContainer.getAttribute('data-is-logged-in') === 'true';
-
-    root.render(
-        <React.StrictMode>
-            <RoomsList isLoggedIn={isLoggedIn} />
-        </React.StrictMode>
-    );
-}
-
-// Mount VideoViewer component on the watch page
-const videoViewerContainer = document.getElementById('video-viewer');
-if (videoViewerContainer) {
-    const root = createRoot(videoViewerContainer);
-    const wsUrl = videoViewerContainer.getAttribute('data-ws-url');
-    const streamer = videoViewerContainer.getAttribute('data-streamer');
-    const viewerCount = parseInt(videoViewerContainer.getAttribute('data-viewer-count') || '0', 10);
-    const iceServers = JSON.parse(videoViewerContainer.getAttribute('data-ice-servers') || '[]');
-
-    root.render(
-        <React.StrictMode>
-            <VideoViewer
-                wsUrl={wsUrl}
-                streamer={streamer}
-                initialViewerCount={viewerCount}
-                iceServers={iceServers}
-            />
-        </React.StrictMode>
-    );
-}
 
 // Mount BlogForm component with dynamic import
 const blogFormContainer = document.getElementById('blog-form-container');
