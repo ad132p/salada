@@ -12,6 +12,9 @@ const BlogForm = ({ initialPost, categories, isEditing, username }) => {
     const [uploadedImageUUIDs, setUploadedImageUUIDs] = useState([]);
     const [message, setMessage] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [htmlContent, setHtmlContent] = useState('');
+    const [viewMode, setViewMode] = useState('edit'); // 'edit', 'html'
+    const [copied, setCopied] = useState(false);
 
     const easyMDERef = useRef(null);
     const textareaRef = useRef(null);
@@ -85,6 +88,9 @@ const BlogForm = ({ initialPost, categories, isEditing, username }) => {
             ],
         });
 
+        // Set initial HTML content
+        setHtmlContent(easyMDE.markdown(easyMDE.value()));
+
         // Configure CodeMirror to show zero-width spaces
         easyMDE.codemirror.setOption("specialChars", /[\u200b]/g);
         easyMDE.codemirror.setOption("specialCharPlaceholder", (char) => {
@@ -108,6 +114,9 @@ const BlogForm = ({ initialPost, categories, isEditing, username }) => {
                 }
             }
             window.dispatchEvent(new CustomEvent('hero-image-change', { detail: { filepath: firstImage } }));
+
+            // Update HTML content in real-time
+            setHtmlContent(easyMDE.markdown(content));
         });
 
         easyMDERef.current = easyMDE;
@@ -119,6 +128,20 @@ const BlogForm = ({ initialPost, categories, isEditing, username }) => {
             }
         };
     }, []);
+
+    useEffect(() => {
+        if (easyMDERef.current && viewMode === 'edit') {
+            setTimeout(() => {
+                easyMDERef.current.codemirror.refresh();
+            }, 50);
+        }
+    }, [viewMode]);
+
+    const handleCopyHTML = () => {
+        navigator.clipboard.writeText(htmlContent);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -226,13 +249,85 @@ const BlogForm = ({ initialPost, categories, isEditing, username }) => {
                         onCropChange={(pos) => setThumbnailPosition(`center ${pos}%`)}
                     />
 
-                    <div>
-                        <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">Write your post content here:</label>
-                        <textarea
-                            id="content"
-                            ref={textareaRef}
-                            className="block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm min-h-[300px]"
-                        ></textarea>
+                    <div className="space-y-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                            <span className="text-sm font-semibold text-gray-700">Post Content</span>
+                            
+                            <div className="flex flex-wrap items-center gap-3">
+                                {/* View Mode Controls */}
+                                <div className="inline-flex rounded-md shadow-sm" role="group">
+                                    <button
+                                        type="button"
+                                        onClick={() => setViewMode('edit')}
+                                        className={`px-4 py-1.5 text-xs font-medium rounded-l-lg border transition-all duration-150 cursor-pointer ${
+                                            viewMode === 'edit'
+                                                ? 'bg-blue-600 border-blue-600 text-white shadow-inner'
+                                                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        Markdown Editor
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setViewMode('html')}
+                                        className={`px-4 py-1.5 text-xs font-medium rounded-r-lg border-t border-b border-r transition-all duration-150 cursor-pointer ${
+                                            viewMode === 'html'
+                                                ? 'bg-blue-600 border-blue-600 text-white shadow-inner'
+                                                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        HTML Equivalent
+                                    </button>
+                                </div>
+
+                                {/* Always Accessible Easy Copy HTML Button */}
+                                <button
+                                    type="button"
+                                    onClick={handleCopyHTML}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-xs font-medium transition-all duration-200 active:scale-95 cursor-pointer shadow-sm"
+                                    title="Copy HTML output to clipboard"
+                                >
+                                    {copied ? (
+                                        <>
+                                            <svg className="w-3.5 h-3.5 text-green-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            <span className="text-green-600 font-semibold">HTML Copied!</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg className="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                            </svg>
+                                            <span>Copy HTML</span>
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Editor and HTML Panes Container */}
+                        <div className="grid grid-cols-1">
+                            {/* Editor Column */}
+                            <div className={viewMode === 'html' ? 'hidden' : 'block'}>
+                                <label htmlFor="content" className="sr-only">Write your post content here:</label>
+                                <textarea
+                                    id="content"
+                                    ref={textareaRef}
+                                    className="block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm min-h-[300px]"
+                                ></textarea>
+                            </div>
+
+                            {/* HTML Equivalent Column */}
+                            <div className={`flex flex-col border border-gray-300 rounded-md bg-gray-900 text-gray-100 overflow-hidden ${viewMode === 'edit' ? 'hidden' : 'block'}`}>
+                                <div className="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700">
+                                    <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 font-mono">HTML Output (Realtime)</span>
+                                </div>
+                                <div className="p-4 overflow-auto font-mono text-sm leading-relaxed flex-1 min-h-[300px] max-h-[500px]" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                                    <code dangerouslySetInnerHTML={{ __html: highlightHTML(htmlContent) || '<span class="text-gray-500 italic">&lt;!-- HTML equivalent will appear here in real time... --&gt;</span>' }} />
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </fieldset>
 
@@ -240,7 +335,7 @@ const BlogForm = ({ initialPost, categories, isEditing, username }) => {
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className={`bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 cursor-pointer ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                         {isEditing ? 'Update Post' : 'Publish Post'}
                     </button>
@@ -252,9 +347,10 @@ const BlogForm = ({ initialPost, categories, isEditing, username }) => {
                                 setCategory('');
                                 setTags('');
                                 if (easyMDERef.current) easyMDERef.current.value('');
+                                setHtmlContent('');
                                 setThumbnailPosition('center 50%');
                             }}
-                            className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200"
+                            className="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200 cursor-pointer"
                         >
                             Clear Form
                         </button>
@@ -275,9 +371,29 @@ const BlogForm = ({ initialPost, categories, isEditing, username }) => {
                     background-position: center !important;
                     border: 1px solid #ccc;
                 }
+                .html-tag { color: #60a5fa; font-weight: 600; }
+                .html-attr { color: #f59e0b; }
+                .html-val { color: #34d399; }
+                .html-comment { color: #9ca3af; font-style: italic; }
             `}</style>
         </div>
     );
+};
+
+const highlightHTML = (html) => {
+    if (!html) return '';
+    let escaped = html
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+    escaped = escaped.replace(/&lt;(\/?[a-zA-Z0-9:-]+)(.*?)&gt;/g, (match, tagName, attrs) => {
+        const highlightedAttrs = attrs.replace(/([a-zA-Z0-9:-]+)=(['"].*?['"])/g, ' <span class="html-attr">$1</span>=<span class="html-val">$2</span>');
+        return `<span class="html-tag">&lt;${tagName}</span>${highlightedAttrs}<span class="html-tag">&gt;</span>`;
+    });
+    
+    escaped = escaped.replace(/&lt;!--(.*?)--&gt;/g, '<span class="html-comment">&lt;!--$1--&gt;</span>');
+    return escaped;
 };
 
 export default BlogForm;
