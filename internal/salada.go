@@ -14,7 +14,6 @@ import (
 	"salada/internal/buildinfo"
 	"salada/internal/db"
 
-	// NEW: Import the routes package
 	"github.com/gin-gonic/gin"
 )
 
@@ -31,6 +30,8 @@ func setupConfiguration(router *gin.Engine) {
 	router.Static("/assets/", "./web/assets")
 	router.Static("/images/", "./web/images")
 	router.Static("/uploads/", "./uploads")
+	router.StaticFile("/favicon.ico", "./web/images/favicon.ico")
+	router.StaticFile("/robots.txt", "web/static/robots.txt")
 	router.LoadHTMLGlob("web/templates/html/*/*")
 }
 
