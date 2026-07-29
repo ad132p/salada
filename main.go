@@ -26,6 +26,8 @@ func main() {
 	defer db.CloseDatabase()
 
 	router := gin.New()
+	// I need no proxy
+	router.SetTrustedProxies(nil)
 
 	//Setup middleware configuration
 	middleware.SetupMiddleware(router)
